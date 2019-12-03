@@ -4,9 +4,7 @@
 #include "TIA-Software_Mayfly_Card_LED.h"                     // include the header file
 
 // Constructor
-LED::LED()                                                    // constructor
-{
-}
+LED::LED() {}                                                 // constructor
 
 // Setup an LED
 void LED::setup(int pin, String LEDname, boolean debugFlag=false)
