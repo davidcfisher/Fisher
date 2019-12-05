@@ -1,3 +1,4 @@
+#define SDCT_version = 20191205
 #include "TIA-Software_Mayfly_Card.h"
 
 boolean debugFlag = false;                            // true = print debug information
