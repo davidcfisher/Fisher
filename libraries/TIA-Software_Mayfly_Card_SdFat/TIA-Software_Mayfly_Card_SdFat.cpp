@@ -6,12 +6,15 @@
 File testFile;                                                        // test file object
 const char* testFilename = "TIA-Software_testFile.txt";               // test file name
 const String SdTestPhrase = "This is the test phrase!";               // test phrase
+
+int numberOfFiles;                                                    // number of files in directory, including directory names
+  
                 
 // CONSTRUCTOR
 TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclass of SdFat
 
 // METHOD: setup - setup the SD Card
-void TIA_SdFat::TIA_setup(boolean testFlag=false, boolean debugFlag=false) {
+void TIA_SdFat::TIA_setup(boolean testFlag, boolean debugFlag) {
   
   TIA_init(debugFlag);                                                // initialize the SD card
     
@@ -91,25 +94,43 @@ void TIA_SdFat::TIA_removeTest(boolean debugFlag) {
 }
 
 // METHOD: TIA_dir - print the names of files in the directory
-void TIA_SdFat::TIA_dir(boolean debugFlag=false) {
+int TIA_SdFat::TIA_dir(SdCardDirectory *sd_card_directory, boolean debugFlag) {
   SdFile file;
+  numberOfFiles = 0;
   
   if (file.open("/", O_READ)) {
     SerialMon.println(); SerialMon.println(F("SD Card files - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"));
   
-    TIA_SdFat::TIA_printDirectory(file, "Root", 0, debugFlag);        // process the root directory
+    TIA_SdFat::TIA_printDirectory(&sd_card_directory[0], file, "Root", 0, debugFlag);        // process the root directory
   
     SerialMon.println(F("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"));
   }
+  
+  return numberOfFiles;
 }
 
 // METHOD: TIA_printDirectory - print all files in a directory and sub-directories
-void TIA_SdFat::TIA_printDirectory(SdFile CFile, String dirName, int numTabs, boolean debugFlag=false)
+void TIA_SdFat::TIA_printDirectory(
+  SdCardDirectory *sd_card_directory,
+  SdFile CFile,
+  String dirName,
+  int numTabs,
+  boolean debugFlag)
 {
   if (debugFlag) { SerialMon.print(__FILE__);SerialMon.print(F(", line"));SerialMon.print(__LINE__); SerialMon.println(F(": starting SD Card file listing ***")); }
 
   SdFile file;
   char filename[50];
+  
+  // save the directory information
+  sd_card_directory[numberOfFiles].folderLevel    = numTabs;
+  sd_card_directory[numberOfFiles].directoryFlag  = true;
+  sd_card_directory[numberOfFiles].filename       = dirName;
+  sd_card_directory[numberOfFiles].modDateTime    = "";
+  sd_card_directory[numberOfFiles].sizeKb         = 0;
+  
+  // increment the files counter
+  numberOfFiles++;
   
   // display the directory name
   for (int i = 1; i <= numTabs; i++) { Serial.print(F("\t")); }       // insert tabs for spacing
@@ -125,7 +146,7 @@ void TIA_SdFat::TIA_printDirectory(SdFile CFile, String dirName, int numTabs, bo
       if (file.isDir()) {
         SerialMon.println(F(""));                                     // blank line before this directory listing
         file.getName(filename,50);                                    // get the directory name
-        TIA_printDirectory(file, filename, numTabs+1);                // process this directory
+        TIA_printDirectory(&sd_card_directory[0], file, String(filename), numTabs+1, debugFlag);  // process this directory
       }
       
       // a regular file, not hidden or a directory
@@ -135,11 +156,29 @@ void TIA_SdFat::TIA_printDirectory(SdFile CFile, String dirName, int numTabs, bo
         SerialMon.print(F("\t"));
 
         file.printModifyDateTime(&SerialMon);                         // print modified date and time
+        directoryEntry sd_card_directoryEntry;
+        file.dirEntry(&sd_card_directoryEntry);
+        int lastWriteYear = sd_card_directoryEntry.lastWriteDate;
+        lastWriteYear >> 8;
+        SerialMon.print(F(" -- "));
+        SerialMon.print(sd_card_directoryEntry.lastWriteDate, BIN);
+        SerialMon.print(F(", "));
+        SerialMon.print(lastWriteYear, BIN);
         SerialMon.print(F("\t"));
         
         int size = file.fileSize();                                   // get the file size
         SerialMon.print(size);                                        // print the file size
         SerialMon.println(F(" kb"));
+        
+        // save the file information
+        sd_card_directory[numberOfFiles].folderLevel    = numTabs;
+        sd_card_directory[numberOfFiles].directoryFlag  = false;
+        sd_card_directory[numberOfFiles].filename       = filename;
+        sd_card_directory[numberOfFiles].modDateTime    = "Gotta get this";
+        sd_card_directory[numberOfFiles].sizeKb         = size;
+        
+        // increment the files counter
+        numberOfFiles++;
       }
     }
     
