@@ -3,6 +3,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_H
 #define TIA_SOFTWARE_MAYFLY_CARD_H
+#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20191209
 
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"                         // global definitions
@@ -16,7 +17,7 @@ class Mayfly_card {
     static LED greenLED;                                      // create green led instance "greenLED"
     static TIA_SdFat SdCard;                                  // create SD Card instance "SdCard"
     
-    void setup(boolean testFlag=false, boolean debugFlag=false);      // method to setup the Mayfly card
+    void setup(boolean testFlag=false);                       // method to setup the Mayfly card
 };
 
 #endif

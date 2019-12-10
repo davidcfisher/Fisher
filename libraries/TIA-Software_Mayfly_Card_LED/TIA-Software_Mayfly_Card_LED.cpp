@@ -7,29 +7,33 @@
 LED::LED() {}                                                 // constructor
 
 // Setup an LED
-void LED::setup(int pin, String LEDname, boolean debugFlag=false)
+void LED::setup(int pin, String LEDname)
 {
   _pin = pin;                                                 // save the pin number for later use
   _LEDname = LEDname;                                         // save the LED name for later use
+  _state = false;
   
-  if (debugFlag) { SerialMon.print(__FILE__);SerialMon.print(", line ");SerialMon.print(__LINE__); SerialMon.print(": setting up "); SerialMon.print(_LEDname); SerialMon.print(" on pin ");SerialMon.print(_pin);SerialMon.print("..."); }
   pinMode(_pin, OUTPUT);                                      // make the pin an OUTPUT
   digitalWrite(_pin, LOW);                                    // turn the LED off
-  if (debugFlag) { SerialMon.println("...complete."); }
 }
 
 // Turn on an lED
-void LED::turnOn(boolean debugFlag=false)
+void LED::turnOn()
 {
-  if (debugFlag) { SerialMon.print(__FILE__);SerialMon.print(", line ");SerialMon.print(__LINE__); SerialMon.print(": turning "); SerialMon.print(_LEDname); SerialMon.print(" on..."); }
   digitalWrite(_pin, HIGH);
-  if (debugFlag) { SerialMon.print("...turned "); SerialMon.print(_LEDname); SerialMon.println(" on."); }
+  _state = true;
 }
 
 // Turn off an LED
-void LED::turnOff(boolean debugFlag=false)
+void LED::turnOff()
 {
-  if (debugFlag) { SerialMon.print(__FILE__);SerialMon.print(", line ");SerialMon.print(__LINE__); SerialMon.print(": turning "); SerialMon.print(_LEDname); SerialMon.print(" off..."); }
   digitalWrite(_pin, LOW);
-  if (debugFlag) { SerialMon.print("...turned "); SerialMon.print(_LEDname); SerialMon.println(" off."); }
+  _state = false;
+}
+
+// switch the state of the LED
+void LED::switchState()
+{
+  digitalWrite(_pin,(_state ? LOW : HIGH));
+  _state = !_state;
 }

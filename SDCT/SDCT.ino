@@ -1,54 +1,53 @@
-#define SDCT_version = 20191206
-#include "TIA-Software_DCF_Globals.h"
+#define SDCT_version = 20191209
+
 #include "TIA-Software_Mayfly_Card.h"
-
-boolean debugFlag = false;                                      // true = print debug information
-boolean testFlag = false;                                       // true = perform SD card write, read and delete tests
-
 Mayfly_card mayflyCard;                                         // establish instance of Mayfly Card
 
-SdCardDirectory sd_card_directory[100];
-  
+const int SdCardDirectoryLimit = 50;                            // limit the number of directory names + file names to be displayed
+SdCardDirectory sd_card_directory[SdCardDirectoryLimit];        // define an array to hold the SD Card directory results
+ 
 void setup() 
 {
-  mayflyCard.setup(testFlag, debugFlag);                        // setup the Mayfly Card
-  mayflyCard.redLED.turnOn(debugFlag);                          // turn on the Red LED
-  mayflyCard.greenLED.turnOn(debugFlag);                        // turn on the Green LED
-  delay(2000);                                                  // wait a couple of seconds
-  mayflyCard.redLED.turnOff(debugFlag);                         // turn off the red LED
-  
-  int numberOfFiles = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], debugFlag);     // list the SD Card directories & files
+  mayflyCard.setup(false);                                      // setup the Mayfly Card.  True=test SD card file write, read and remove.
+  mayflyCard.redLED.turnOn();                                   // turn on the Red LED
+  mayflyCard.greenLED.turnOn();                                 // turn on the Green LED
+  delay(1000);                                                  // wait a couple of seconds
+  mayflyCard.redLED.turnOff();                                  // turn off the red LED
 
-  for (int i=0; i<numberOfFiles; i++) {
+  // get the directory from the SD Card
+  int numberOfEntries = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], SdCardDirectoryLimit);     // get the SD Card directories & files
 
-    // print a blank line before a directory entry
-    if (sd_card_directory[i].directoryFlag) { SerialMon.println(F("")); }
+  // process each file
+  for (int i=0; i < numberOfEntries; i++) {
+    
+    if (sd_card_directory[i].directoryFlag) SerialMon.println(F(""));                               // print a blank line before a directory entry
    
-
-    // add tabs to show sub-directory level
-    for (int j=0; j<sd_card_directory[i].folderLevel; j++) {
-      SerialMon.print("\t");
-    }
+    for (int j=0; j<sd_card_directory[i].folderLevel; j++) { SerialMon.print("\t"); }               // add tabs to indent sub-directory level
 
     // if this is a directory entry
     if (sd_card_directory[i].directoryFlag) {
-      SerialMon.print(F("Directory: "));
-      SerialMon.println(sd_card_directory[i].filename);
+      SerialMon.print(F("Directory: ")); SerialMon.println(sd_card_directory[i].filename);
     }
 
     // otherwise, this is a file
     else {
-      SerialMon.print(sd_card_directory[i].filename);
-      SerialMon.print(F("\t"));
-      SerialMon.print(sd_card_directory[i].sizeKb);
-      SerialMon.println(F(" Kb"));
+      SerialMon.print(sd_card_directory[i].filename);     SerialMon.print(F("\t"));
+      SerialMon.print(sd_card_directory[i].modDateTime);  SerialMon.print(F("\t"));
+      SerialMon.print(sd_card_directory[i].sizeKb);       SerialMon.println(F(" KB"));
+    }
+    
+    // if we've reached the limit of directory+file names
+    if(sd_card_directory[i].limitReached) {
+      SerialMon.println(F(""));SerialMon.print(F("=== More files may exist.  Maximum display limit of ")); SerialMon.print(SdCardDirectoryLimit); SerialMon.println(F(" reached. ==="));
+      break;
     }
   }
 
-SerialMon.println("This is the Add-a-return branch.");  
-  
-  if (debugFlag) { SerialMon.print(__FILE__);SerialMon.print(", line ");SerialMon.print(__LINE__); SerialMon.println(": exiting Sketch setup()."); }
+  SerialMon.println("This is the Add-a-return branch.");  
 }
 
 void loop() {
+  delay(500);
+  mayflyCard.redLED.switchState();
+  mayflyCard.greenLED.switchState();
 }

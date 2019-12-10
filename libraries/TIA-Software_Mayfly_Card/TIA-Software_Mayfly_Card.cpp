@@ -10,16 +10,12 @@ LED Mayfly_card::greenLED{};                                  // Mayfly has a Gr
 TIA_SdFat Mayfly_card::SdCard{};                              // Mayfly has an SD Card 
 
 // METHOD: setup the Mayfly Card
-void Mayfly_card::setup(boolean testFlag, boolean debugFlag)
+void Mayfly_card::setup(boolean testFlag)
 {
   SerialMon.begin(57600);                                     // initialize the Serial Monitor
   delay (100);
 
-  if (debugFlag) { SerialMon.print(__FILE__);SerialMon.print(F(", line "));SerialMon.print(__LINE__); SerialMon.println(F(": starting Mayfly Card setup ===")); }
-  
-  redLED.setup(redLedPin, "Red LED", debugFlag);              // setup the red LED
-  greenLED.setup(greenLedPin, "Green LED", debugFlag);        // setup the green LED
-  SdCard.TIA_setup(testFlag, debugFlag);                      // setup the SD card
-  
-  if (debugFlag) { SerialMon.print(__FILE__);SerialMon.print(F(", line "));SerialMon.print(__LINE__); SerialMon.println(F(": Mayfly Card setup complete. ===")); SerialMon.println(F("")); }
+  redLED.setup(TIA_redLedPin, "Red LED");                     // setup the red LED
+  greenLED.setup(TIA_greenLedPin, "Green LED");               // setup the green LED
+  SdCard.TIA_setup(testFlag);                                 // setup the SD card
 }
