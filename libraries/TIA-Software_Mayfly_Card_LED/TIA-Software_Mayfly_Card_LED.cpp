@@ -3,37 +3,36 @@
 
 #include "TIA-Software_Mayfly_Card_LED.h"                     // include the header file
 
-// Constructor
+// CONSTRUCTOR
 LED::LED() {}                                                 // constructor
 
-// Setup an LED
+// METHOD: setup an LED
 void LED::setup(int pin, String LEDname)
 {
   _pin = pin;                                                 // save the pin number for later use
   _LEDname = LEDname;                                         // save the LED name for later use
-  _state = false;
   
   pinMode(_pin, OUTPUT);                                      // make the pin an OUTPUT
-  digitalWrite(_pin, LOW);                                    // turn the LED off
+  turnOff();                                                  // turn the LED off
 }
 
-// Turn on an lED
+// METHOD: turn the lED on
 void LED::turnOn()
 {
   digitalWrite(_pin, HIGH);
-  _state = true;
+  _state = HIGH;
 }
 
-// Turn off an LED
+// METHOD: turn the LED off
 void LED::turnOff()
 {
   digitalWrite(_pin, LOW);
-  _state = false;
+  _state = LOW;
 }
 
-// switch the state of the LED
+// METHOD: switch the state of the LED
 void LED::switchState()
 {
-  digitalWrite(_pin,(_state ? LOW : HIGH));
+  digitalWrite(_pin, (_state ? LOW : HIGH));
   _state = !_state;
 }

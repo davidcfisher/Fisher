@@ -8,7 +8,7 @@
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"                         // global definitions
 #include "TIA-Software_Mayfly_Card_LED.h"                     // include the LED library
-#include "TIA-Software_Mayfly_Card_SdFat.h"                   // include the SD library
+#include "TIA-Software_Mayfly_Card_SdFat.h"                   // include the SD Card library
 
 class Mayfly_card { 
   public: 

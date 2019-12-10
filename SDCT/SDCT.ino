@@ -1,22 +1,22 @@
-#define SDCT_version = 20191209
+#define SDCT_version = 20191210
 
 #include "TIA-Software_Mayfly_Card.h"
-Mayfly_card mayflyCard;                                         // establish instance of Mayfly Card
-
-const int SdCardDirectoryLimit = 50;                            // limit the number of directory names + file names to be displayed
-SdCardDirectory sd_card_directory[SdCardDirectoryLimit];        // define an array to hold the SD Card directory results
+Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
  
 void setup() 
 {
-  mayflyCard.setup(false);                                      // setup the Mayfly Card.  True=test SD card file write, read and remove.
-  mayflyCard.redLED.turnOn();                                   // turn on the Red LED
-  mayflyCard.greenLED.turnOn();                                 // turn on the Green LED
-  delay(1000);                                                  // wait a couple of seconds
-  mayflyCard.redLED.turnOff();                                  // turn off the red LED
+  mayflyCard.setup();                                             // setup the Mayfly Card.  True=test SD card file write, read and remove.
+  mayflyCard.redLED.turnOn();                                     // turn on the Red LED
+  mayflyCard.greenLED.turnOn();                                   // turn on the Green LED
+  delay(1000);                                                    // wait a couple of seconds
+  mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
   // get the directory from the SD Card
-  int numberOfEntries = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], SdCardDirectoryLimit);     // get the SD Card directories & files
+  const int SdCardDirectoryLimit = 50;                            // limit the number of directory names + file names to be displayed
+  SdCardDirectory sd_card_directory[SdCardDirectoryLimit];        // define an array to hold the SD Card directory results
+  int numberOfEntries = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], SdCardDirectoryLimit);     // get the SD Card directory & file names
 
+  /***** the code below simply displays the directory information received ***/
   // process each file
   for (int i=0; i < numberOfEntries; i++) {
     
