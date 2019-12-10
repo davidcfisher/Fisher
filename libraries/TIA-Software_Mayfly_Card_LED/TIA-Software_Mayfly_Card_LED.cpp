@@ -10,7 +10,7 @@ LED::LED() {}                                                 // constructor
 void LED::setup(int pin, String LEDname)
 {
   _pin = pin;                                                 // save the pin number for later use
-  _LEDname = LEDname;                                         // save the LED name for later use
+  setName(LEDname);                                           // save the LED name for later use
   
   pinMode(_pin, OUTPUT);                                      // make the pin an OUTPUT
   turnOff();                                                  // turn the LED off
@@ -35,4 +35,22 @@ void LED::switchState()
 {
   digitalWrite(_pin, (_state ? LOW : HIGH));
   _state = !_state;
+}
+
+// METHOD: set the name of the LED
+void LED::setName(String ledName)
+{
+  _LEDname = ledName;
+}
+
+// METHOD: get the name of the LED
+String LED::getName()
+{
+  return _LEDname;
+}
+
+// METHOD:  get the state of the LED
+boolean LED::getState()
+{
+  return _state;
 }

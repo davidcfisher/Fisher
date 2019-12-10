@@ -14,7 +14,7 @@ typedef struct {                                                  // structure o
   String filename;                                                // directory or file name
   String modDateTime;                                             // modification date and time
   int sizeKb;                                                     // file size in KB
-  boolean limitReached;                                           // true=more files exist, but display limit reached
+  boolean limitReached;                                           // true=more files may exist, but display limit reached
 } SdCardDirectory;
 
 class TIA_SdFat : public SdFat {

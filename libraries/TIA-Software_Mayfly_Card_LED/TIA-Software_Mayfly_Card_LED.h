@@ -14,9 +14,12 @@ class LED {
       int pin,                                              // pin number for the LED
       String LEDname                                        // name for the LED
     );
+    void setName(String name);                              // METHOD: set the LED name
+    String getName();                                       // METHOD: get the LED name
     void turnOn();                                          // METHOD: turn on the LED
     void turnOff();                                         // METHOD: turn off the LED
     void switchState();                                     // METHOD: switch the light on or off
+    boolean getState();                                     // METHOD: get the state of the LED
   protected:
     int _pin;                                               // LED pin number
     String _LEDname;                                        // name of the LED

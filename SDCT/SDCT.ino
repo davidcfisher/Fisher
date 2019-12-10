@@ -43,6 +43,8 @@ void setup()
     }
   }
 
+  //mayflyCard.greenLED.setName("The pretty GREEN LED");
+  
   SerialMon.println("This is the Add-a-return branch.");  
 }
 
@@ -50,4 +52,7 @@ void loop() {
   delay(500);
   mayflyCard.redLED.switchState();
   mayflyCard.greenLED.switchState();
+//  SerialMon.print(mayflyCard.redLED.getName()); SerialMon.print(F(" state=")); SerialMon.println(mayflyCard.redLED.getState());
+//  SerialMon.print(mayflyCard.greenLED.getName()); SerialMon.print(F(" state=")); SerialMon.println(mayflyCard.greenLED.getState());
+
 }
