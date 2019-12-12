@@ -3,10 +3,13 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191209
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191211
+
+#define consoleLineLength 160
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
-#include "SdFat.h"                                                // library to handle SD Card
+#include "SdFat.h"                                                // SD Card support
+#include "Sodaq_DS3231.h"             `                           // Real Time Clock support
     
 typedef struct {                                                  // structure of an SD Card directory return
   int folderLevel;                                                // sub-directory depth, used to determine indentation level for displaying results
@@ -17,15 +20,27 @@ typedef struct {                                                  // structure o
   boolean limitReached;                                           // true=more files may exist, but display limit reached
 } SdCardDirectory;
 
+typedef struct {
+  String record;
+} consoleRecord;
+
 class TIA_SdFat : public SdFat {
   public:
+
     TIA_SdFat();                                                  // constructor
+
     void TIA_setup(                                               // setup the SD Card
       boolean testFlag                                            // true=test the file write, read and remove capabilities of the SD Card
     );
+
     int TIA_dir(                                                  // list the files in the dir.  Returns the number of directory names + filenames
       SdCardDirectory *sd_card_directory,                         // array to hold directory results
       int limit                                                   // limit on the number of directory names + file names to be returned
+    );
+    
+    int TIA_consoleRead(
+      consoleRecord *console_record,                              // array to hold console records
+      int limit                                                   // limit on the number of colsole records to be returned      
     );
     
   protected:

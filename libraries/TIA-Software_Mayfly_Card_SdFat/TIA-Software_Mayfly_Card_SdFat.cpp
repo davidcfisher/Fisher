@@ -194,3 +194,44 @@ void TIA_SdFat::TIA_processDirectory(
     file.close();
   }
 }
+
+// METHOD: read the console record
+int TIA_SdFat::TIA_consoleRead(
+  consoleRecord *console_record,                                      // array to hold console records
+  int limit                                                           // limit on the number of colsole records to be returned      
+)
+{
+  size_t n;
+  char line[consoleLineLength];
+  SdFat sd;
+  SdFile file;
+  
+  if (!file.open("console.txt", O_READ)) SerialMon.println("open failed");
+ 
+  int numberOfEntries = 0;
+  while ((n = file.fgets(line, sizeof(line))) > 0 && numberOfEntries < limit) {
+    
+    String t = String(line);
+    String u = t.substring(4,5) + t.substring(7,8) + t.substring(13,14) + t.substring(16,17);
+      
+    // grab the entry
+    console_record[numberOfEntries].record = String(line);
+    
+    numberOfEntries++;
+    // Print line number.
+    Serial.print(numberOfEntries);
+    Serial.print(": ");
+    Serial.print(line);
+    SerialMon.print(">");
+    SerialMon.print(u);
+    SerialMon.println("<");
+    if (line[n - 1] != '\n') {
+      // Line is too long or last line is missing nl.
+      Serial.println(F(" <-- missing nl"));
+    }
+  }
+  Serial.println(F("\nDone"));
+
+  return numberOfEntries;
+}
+

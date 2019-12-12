@@ -12,11 +12,26 @@ void setup()
   mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
   // get the directory from the SD Card
-  const int SdCardDirectoryLimit = 50;                            // limit the number of directory names + file names to be displayed
-  SdCardDirectory sd_card_directory[SdCardDirectoryLimit];        // define an array to hold the SD Card directory results
-  int numberOfEntries = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], SdCardDirectoryLimit);     // get the SD Card directory & file names
+  const int sdCardDirectoryLimit = 5;                            // limit the number of directory names + file names to be displayed
+  SdCardDirectory sd_card_directory[sdCardDirectoryLimit];        // define an array to hold the SD Card directory results
+  int numberOfEntries = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
 
-  /***** the code below simply displays the directory information received ***/
+  // get the console information
+  const int consoleRecordLimit = 20;
+  consoleRecord console_record[consoleRecordLimit];
+  int numberOfConsoleRecords = mayflyCard.SdCard.TIA_consoleRead(&console_record[0], consoleRecordLimit);
+  SerialMon.print("numberOfConsoleRecords=");SerialMon.println(numberOfConsoleRecords);
+
+  /***** the code below displays the console record information *****/
+  // process each record
+  for (int i=0; i < numberOfConsoleRecords; i++) {
+    
+    SerialMon.print(i+1); 
+    SerialMon.print(": "); 
+    SerialMon.println(console_record[i].record);
+  }
+
+  /***** the code below simply displays the directory information received *****/
   // process each file
   for (int i=0; i < numberOfEntries; i++) {
     
@@ -38,7 +53,7 @@ void setup()
     
     // if we've reached the limit of directory+file names
     if(sd_card_directory[i].limitReached) {
-      SerialMon.println(F(""));SerialMon.print(F("=== More files may exist.  Maximum display limit of ")); SerialMon.print(SdCardDirectoryLimit); SerialMon.println(F(" reached. ==="));
+      SerialMon.println(F(""));SerialMon.print(F("=== More files may exist.  Maximum display limit of ")); SerialMon.print(sdCardDirectoryLimit); SerialMon.println(F(" reached. ==="));
       break;
     }
   }  
