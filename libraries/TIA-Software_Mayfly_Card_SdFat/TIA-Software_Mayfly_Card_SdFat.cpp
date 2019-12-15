@@ -195,43 +195,108 @@ void TIA_SdFat::TIA_processDirectory(
   }
 }
 
+
+// FUNCTION: return the number of seconds since 1/1/200 from a string "YYYY-MM-DD HH:MM:SS"
+double secondsSince1Jan2000(String dateTimeToEncode) {
+  
+  // validate the dateTimeToEncode
+  int year = (dateTimeToEncode.substring(0,4)).toInt();               // should be integer in the format YYYY
+  String dash1 = dateTimeToEncode.substring(4,5);                     // should be a "-"
+  int month = (dateTimeToEncode.substring(5,7)).toInt();              // should be integer in the format MM
+  String dash2 = dateTimeToEncode.substring(7,8);                     // should be a "-"
+  int dayOfMonth = (dateTimeToEncode.substring(8,10)).toInt();        // should be integer in the format DD
+  int hours = (dateTimeToEncode.substring(11,13)).toInt();            // should be integer in the format HH
+  String colon1 = dateTimeToEncode.substring(13,14);                  // should be a ":"
+  int minutes = (dateTimeToEncode.substring(14,16)).toInt();          // should be integer in the format MM
+  String colon2 = dateTimeToEncode.substring(16,17);                  // should be a ":"
+  int seconds = (dateTimeToEncode.substring(16,18)).toInt();          // should be integer in the format SS
+  
+  if (                                                                // indicate an invalid DateTime
+    ! (
+      year > 2000 &&
+      dash1 == "-" &&
+      month >= 1 && month <= 12 &&
+      dash2 == "-" &&
+      dayOfMonth >= 1  && dayOfMonth <= 31 &&
+      hours >= 0 && hours <= 23 &&
+      colon1 == ":" &&
+      minutes >= 0 && minutes <= 59 &&
+      colon2 == ":" &&
+      seconds >= 0 && seconds <= 59
+    )
+  ) return -1;
+  
+  // DateTime expects the date to be in the format: Oct 2 2015
+  String monthNames[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  
+  String dateString =                                                 // establish a String containing the date
+    monthNames[(dateTimeToEncode.substring(5,7)).toInt() - 1] +       // month in the format: Oct
+    " " +
+    dateTimeToEncode.substring(8,10) +                                // day of month
+    " " +
+    dateTimeToEncode.substring(0,4);                                  // year
+    
+  String timeString = dateTimeToEncode.substring(11,19);              // establish a String containing the time
+  
+  char *date = dateString.c_str();                                    // establish a pointer to a char array holding the date, as needed by DateTime
+  char *time = timeString.c_str();                                    // establish a pointer to a char array holding the time, as needed by DateTime
+  
+  DateTime dT = DateTime(date, time);                                 // establish the DateTime
+  return dT.get();                                                    // return the number of seconds since 1/1/2000
+}
+
+
 // METHOD: read the console record
 int TIA_SdFat::TIA_consoleRead(
   consoleRecord *console_record,                                      // array to hold console records
+  String startDateTimeString,                                         // start reading at "YYYY-MM-DD HH:MM:SS"
+  String endDateTimeString,                                           // end reading at "YYYY-MM-DD HH:MM:SS"
   int limit                                                           // limit on the number of colsole records to be returned      
 )
 {
-  size_t n;
-  char line[consoleLineLength];
-  SdFat sd;
-  SdFile file;
+  SdFile console_file;                                                // console file
+  char line[consoleLineLength];                                       // holds a line read from the console file
+  int lineBytes;                                                      // number of characters from console_file into line
+  double recordSecondsSince1Jan2000;                                  // for the current record: holds number of seconds since 1/1/2000
   
-  if (!file.open("console.txt", O_READ)) SerialMon.println("open failed");
- 
-  int numberOfEntries = 0;
-  while ((n = file.fgets(line, sizeof(line))) > 0 && numberOfEntries < limit) {
-    
-    String t = String(line);
-    String u = t.substring(4,5) + t.substring(7,8) + t.substring(13,14) + t.substring(16,17);
-      
-    // grab the entry
-    console_record[numberOfEntries].record = String(line);
-    
-    numberOfEntries++;
-    // Print line number.
-    Serial.print(numberOfEntries);
-    Serial.print(": ");
-    Serial.print(line);
-    SerialMon.print(">");
-    SerialMon.print(u);
-    SerialMon.println("<");
-    if (line[n - 1] != '\n') {
-      // Line is too long or last line is missing nl.
-      Serial.println(F(" <-- missing nl"));
-    }
+  double startDateTime = secondsSince1Jan2000(startDateTimeString);   // start reading console records at this datetime
+  double endDateTime = secondsSince1Jan2000(endDateTimeString);       // end reading console records after this datetime
+  
+  if (endDateTime <= startDateTime) return -2;                        // error: start time is after the end time
+  
+  if (!console_file.open("console.txt", O_READ)) {                    // if the file doesn't open
+    return -1;                                                        // return an error code
   }
-  Serial.println(F("\nDone"));
+ 
+  int numberOfConsoleRecords = 0;                                     // keep track of the number of console records read
+  while ((lineBytes = console_file.fgets(line, sizeof(line))) > 0 && numberOfConsoleRecords < limit) {    // read the record
+    
+    String record = String(line);                                     // get line as a String
+    record.replace("\n","");                                          // remove all \n's
+    recordSecondsSince1Jan2000 = secondsSince1Jan2000(record);        
+    
+    if (recordSecondsSince1Jan2000 == -1) {                           // invalid timestamp on record, so don't check for start or end date exceptions
+    }
+    
+    // if the record is before the start time, continue the loop
+    else if (recordSecondsSince1Jan2000 < startDateTime) continue;
+    
+    // if the record is after the end time, stop processing
+    if (recordSecondsSince1Jan2000 > endDateTime) break;
+    
+    console_record[numberOfConsoleRecords].record = record;           // save the entry
+    
+    numberOfConsoleRecords++;
+    //// Print line number.
+    //Serial.print(numberOfConsoleRecords);
+    //Serial.print(": ");
+    //Serial.print(line);
+    //if (line[lineBytes - 1] != '\n') {
+    //  // Line is too long or last line is missing nl.
+    //  Serial.println(F(" <-- missing nl"));
+    //}
+  }
+//  Serial.println(F("\nDone"));
 
-  return numberOfEntries;
+  return numberOfConsoleRecords;
 }
-

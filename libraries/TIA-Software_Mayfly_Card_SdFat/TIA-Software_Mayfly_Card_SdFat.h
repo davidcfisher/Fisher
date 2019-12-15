@@ -3,12 +3,13 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191211
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191212
 
-#define consoleLineLength 160
+#define consoleLineLength 1000                                    // maximum length of a console record
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
 #include "SdFat.h"                                                // SD Card support
+//#include "time.h"                                                 // Unix epoch time support
 #include "Sodaq_DS3231.h"             `                           // Real Time Clock support
     
 typedef struct {                                                  // structure of an SD Card directory return
@@ -22,6 +23,8 @@ typedef struct {                                                  // structure o
 
 typedef struct {
   String record;
+  boolean validDateTime;
+  int bytes;
 } consoleRecord;
 
 class TIA_SdFat : public SdFat {
@@ -38,8 +41,10 @@ class TIA_SdFat : public SdFat {
       int limit                                                   // limit on the number of directory names + file names to be returned
     );
     
-    int TIA_consoleRead(
+    int TIA_consoleRead(                                          // returns number of records read.  Error codes: -1=file didn't open
       consoleRecord *console_record,                              // array to hold console records
+      String startDateTimeString,                                 // start reading at "YYYY-MM-DD HH:MM:SS"
+      String endDateTimeString,                                   // end reading at "YYYY-MM-DD HH:MM:SS"
       int limit                                                   // limit on the number of colsole records to be returned      
     );
     

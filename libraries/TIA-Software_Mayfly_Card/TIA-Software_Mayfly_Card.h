@@ -10,6 +10,8 @@
 #include "TIA-Software_Mayfly_Card_LED.h"                     // include the LED library
 #include "TIA-Software_Mayfly_Card_SdFat.h"                   // include the SD Card library
 
+#include "Sodaq_DS3231.h"   // move this to RTC class
+
 class Mayfly_card { 
   public: 
     Mayfly_card();                                            // Mayfly card constructor
