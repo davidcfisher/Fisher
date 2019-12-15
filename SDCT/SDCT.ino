@@ -19,7 +19,7 @@ void setup()
   // get the console information
   const int consoleRecordLimit = 200;
   consoleRecord console_record[consoleRecordLimit];
-  int numberOfConsoleRecords = mayflyCard.SdCard.TIA_consoleRead(&console_record[0], "2019-11-05 11:30:00", "2019-11-05 13:29:00", consoleRecordLimit);
+  int numberOfConsoleRecords = mayflyCard.SdCard.TIA_consoleRead(&console_record[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", consoleRecordLimit);
 
 
   /***** the code below displays the console record information *****/
