@@ -9,8 +9,10 @@ const String SdTestPhrase = "This is the test phrase!";               // test ph
 
 int numberOfFiles;                                                    // number of files in directory, including directory names
 
+
 // CONSTRUCTOR
 TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclass of SdFat
+
 
 // METHOD: setup - setup the SD Card
 void TIA_SdFat::TIA_setup(boolean testFlag) {
@@ -25,6 +27,7 @@ void TIA_SdFat::TIA_setup(boolean testFlag) {
   }
 }
 
+
 // METHOD: TIA_init - initialize the SD Card
 void TIA_SdFat::TIA_init() {
   
@@ -33,6 +36,7 @@ void TIA_SdFat::TIA_init() {
   else {
     }
 }
+
 
 // METHOD: TIA_writeTest - test the write capability of the SD card
 void TIA_SdFat::TIA_writeTest() {
@@ -46,6 +50,7 @@ void TIA_SdFat::TIA_writeTest() {
     
   }
 }
+
 
 // METHOD: TIA_readTest - test the read capability of the SD card
 void TIA_SdFat::TIA_readTest() {
@@ -69,6 +74,7 @@ void TIA_SdFat::TIA_readTest() {
   }
 }
 
+
 // METHOD: TIA_removeTest - test the 'remove file' capability of the SD card
 void TIA_SdFat::TIA_removeTest() {
   // perform a remove test
@@ -77,6 +83,7 @@ void TIA_SdFat::TIA_removeTest() {
   else {
   }
 }
+
 
 // METHOD: TIA_dir - get the directory names and filenames on the SD Card
 int TIA_SdFat::TIA_dir(
@@ -93,6 +100,7 @@ int TIA_SdFat::TIA_dir(
   
   return numberOfFiles;
 }
+
 
 // METHOD: TIA_processDirectory - recuresively get all directory names and filenames in a directory and sub-directories
 void TIA_SdFat::TIA_processDirectory(
@@ -247,7 +255,7 @@ double secondsSince1Jan2000(String dateTimeToEncode) {
 
 
 // METHOD: read the console record
-int TIA_SdFat::TIA_consoleRead(
+int TIA_SdFat::TIA_consoleRead(                                       // returns the number of console records in the console_record array
   consoleRecord *console_record,                                      // array to hold console records
   String startDateTimeString,                                         // start reading at "YYYY-MM-DD HH:MM:SS"
   String endDateTimeString,                                           // end reading at "YYYY-MM-DD HH:MM:SS"
@@ -256,11 +264,13 @@ int TIA_SdFat::TIA_consoleRead(
 {
   SdFile console_file;                                                // console file
   char line[consoleLineLength];                                       // holds a line read from the console file
-  int lineBytes;                                                      // number of characters from console_file into line
+  int recordBytes;                                                    // number of characters from console_file into line
   double recordSecondsSince1Jan2000;                                  // for the current record: holds number of seconds since 1/1/2000
   
   double startDateTime = secondsSince1Jan2000(startDateTimeString);   // start reading console records at this datetime
   double endDateTime = secondsSince1Jan2000(endDateTimeString);       // end reading console records after this datetime
+  
+  boolean startDateTimeFoundFlag = false;                             // true=we've found a record with the startDateTime
   
   if (endDateTime <= startDateTime) return -2;                        // error: start time is after the end time
   
@@ -269,13 +279,13 @@ int TIA_SdFat::TIA_consoleRead(
   }
  
   int numberOfConsoleRecords = 0;                                     // keep track of the number of console records read
-  while ((lineBytes = console_file.fgets(line, sizeof(line))) > 0 && numberOfConsoleRecords < limit) {    // read the record
+  while ((recordBytes = console_file.fgets(line, sizeof(line))) > 0 && numberOfConsoleRecords < limit) {    // read the next record
     
     String record = String(line);                                     // get line as a String
     record.replace("\n","");                                          // remove all \n's
-    recordSecondsSince1Jan2000 = secondsSince1Jan2000(record);        
+    recordSecondsSince1Jan2000 = secondsSince1Jan2000(record);        // get the number of seconds since 1/1/2000 for this record        
     
-    if (recordSecondsSince1Jan2000 == -1) {                           // invalid timestamp on record, so don't check for start or end date exceptions
+    if (recordSecondsSince1Jan2000 == -1 && startDateTimeFoundFlag) { // invalid timestamp on record, so don't check for start or end date exceptions
     }
     
     // if the record is before the start time, continue the loop
@@ -284,19 +294,13 @@ int TIA_SdFat::TIA_consoleRead(
     // if the record is after the end time, stop processing
     if (recordSecondsSince1Jan2000 > endDateTime) break;
     
-    console_record[numberOfConsoleRecords].record = record;           // save the entry
+    startDateTimeFoundFlag = true;                                    // we've found the startDateTime
     
-    numberOfConsoleRecords++;
-    //// Print line number.
-    //Serial.print(numberOfConsoleRecords);
-    //Serial.print(": ");
-    //Serial.print(line);
-    //if (line[lineBytes - 1] != '\n') {
-    //  // Line is too long or last line is missing nl.
-    //  Serial.println(F(" <-- missing nl"));
-    //}
+    console_record[numberOfConsoleRecords].record = record;           // save the entry
+    console_record[numberOfConsoleRecords].bytes = recordBytes-1;     // save the number of bytes - trailing "\n" has been removed, hence the -1
+    
+    numberOfConsoleRecords++;                                         // increment the record counter
   }
-//  Serial.println(F("\nDone"));
 
   return numberOfConsoleRecords;
 }

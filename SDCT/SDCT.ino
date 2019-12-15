@@ -19,15 +19,18 @@ void setup()
   // get the console information
   const int consoleRecordLimit = 200;
   consoleRecord console_record[consoleRecordLimit];
-  int numberOfConsoleRecords = mayflyCard.SdCard.TIA_consoleRead(&console_record[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", consoleRecordLimit);
-  SerialMon.print("numberOfConsoleRecords=");SerialMon.println(numberOfConsoleRecords);
+  int numberOfConsoleRecords = mayflyCard.SdCard.TIA_consoleRead(&console_record[0], "2019-10-15 11:30:00", "2019-10-15 15:29:00", consoleRecordLimit);
 
   /***** the code below displays the console record information *****/
+  SerialMon.print("numberOfConsoleRecords=");SerialMon.println(numberOfConsoleRecords);
+  
   // process each record
   for (int i=0; i < numberOfConsoleRecords; i++) {
     
     SerialMon.print(i+1); 
-    SerialMon.print(": "); 
+    SerialMon.print(F(": ("));
+    SerialMon.print(console_record[i].bytes);
+    SerialMon.print(F(" bytes) "));
     SerialMon.println(console_record[i].record);
   }
 
@@ -37,11 +40,11 @@ void setup()
     
     if (sd_card_directory[i].directoryFlag) SerialMon.println(F(""));                               // print a blank line before a directory entry
    
-    for (int j=0; j<sd_card_directory[i].folderLevel; j++) { SerialMon.print("\t"); }               // add tabs to indent sub-directory level
+    for (int j=0; j<sd_card_directory[i].folderLevel; j++) { SerialMon.print(F("\t")); }            // add tabs to indent sub-directory level
 
     // if this is a directory entry
     if (sd_card_directory[i].directoryFlag) {
-      SerialMon.print(F("Directory: ")); SerialMon.println(sd_card_directory[i].filename);
+      SerialMon.print(F("<<< ")); SerialMon.print(sd_card_directory[i].filename); SerialMon.println(F(" >>>"));
     }
 
     // otherwise, this is a file
