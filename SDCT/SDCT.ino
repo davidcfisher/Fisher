@@ -19,9 +19,11 @@ void setup()
   // get the console information
   const int consoleRecordLimit = 200;
   consoleRecord console_record[consoleRecordLimit];
-  int numberOfConsoleRecords = mayflyCard.SdCard.TIA_consoleRead(&console_record[0], "2019-10-15 11:30:00", "2019-10-15 15:29:00", consoleRecordLimit);
+  int numberOfConsoleRecords = mayflyCard.SdCard.TIA_consoleRead(&console_record[0], "2019-11-05 11:30:00", "2019-11-05 13:29:00", consoleRecordLimit);
+
 
   /***** the code below displays the console record information *****/
+  /*                                                                */
   SerialMon.print("numberOfConsoleRecords=");SerialMon.println(numberOfConsoleRecords);
   
   // process each record
