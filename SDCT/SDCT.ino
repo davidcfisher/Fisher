@@ -1,9 +1,9 @@
-#define SDCT_version = 20191211
+#define SDCT_version = 20191215
 
 #include "TIA-Software_Mayfly_Card.h"
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
- 
-void setup() 
+
+void setup()
 {
   mayflyCard.setup();                                             // setup the Mayfly Card.  True=test SD card file write, read and remove.
   mayflyCard.redLED.turnOn();                                     // turn on the Red LED
@@ -25,11 +25,11 @@ void setup()
   /***** the code below displays the console record information *****/
   /*                                                                */
   SerialMon.print("numberOfConsoleRecords=");SerialMon.println(numberOfConsoleRecords);
-  
+
   // process each record
   for (int i=0; i < numberOfConsoleRecords; i++) {
-    
-    SerialMon.print(i+1); 
+
+    SerialMon.print(i+1);
     SerialMon.print(F(": ("));
     SerialMon.print(console_record[i].bytes);
     SerialMon.print(F(" bytes) "));
@@ -39,9 +39,9 @@ void setup()
   /***** the code below simply displays the directory information received *****/
   // process each file
   for (int i=0; i < numberOfEntries; i++) {
-    
+
     if (sd_card_directory[i].directoryFlag) SerialMon.println(F(""));                               // print a blank line before a directory entry
-   
+
     for (int j=0; j<sd_card_directory[i].folderLevel; j++) { SerialMon.print(F("\t")); }            // add tabs to indent sub-directory level
 
     // if this is a directory entry
@@ -55,13 +55,13 @@ void setup()
       SerialMon.print(sd_card_directory[i].modDateTime);  SerialMon.print(F("\t"));
       SerialMon.print(sd_card_directory[i].sizeKb);       SerialMon.println(F(" KB"));
     }
-    
+
     // if we've reached the limit of directory+file names
     if(sd_card_directory[i].limitReached) {
       SerialMon.println(F(""));SerialMon.print(F("=== More files may exist.  Maximum display limit of ")); SerialMon.print(sdCardDirectoryLimit); SerialMon.println(F(" reached. ==="));
       break;
     }
-  }  
+  }
 }
 
 void loop() {
