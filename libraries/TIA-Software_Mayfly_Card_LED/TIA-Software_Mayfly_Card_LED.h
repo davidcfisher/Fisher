@@ -20,6 +20,7 @@ class LED {
     void turnOff();                                         // METHOD: turn off the LED
     void switchState();                                     // METHOD: switch the light on or off
     boolean getState();                                     // METHOD: get the state of the LED
+    
   protected:
     int _pin;                                               // LED pin number
     String _LEDname;                                        // name of the LED

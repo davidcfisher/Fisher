@@ -6,9 +6,10 @@ Mayfly_card mayflyCard;                                           // establish i
 void setup()
 {
   mayflyCard.setup();                                             // setup the Mayfly Card.  True=test SD card file write, read and remove.
+  
   mayflyCard.redLED.turnOn();                                     // turn on the Red LED
   mayflyCard.greenLED.turnOn();                                   // turn on the Green LED
-  delay(1000);                                                    // wait a couple of seconds
+  delay(1000);                                                    // wait a second
   mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
   // get the console information
@@ -21,6 +22,13 @@ void setup()
   SdCardDirectory sd_card_directory[sdCardDirectoryLimit];       // define an array to hold the SD Card directory results
   int numberOfEntries = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
 
+
+  /***** the code below displays time information *****/
+  /*                                                  */
+  SerialMon.print("dateTimeString: ");
+  SerialMon.println(mayflyCard.realTimeClock.getDateTimeNowString());
+  
+  
 
   /***** the code below displays the console record information *****/
   /*                                                                */
@@ -65,6 +73,33 @@ void setup()
 }
 
 void loop() {
-  delay(500);
+  delay(1000);
   mayflyCard.greenLED.switchState();
+
+  SerialMon.print(mayflyCard.realTimeClock.getTimeNowString());
+  SerialMon.print(", ");
+  SerialMon.println(mayflyCard.realTimeClock.getTimeNowString("HH:MM AP"));
+
+  DateTime dT = mayflyCard.realTimeClock.getDateTimeNow();
+  SerialMon.print("yr: ");
+  SerialMon.print(mayflyCard.realTimeClock.getYearString(dT));
+  
+  SerialMon.print(", mon: ");
+  SerialMon.print(mayflyCard.realTimeClock.getMonthString(dT));
+  SerialMon.print(" & ");
+  SerialMon.print(mayflyCard.realTimeClock.getMonthString(dT, "Mmm"));
+
+  SerialMon.print(", dayOfMon: ");
+  SerialMon.print(mayflyCard.realTimeClock.getDayOfMonthString(dT));
+
+  SerialMon.print(", hr: ");
+  SerialMon.print(mayflyCard.realTimeClock.getHourString(dT));
+
+  SerialMon.print(", min: ");
+  SerialMon.print(mayflyCard.realTimeClock.getMinuteString(dT));
+
+  SerialMon.print(", sec: ");
+  SerialMon.println(mayflyCard.realTimeClock.getSecondString(dT));
+
+  while(true);
 }

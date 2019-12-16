@@ -5,8 +5,9 @@
 
 Mayfly_card::Mayfly_card() {};                                // constructor
 
-LED Mayfly_card::redLED{};                                    // Mayfly has a Red LED 
-LED Mayfly_card::greenLED{};                                  // Mayfly has a Green LED 
+TIA_RTC   Mayfly_card::realTimeClock{};                       // Mayfly has a Real Time Clock
+LED       Mayfly_card::redLED{};                              // Mayfly has a Red LED 
+LED       Mayfly_card::greenLED{};                            // Mayfly has a Green LED
 TIA_SdFat Mayfly_card::SdCard{};                              // Mayfly has an SD Card 
 
 // METHOD: setup the Mayfly Card

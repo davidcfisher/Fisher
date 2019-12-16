@@ -15,11 +15,12 @@
 class Mayfly_card { 
   public: 
     Mayfly_card();                                            // Mayfly card constructor
-    static LED redLED;                                        // create red led instance "redLED"
-    static LED greenLED;                                      // create green led instance "greenLED"
-    static TIA_SdFat SdCard;                                  // create SD Card instance "SdCard"
+    static TIA_RTC    realTimeClock;                          // create real time clock instance "realTimeClock"
+    static LED        redLED;                                 // create red led instance "redLED"
+    static LED        greenLED;                               // create green led instance "greenLED"
+    static TIA_SdFat  SdCard;                                 // create SD Card instance "SdCard"
     
-    void setup(boolean testFlag=false);                       // method to setup the Mayfly card
+    void setup(boolean testFlag=false);                       // method to setup the Mayfly card.  true=do write, read and remove tests
 };
 
 #endif
