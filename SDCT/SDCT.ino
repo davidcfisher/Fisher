@@ -1,4 +1,4 @@
-#define SDCT_version = 20191215
+#define SDCT_version = 20191216
 
 #include "TIA-Software_Mayfly_Card.h"
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
@@ -66,6 +66,5 @@ void setup()
 
 void loop() {
   delay(500);
-  mayflyCard.redLED.switchState();
   mayflyCard.greenLED.switchState();
 }
