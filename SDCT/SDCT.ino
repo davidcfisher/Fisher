@@ -66,6 +66,5 @@ void setup()
 
 void loop() {
   delay(500);
-  //mayflyCard.redLED.switchState();
   mayflyCard.greenLED.switchState();
 }
