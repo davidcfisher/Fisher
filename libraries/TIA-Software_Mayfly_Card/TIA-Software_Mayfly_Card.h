@@ -7,10 +7,10 @@
 
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"                         // global definitions
+#include "TIA-Software_Mayfly_Card_RTC.h"                     // include the Real Time Clock library
 #include "TIA-Software_Mayfly_Card_LED.h"                     // include the LED library
 #include "TIA-Software_Mayfly_Card_SdFat.h"                   // include the SD Card library
 
-#include "Sodaq_DS3231.h"   // move this to RTC class
 
 class Mayfly_card { 
   public: 
