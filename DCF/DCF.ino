@@ -1,4 +1,4 @@
-#define DCF_version = 20191216
+#define DCF_version = 20191217
 
 #include "TIA-Software_Mayfly_Card.h"
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card

@@ -3,14 +3,13 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191215
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191217
 
 #define consoleLineLength 1000                                    // maximum length of a console record
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
 #include "SdFat.h"                                                // SD Card support
-//#include "time.h"                                                 // Unix epoch time support
-#include "Sodaq_DS3231.h"             `                           // Real Time Clock support
+#include "Sodaq_DS3231.h"                                         // Real Time Clock support
    
     
 typedef struct {                                                  // structure of an SD Card directory return

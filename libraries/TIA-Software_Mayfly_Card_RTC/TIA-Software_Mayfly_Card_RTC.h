@@ -12,7 +12,7 @@
 class TIA_RTC {
   public:
     
-    RTC();                                                  // constructor
+    TIA_RTC();                                              // constructor
     
     DateTime getDateTimeNow();                              // get the current date and time as a DateTime object
     String getYearString(DateTime dT);                      // get the year as a String

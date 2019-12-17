@@ -6,18 +6,18 @@ String months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Se
 
 
 // CONSTRUCTOR
-TIA_RTC::RTC() {}                                               // constructor
+TIA_RTC::TIA_RTC() {}                                             // constructor
 
 
 // METHOD: getYearString()
-String TIA_RTC::getYearString(DateTime dT)                      // get the year as a String
+String TIA_RTC::getYearString(DateTime dT)                        // get the year as a String
 {
   return String(dT.year());
 }
 
 
 // METHOD: getMonthString()
-String TIA_RTC::getMonthString(DateTime dT, String format)      // get the month as a String
+String TIA_RTC::getMonthString(DateTime dT, String format)        // get the month as a String
 {
   if (format == "MM") {
     char myMonth[3];                                              // this will hold the current month
