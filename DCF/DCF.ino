@@ -73,33 +73,6 @@ void setup()
 }
 
 void loop() {
-  delay(1000);
+  delay(500);
   mayflyCard.greenLED.switchState();
-
-  SerialMon.print(mayflyCard.realTimeClock.getTimeNowString());
-  SerialMon.print(", ");
-  SerialMon.println(mayflyCard.realTimeClock.getTimeNowString("HH:MM AP"));
-
-  DateTime dT = mayflyCard.realTimeClock.getDateTimeNow();
-  SerialMon.print("yr: ");
-  SerialMon.print(mayflyCard.realTimeClock.getYearString(dT));
-  
-  SerialMon.print(", mon: ");
-  SerialMon.print(mayflyCard.realTimeClock.getMonthString(dT));
-  SerialMon.print(" & ");
-  SerialMon.print(mayflyCard.realTimeClock.getMonthString(dT, "Mmm"));
-
-  SerialMon.print(", dayOfMon: ");
-  SerialMon.print(mayflyCard.realTimeClock.getDayOfMonthString(dT));
-
-  SerialMon.print(", hr: ");
-  SerialMon.print(mayflyCard.realTimeClock.getHourString(dT));
-
-  SerialMon.print(", min: ");
-  SerialMon.print(mayflyCard.realTimeClock.getMinuteString(dT));
-
-  SerialMon.print(", sec: ");
-  SerialMon.println(mayflyCard.realTimeClock.getSecondString(dT));
-
-  while(true);
 }
