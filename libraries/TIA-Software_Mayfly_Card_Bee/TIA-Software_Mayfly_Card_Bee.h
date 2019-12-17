@@ -6,6 +6,7 @@
 #define TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION 20191217
 
 #include "Arduino.h"
+#include "TIA-Software_DCF_Globals.h"
 
 class BeeSocket {
   public:

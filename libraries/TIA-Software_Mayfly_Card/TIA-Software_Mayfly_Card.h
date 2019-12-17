@@ -5,8 +5,6 @@
 #define TIA_SOFTWARE_MAYFLY_CARD_H
 #define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20191217
 
-#define BeeModule 1234
-
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"                         // global definitions
 #include "TIA-Software_Mayfly_Card_RTC.h"                     // include the Real Time Clock library

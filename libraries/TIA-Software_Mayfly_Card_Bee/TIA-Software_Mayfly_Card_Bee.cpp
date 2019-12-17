@@ -5,11 +5,11 @@
 
 
 // CONSTRUCTOR
-Bee::Bee() {}                                                 // constructor
+BeeSocket::BeeSocket() {}                                     // constructor
 
 
 // METHOD: setup an LED
-void Bee::setup(int pin)
+void BeeSocket::setup(int pin)
 {
-  SerialMon.println("<<< setting up the bee socket >>>");
+  SerialMon.print("<<< setting up the bee socket with module: "); SerialMon.print(BeeModule); SerialMon.println(" >>>");
 }

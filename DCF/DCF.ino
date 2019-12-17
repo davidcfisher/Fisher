@@ -2,6 +2,7 @@
 
 #include "TIA-Software_Mayfly_Card.h"
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
+#define BeeModule Digi1234;
 
 void setup()
 {
