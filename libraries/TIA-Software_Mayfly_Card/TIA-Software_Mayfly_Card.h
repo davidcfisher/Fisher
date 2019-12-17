@@ -3,7 +3,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_H
 #define TIA_SOFTWARE_MAYFLY_CARD_H
-#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20191209
+#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20191216
 
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"                         // global definitions
