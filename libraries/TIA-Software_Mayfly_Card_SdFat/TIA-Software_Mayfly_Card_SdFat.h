@@ -42,7 +42,14 @@ class TIA_SdFat : public SdFat {
       int limit                                                   // limit on the number of directory names + file names to be returned
     );
     
-    int TIA_consoleRead(                                          // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+    int TIA_getConsoleRecords(                                    // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+      char *destinationArray,                                     // pointer to array to hold console records
+      String startDateTimeString,                                 // start reading at "YYYY-MM-DD HH:MM:SS"
+      String endDateTimeString,                                   // end reading at "YYYY-MM-DD HH:MM:SS"
+      int byteLimit                                               // limit on the number of bytes to be returned      
+    );
+    
+    int TIA_consoleReadLines(                                     // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
       consoleRecord *console_record,                              // array to hold console records
       String startDateTimeString,                                 // start reading at "YYYY-MM-DD HH:MM:SS"
       String endDateTimeString,                                   // end reading at "YYYY-MM-DD HH:MM:SS"

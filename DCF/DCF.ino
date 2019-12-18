@@ -14,9 +14,9 @@ void setup()
   mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
   // get the console information
-  const int consoleRecordLimit = 200;
-  consoleRecord console_record[consoleRecordLimit];
-  int numberOfConsoleRecords = mayflyCard.SdCard.TIA_consoleRead(&console_record[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", consoleRecordLimit);
+  const int consoleRecordLimit = 2000;
+  char killenArray[consoleRecordLimit];
+  int numberOfConsoleBytes = mayflyCard.SdCard.TIA_getConsoleRecords(&killenArray[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", consoleRecordLimit);
 
   // get the directory from the SD Card
   const int sdCardDirectoryLimit = 5;                            // limit the number of directory names + file names to be displayed
@@ -33,16 +33,11 @@ void setup()
 
   /***** the code below displays the console record information *****/
   /*                                                                */
-  SerialMon.print("numberOfConsoleRecords=");SerialMon.println(numberOfConsoleRecords);
+  SerialMon.print("numberOfConsoleBytes=");SerialMon.println(numberOfConsoleBytes);
 
   // process each record
-  for (int i=0; i < numberOfConsoleRecords; i++) {
+  for (int i=0; i < numberOfConsoleBytes; i++) {
 
-    SerialMon.print(i+1);
-    SerialMon.print(F(": ("));
-    SerialMon.print(console_record[i].bytes);
-    SerialMon.print(F(" bytes) "));
-    SerialMon.println(console_record[i].record);
   }
 
   /***** the code below simply displays the directory information received *****/

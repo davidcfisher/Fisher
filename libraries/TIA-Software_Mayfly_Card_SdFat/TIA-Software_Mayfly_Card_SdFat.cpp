@@ -254,8 +254,28 @@ double secondsSince1Jan2000(String dateTimeToEncode) {
 }
 
 
+// METHOD get Console records
+int TIA_SdFat::TIA_getConsoleRecords(                                 // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+  char *destinationArray,                                             // pointer to array to hold console records
+  String startDateTimeString,                                         // start reading at "YYYY-MM-DD HH:MM:SS"
+  String endDateTimeString,                                           // end reading at "YYYY-MM-DD HH:MM:SS"
+  int byteLimit                                                       // limit on the number of bytes to be returned      
+)
+{
+  SerialMon.print("<<< getting Console records, array=");
+  SerialMon.print(destinationArray);
+  SerialMon.print(", start=");
+  SerialMon.print(startDateTimeString);
+  SerialMon.print(", end=");
+  SerialMon.print(endDateTimeString);
+  SerialMon.print(", byteLimit=");
+  SerialMon.print(byteLimit);
+  SerialMon.println(" >>>");
+}
+
+
 // METHOD: read the console record
-int TIA_SdFat::TIA_consoleRead(                                       // returns the number of console records in the console_record array
+int TIA_SdFat::TIA_consoleReadLines(                                  // returns the number of console records in the console_record array
   consoleRecord *console_record,                                      // array to hold console records
   String startDateTimeString,                                         // start reading at "YYYY-MM-DD HH:MM:SS"
   String endDateTimeString,                                           // end reading at "YYYY-MM-DD HH:MM:SS"
