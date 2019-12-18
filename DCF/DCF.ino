@@ -1,12 +1,12 @@
-#define DCF_version = 20191217
+#define DCF_version = 20191218
 
 #include "TIA-Software_Mayfly_Card.h"
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
-#define BeeModule Digi1234;
+const String BeeModule = "Digi1234";                              // module in the Bee socket, default = "none"
 
 void setup()
 {
-  mayflyCard.setup();                                             // setup the Mayfly Card.  True=test SD card file write, read and remove.
+  mayflyCard.setup(BeeModule);                                    // setup the Mayfly Card.  True=test SD card file write, read and remove.
   
   mayflyCard.redLED.turnOn();                                     // turn on the Red LED
   mayflyCard.greenLED.turnOn();                                   // turn on the Green LED

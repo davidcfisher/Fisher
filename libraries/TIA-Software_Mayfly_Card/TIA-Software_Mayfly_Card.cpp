@@ -12,7 +12,7 @@ TIA_SdFat Mayfly_card::SdCard{};                              // Mayfly has an S
 BeeSocket Mayfly_card::Bee{};                                 // Mayfly has a Bee Socket
 
 // METHOD: setup the Mayfly Card
-void Mayfly_card::setup(boolean testFlag)
+void Mayfly_card::setup(String beeModule, boolean testFlag)
 {
   SerialMon.begin(57600);                                     // initialize the Serial Monitor
   delay (100);
@@ -20,5 +20,5 @@ void Mayfly_card::setup(boolean testFlag)
   redLED.setup(TIA_redLedPin, "Red LED");                     // setup the red LED
   greenLED.setup(TIA_greenLedPin, "Green LED");               // setup the green LED
   SdCard.TIA_setup(testFlag);                                 // setup the SD card
-  Bee.setup(BeeModule);                                       // setup the Bee Socket
+  Bee.setup(beeModule);                                       // setup the Bee Socket
 }

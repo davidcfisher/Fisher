@@ -14,11 +14,8 @@ class BeeSocket {
     BeeSocket();                                            // constructor
     
     void setup(                                             // METHOD: setup the Bee Socket
-      int pin                                               // pin number for the Bee 
+      String module                                         // defines the module in the Bee socket
     );
-    
-  protected:
-    int _pin;                                               // LED pin number
 };
 
 #endif

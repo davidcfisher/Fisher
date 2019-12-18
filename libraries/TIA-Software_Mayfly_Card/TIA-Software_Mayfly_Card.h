@@ -22,7 +22,10 @@ class Mayfly_card {
     static TIA_SdFat  SdCard;                                 // create SD Card instance "SdCard"
     static BeeSocket  Bee;                                    // create something on the BEE socket
     
-    void setup(boolean testFlag=false);                       // method to setup the Mayfly card.  true=do write, read and remove tests
+    void setup(                                               // setup the Mayfly card.  
+      String beeModule="none",                                // module in the Bee socket
+      boolean testFlag=false                                  // true=do write, read and remove tests
+    );
 };
 
 #endif
