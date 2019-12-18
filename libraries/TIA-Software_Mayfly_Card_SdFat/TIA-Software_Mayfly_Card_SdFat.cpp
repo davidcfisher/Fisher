@@ -262,15 +262,33 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
   int byteLimit                                                       // limit on the number of bytes to be returned      
 )
 {
-  SerialMon.print("<<< getting Console records, array=");
-  SerialMon.print(destinationArray);
-  SerialMon.print(", start=");
+  SerialMon.print("<<< getting Console records, start=");
   SerialMon.print(startDateTimeString);
   SerialMon.print(", end=");
   SerialMon.print(endDateTimeString);
   SerialMon.print(", byteLimit=");
   SerialMon.print(byteLimit);
   SerialMon.println(" >>>");
+  
+  SdFile consoleFile;                                                // console file
+  
+  double startDateTime = secondsSince1Jan2000(startDateTimeString);   // start reading console records at this datetime
+  double endDateTime = secondsSince1Jan2000(endDateTimeString);       // end reading console records after this datetime
+  
+  
+  if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
+    return -1;                                                        // return an error code
+  }
+ 
+  SerialMon.print("console.txt opened for reading, curPosition=");
+  SerialMon.print(consoleFile.curPosition());
+  SerialMon.print(", size=");
+  SerialMon.println(consoleFile.fileSize());
+  consoleFile.seekEnd();
+  SerialMon.print("console.txt executed seekEnd(), curPosition=");
+  SerialMon.println(consoleFile.curPosition());
+  
+  return 42;
 }
 
 
