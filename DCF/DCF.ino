@@ -14,13 +14,18 @@ void setup()
   mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
   // get the console information
-  const int consoleRecordLimit = 2000;
-  char killenArray[consoleRecordLimit];
-  int numberOfConsoleBytes = mayflyCard.SdCard.TIA_getConsoleRecords(&killenArray[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", consoleRecordLimit);
+  const int byteLimit = 2000;
+  char consoleBytes[byteLimit];
+  mayflyCard.SdCard.TIA_getConsoleRecords(&consoleBytes[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", byteLimit);
+
+  //// get the console information
+  //const int consoleRecordLimit = 200;
+  //consoleRecord console_record[consoleRecordLimit];
+  //int numberOfConsoleRecords = mayflyCard.SdCard.TIA_consoleRead(&console_record[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", consoleRecordLimit);
 
   // get the directory from the SD Card
   const int sdCardDirectoryLimit = 5;                            // limit the number of directory names + file names to be displayed
-  SdCardDirectory sd_card_directory[sdCardDirectoryLimit];       // define an array to hold the SD Card directory results
+  SdCardDirectory sd_card_directory[sdCardDirectoryLimit];        // define an array to hold the SD Card directory results
   int numberOfEntries = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
 
 
@@ -33,12 +38,17 @@ void setup()
 
   /***** the code below displays the console record information *****/
   /*                                                                */
-  SerialMon.print("numberOfConsoleBytes=");SerialMon.println(numberOfConsoleBytes);
+  //SerialMon.print("numberOfConsoleBytes=");SerialMon.println(numberOfConsoleBytes);
 
   // process each record
-  for (int i=0; i < numberOfConsoleBytes; i++) {
+  //for (int i=0; i < numberOfConsoleBytes; i++) {
 
-  }
+    //SerialMon.print(i+1);
+    //SerialMon.print(F(": ("));
+    //SerialMon.print(console_record[i].bytes);
+    //SerialMon.print(F(" bytes) "));
+    //SerialMon.println(console_record[i].record);
+  //}
 
   /***** the code below simply displays the directory information received *****/
   // process each file

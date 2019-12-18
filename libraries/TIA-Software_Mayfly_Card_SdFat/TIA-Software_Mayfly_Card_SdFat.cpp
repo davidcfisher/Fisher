@@ -254,8 +254,17 @@ double secondsSince1Jan2000(String dateTimeToEncode) {
 }
 
 
+// FUNCTION: scan thru file backwards, byte by byte, looking for Line Feed (ASCII 10)
+unsigned long int scanBackwardsForLineFeed(
+  SdFile *scanFile,
+  unsigned long int startPos
+){
+  return startPos;
+}
+
+
 // METHOD get Console records
-int TIA_SdFat::TIA_getConsoleRecords(                                 // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+void TIA_SdFat::TIA_getConsoleRecords(                                 // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
   char *destinationArray,                                             // pointer to array to hold console records
   String startDateTimeString,                                         // start reading at "YYYY-MM-DD HH:MM:SS"
   String endDateTimeString,                                           // end reading at "YYYY-MM-DD HH:MM:SS"
@@ -270,7 +279,7 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
   SerialMon.print(byteLimit);
   SerialMon.println(" >>>");
   
-  SdFile consoleFile;                                                // console file
+  SdFile consoleFile;                                                 // console file
   
   double startDateTime = secondsSince1Jan2000(startDateTimeString);   // start reading console records at this datetime
   double endDateTime = secondsSince1Jan2000(endDateTimeString);       // end reading console records after this datetime
@@ -279,7 +288,7 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
     return -1;                                                        // return an error code
   }
- 
+  
   SerialMon.print("console.txt opened for reading, curPosition=");
   SerialMon.print(consoleFile.curPosition());
   SerialMon.print(", size=");
@@ -287,8 +296,20 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
   consoleFile.seekEnd();
   SerialMon.print("console.txt executed seekEnd(), curPosition=");
   SerialMon.println(consoleFile.curPosition());
+  boolean resultFlag = consoleFile.seekCur(-1);
+  SerialMon.print("seekCur(-1) result=");
+  SerialMon.println(resultFlag);
+  char p = consoleFile.peek();
+  SerialMon.print("peek=");
+  SerialMon.print(p);
+  SerialMon.print("<<<, ASCII=");
+  SerialMon.println(int(p));
   
-  return 42;
+  unsigned long int t = scanBackwardsForLineFeed(&consoleFile, consoleFile.curPosition());
+  SerialMon.print("t=");
+  SerialMon.println(t);
+  
+return 42;
 }
 
 
