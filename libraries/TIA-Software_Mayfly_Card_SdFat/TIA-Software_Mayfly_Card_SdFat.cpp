@@ -9,6 +9,20 @@ const String SdTestPhrase = "This is the test phrase!";               // test ph
 
 int numberOfFiles;                                                    // number of files in directory, including directory names
 
+struct consoleRecordStruct {
+  unsigned long int progressPos;
+  unsigned long int secondsSince1Jan2000 = 0;
+  char timestampFormat_YYYY_MM_DD_HH_MM_SS[20];
+  char dateFormat_Mmm_DD_YYYY[12];
+  char line[256];
+};
+
+
+struct timestampValidStruct {
+  boolean timestampValidFlag;
+  char validDateTimeArray[20] = {'Y','Y','Y','Y','-','M','M','-','D','D',' ','H','H',':','M','M',':','S','S','\0'}; // timestamp YYYY-MM-DD HH:MM:SS
+  char validDateArray[12] = {'M','m','m',' ','D','D',' ','Y','Y','Y','Y','\0'};  // date in format Mmm DD YYYY (Oct 4 2012)
+};
 
 // CONSTRUCTOR
 TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclass of SdFat
@@ -254,12 +268,110 @@ double secondsSince1Jan2000(String dateTimeToEncode) {
 }
 
 
+// FUNCTION: determine if beginning of a character array is a valid timestamp of the format: YYYY-MM-DD HH:MM:SS
+timestampValidStruct validateTimestamp(
+  char line[256]                                                      // character arry holding line to be validated
+)
+{
+  timestampValidStruct validationResults;
+  validationResults.timestampValidFlag = false;
+  validationResults.validDateArray[12] = "Dec 25 2019";
+  
+  char potentialYearArray[5]    = {'Y','Y','Y','Y','\0'};
+  char potentialDash1Array[2]   = {'-','\0'};
+  char potentialMonthArray[3]   = {'M','M','\0'};
+  char potentialDash2Array[2]   = {'-','\0'};
+  char potentialDayArray[11]    = {'D','D','\0'};     
+  //char potentialTimeArray[9]    = {'H','H',':','M','M',':','S','S','\0'};
+  char potentialHourArray[3]    = {'H','H','\0'};
+  char potentialColon1Array[2]  = {':','\0'};
+  char potentialMinuteArray[3]  = {'M','M','\0'};
+  char potentialColon2Array[2]  = {':','\0'};
+  char potentialSecondArray[3]  = {'S','S','\0'};
+    
+  char months[][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  
+  for (int i=0; i<4; i++)   potentialYearArray[i]   = line[i];
+  for (int i=0; i<1; i++)   potentialDash1Array[i]  = line[i+4];
+  for (int i=0; i<2; i++)   potentialMonthArray[i]  = line[i+5];
+  for (int i=0; i<1; i++)   potentialDash2Array[i]  = line[i+7];
+  for (int i=0; i<2; i++)   potentialDayArray[i]    = line[i+8];
+  //for (int i=0; i<8; i++)   potentialTimeArray[i]   = line[i+11];
+  for (int i=0; i<2; i++)   potentialHourArray[i]   = line[i+11];
+  for (int i=0; i<1; i++)   potentialColon1Array[i] = line[i+13];
+  for (int i=0; i<2; i++)   potentialMinuteArray[i] = line[i+14];
+  for (int i=0; i<1; i++)   potentialColon2Array[i] = line[i+16];
+  for (int i=0; i<2; i++)   potentialSecondArray[i] = line[i+17];
+  
+  int potentialYearInt    = atoi(potentialYearArray);
+  int potentialMonthInt   = atoi(potentialMonthArray);
+  int potentialDayInt     = atoi(potentialDayArray);
+  int potentialHourInt    = atoi(potentialHourArray);
+  int potentialMinuteInt  = atoi(potentialMinuteArray);
+  int potentialSecondInt  = atoi(potentialSecondArray);
+
+  if (potentialYearInt > 2000                                   &&
+      potentialDash1Array[0] == '-'                             &&
+      potentialMonthInt >= 1        && potentialMonthInt <= 12  &&
+      potentialDash2Array[0] == '-'                             &&
+      potentialDayInt >= 1          && potentialDayInt <= 31    &&
+      potentialHourInt >= 0         && potentialHourInt <= 23   &&
+      potentialColon1Array[0] == ':'                            &&
+      potentialMinuteInt >= 0       && potentialMinuteInt <= 59 &&
+      potentialColon2Array[0] == ':'                            &&
+      potentialSecondInt >= 0       && potentialSecondInt <= 59
+    )
+  {
+    validationResults.timestampValidFlag = true;
+    
+    // establish the validDateTimeArray for format YYYY-MM-DD HH:MM:SS
+    char validDateTimeArray[20] = {'Y','Y','Y','Y','-','M','M','-','D','D',' ','H','H',':','M','M',':','S','S','\0'};
+    for (int i=0; i<20; i++) validationResults.validDateTimeArray[i] = line[i];
+    
+    // establish the validDateArray for format Mmm DD YYYY (Dec 19 2019)
+    for (int i=0; i<3; i++) validationResults.validDateArray[i]   = months[potentialMonthInt - 1][i];
+    for (int i=0; i<2; i++) validationResults.validDateArray[i+4] = potentialDayArray[i];
+    for (int i=0; i<4; i++) validationResults.validDateArray[i+7] = potentialYearArray[i];
+  }
+  
+  return validationResults;
+}
+
+
 // FUNCTION: scan thru file backwards, byte by byte, looking for Line Feed (ASCII 10)
-unsigned long int scanBackwardsForLineFeed(
-  SdFile *scanFile,
+consoleRecordStruct getPreviousTimestampedRecord(
+  SdFile consoleFile,
   unsigned long int startPos
-){
-  return startPos;
+)
+{
+  boolean lineFeedFoundFlag = false;
+  
+  consoleRecordStruct consoleRecordResults;
+  consoleRecordResults.progressPos = startPos;
+ 
+  consoleFile.seekSet(consoleRecordResults.progressPos);
+  
+  while (!lineFeedFoundFlag) {
+    consoleFile.seekCur(-1);
+    
+    if (consoleFile.peek() == 10) {      // check for LineFeed
+      lineFeedFoundFlag = true;
+      consoleRecordResults.progressPos = consoleFile.curPosition();
+    }
+  }
+  
+  consoleFile.seekCur(1);                                      // move past the LF
+  consoleFile.fgets(consoleRecordResults.line, sizeof(consoleRecordResults.line));
+
+  timestampValidStruct temp = validateTimestamp(consoleRecordResults.line);
+  if (temp.timestampValidFlag) {
+    consoleRecordResults.secondsSince1Jan2000 = 1234;
+    for (int i=0; i<20; i++) consoleRecordResults.timestampFormat_YYYY_MM_DD_HH_MM_SS[i] = temp.validDateTimeArray[i];
+    for (int i=0; i<12; i++) consoleRecordResults.dateFormat_Mmm_DD_YYYY[i] = temp.validDateArray[i];
+  }
+  
+  return consoleRecordResults;
+  
 }
 
 
@@ -271,6 +383,10 @@ void TIA_SdFat::TIA_getConsoleRecords(                                 // return
   int byteLimit                                                       // limit on the number of bytes to be returned      
 )
 {
+  //unsigned long int progressPos;
+  
+  consoleRecordStruct results;
+  
   SerialMon.print("<<< getting Console records, start=");
   SerialMon.print(startDateTimeString);
   SerialMon.print(", end=");
@@ -281,33 +397,22 @@ void TIA_SdFat::TIA_getConsoleRecords(                                 // return
   
   SdFile consoleFile;                                                 // console file
   
-  double startDateTime = secondsSince1Jan2000(startDateTimeString);   // start reading console records at this datetime
-  double endDateTime = secondsSince1Jan2000(endDateTimeString);       // end reading console records after this datetime
+  double startDateTimeSecondsSince1Jan2000 = secondsSince1Jan2000(startDateTimeString);   // start reading console records at this datetime
+  double endDateTimeSecondsSince1Jan2000 = secondsSince1Jan2000(endDateTimeString);       // end reading console records after this datetime
   
   
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
     return -1;                                                        // return an error code
   }
   
-  SerialMon.print("console.txt opened for reading, curPosition=");
-  SerialMon.print(consoleFile.curPosition());
-  SerialMon.print(", size=");
-  SerialMon.println(consoleFile.fileSize());
-  consoleFile.seekEnd();
-  SerialMon.print("console.txt executed seekEnd(), curPosition=");
-  SerialMon.println(consoleFile.curPosition());
-  boolean resultFlag = consoleFile.seekCur(-1);
-  SerialMon.print("seekCur(-1) result=");
-  SerialMon.println(resultFlag);
-  char p = consoleFile.peek();
-  SerialMon.print("peek=");
-  SerialMon.print(p);
-  SerialMon.print("<<<, ASCII=");
-  SerialMon.println(int(p));
-  
-  unsigned long int t = scanBackwardsForLineFeed(&consoleFile, consoleFile.curPosition());
-  SerialMon.print("t=");
-  SerialMon.println(t);
+  consoleFile.seekEnd(); // point to eof
+  consoleFile.seekCur(-1);  // point to last character, likely LF
+  results = getPreviousTimestampedRecord(consoleFile, consoleFile.curPosition());
+  SerialMon.print("409: results.progressPos="); SerialMon.println(results.progressPos);
+  SerialMon.print("results.timestampFormat_YYYY_MM_DD_HH_MM_SS="); SerialMon.println(results.timestampFormat_YYYY_MM_DD_HH_MM_SS);
+  SerialMon.print("results.dateFormat_Mmm_DD_YYYY="); SerialMon.println(results.dateFormat_Mmm_DD_YYYY);
+  SerialMon.print("results.secondsSince1Jan2000=");SerialMon.println(results.secondsSince1Jan2000);
+  SerialMon.print("results.line=");SerialMon.println(results.line);
   
 return 42;
 }
