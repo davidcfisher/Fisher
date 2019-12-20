@@ -3,7 +3,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191217
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191220
 
 #define consoleLineLength 1000                                    // maximum length of a console record
 

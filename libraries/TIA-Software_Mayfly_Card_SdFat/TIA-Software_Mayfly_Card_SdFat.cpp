@@ -9,20 +9,20 @@ const String SdTestPhrase = "This is the test phrase!";               // test ph
 
 int numberOfFiles;                                                    // number of files in directory, including directory names
 
-struct consoleRecordStruct {
-  unsigned long int progressPos;
-  unsigned long int secondsSince1Jan2000 = 0;
-  char timestampFormat_YYYY_MM_DD_HH_MM_SS[20];
-  char dateFormat_Mmm_DD_YYYY[12];
-  char line[256];
-};
-
-
-struct timestampValidStruct {
-  boolean timestampValidFlag;
-  char validDateTimeArray[20] = {'Y','Y','Y','Y','-','M','M','-','D','D',' ','H','H',':','M','M',':','S','S','\0'}; // timestamp YYYY-MM-DD HH:MM:SS
-  char validDateArray[12] = {'M','m','m',' ','D','D',' ','Y','Y','Y','Y','\0'};  // date in format Mmm DD YYYY (Oct 4 2012)
-};
+//struct consoleRecordStruct {
+//  unsigned long int progressPos;
+//  unsigned long int secondsSince1Jan2000 = 0;
+//  char timestampFormat_YYYY_MM_DD_HH_MM_SS[19];
+//  char dateFormat_Mmm_DD_YYYY[12];
+//  char line[256];
+//};
+//
+//
+//struct timestampValidStruct {
+//  boolean timestampValidFlag;
+//  char validDateTimeArray[20] = {"YYYY-MM-DD HH:MM:SS"}; // timestamp YYYY-MM-DD HH:MM:SS
+//  char validDateArray[12] = {"Mmm DD YYYY"};  // date in format Mmm DD YYYY (Oct 4 2012)
+//};
 
 // CONSTRUCTOR
 TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclass of SdFat
@@ -269,25 +269,24 @@ double secondsSince1Jan2000(String dateTimeToEncode) {
 
 
 // FUNCTION: determine if beginning of a character array is a valid timestamp of the format: YYYY-MM-DD HH:MM:SS
-timestampValidStruct validateTimestamp(
-  char line[256]                                                      // character arry holding line to be validated
+boolean validateTimestamp(
+  char *dateFormat_Mmm_DD_YYYY,
+  char *line                                                      // character arry holding line to be validated
 )
 {
-  timestampValidStruct validationResults;
-  validationResults.timestampValidFlag = false;
-  validationResults.validDateArray[12] = "Dec 25 2019";
+  //char validDateTimeArray[20]   = {"YYYY-MM-DD HH:MM:SS"};        // timestamp YYYY-MM-DD HH:MM:SS
+  //char validDateArray[12]       = {"Mmm DD YYYY"};                // date in format Mmm DD YYYY (Oct 4 2012)
   
-  char potentialYearArray[5]    = {'Y','Y','Y','Y','\0'};
-  char potentialDash1Array[2]   = {'-','\0'};
-  char potentialMonthArray[3]   = {'M','M','\0'};
-  char potentialDash2Array[2]   = {'-','\0'};
-  char potentialDayArray[11]    = {'D','D','\0'};     
-  //char potentialTimeArray[9]    = {'H','H',':','M','M',':','S','S','\0'};
-  char potentialHourArray[3]    = {'H','H','\0'};
-  char potentialColon1Array[2]  = {':','\0'};
-  char potentialMinuteArray[3]  = {'M','M','\0'};
-  char potentialColon2Array[2]  = {':','\0'};
-  char potentialSecondArray[3]  = {'S','S','\0'};
+  char potentialYearArray[5]    = {"YYYY"};
+  char potentialDash1Array[2]   = {"-"};
+  char potentialMonthArray[3]   = {"MM"};
+  char potentialDash2Array[2]   = {"-"};
+  char potentialDayArray[11]    = {"DD"};     
+  char potentialHourArray[3]    = {"HH"};
+  char potentialColon1Array[2]  = {":"};
+  char potentialMinuteArray[3]  = {"MM"};
+  char potentialColon2Array[2]  = {":"};
+  char potentialSecondArray[3]  = {"SS"};
     
   char months[][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
   
@@ -296,7 +295,6 @@ timestampValidStruct validateTimestamp(
   for (int i=0; i<2; i++)   potentialMonthArray[i]  = line[i+5];
   for (int i=0; i<1; i++)   potentialDash2Array[i]  = line[i+7];
   for (int i=0; i<2; i++)   potentialDayArray[i]    = line[i+8];
-  //for (int i=0; i<8; i++)   potentialTimeArray[i]   = line[i+11];
   for (int i=0; i<2; i++)   potentialHourArray[i]   = line[i+11];
   for (int i=0; i<1; i++)   potentialColon1Array[i] = line[i+13];
   for (int i=0; i<2; i++)   potentialMinuteArray[i] = line[i+14];
@@ -322,97 +320,104 @@ timestampValidStruct validateTimestamp(
       potentialSecondInt >= 0       && potentialSecondInt <= 59
     )
   {
-    validationResults.timestampValidFlag = true;
-    
-    // establish the validDateTimeArray for format YYYY-MM-DD HH:MM:SS
-    char validDateTimeArray[20] = {'Y','Y','Y','Y','-','M','M','-','D','D',' ','H','H',':','M','M',':','S','S','\0'};
-    for (int i=0; i<20; i++) validationResults.validDateTimeArray[i] = line[i];
-    
     // establish the validDateArray for format Mmm DD YYYY (Dec 19 2019)
-    for (int i=0; i<3; i++) validationResults.validDateArray[i]   = months[potentialMonthInt - 1][i];
-    for (int i=0; i<2; i++) validationResults.validDateArray[i+4] = potentialDayArray[i];
-    for (int i=0; i<4; i++) validationResults.validDateArray[i+7] = potentialYearArray[i];
+    for (int i=0; i<3; i++) dateFormat_Mmm_DD_YYYY[i]   = months[potentialMonthInt - 1][i];
+    for (int i=0; i<2; i++) dateFormat_Mmm_DD_YYYY[i+4] = potentialDayArray[i];
+    for (int i=0; i<4; i++) dateFormat_Mmm_DD_YYYY[i+7] = potentialYearArray[i];
+    
+SerialMon.print("328 returning from validateTimestamp(), dateFormat_Mmm_DD_YYYY=");SerialMon.println(dateFormat_Mmm_DD_YYYY);
+    
+    return true;
   }
   
-  return validationResults;
+  return false;
 }
 
 
 // FUNCTION: scan thru file backwards, byte by byte, looking for Line Feed (ASCII 10)
-consoleRecordStruct getPreviousTimestampedRecord(
-  SdFile consoleFile,
-  unsigned long int startPos
+boolean getPreviousTimestampedRecord(
+  char *line,                                                       // return the console record
+  unsigned long int *progressPos,                                   // return the position of the start of the console record
+  unsigned long int *timestampSeconds,                              // return the timestamp of the console record
+  char *dateFormat_YYYY_MM_DD,                                      // return the date in the format YYYY-MM-DD
+  char *dateFormat_Mmm_DD_YYYY,                                     // return the date in the format Mmm DD YYYY (Dec 20 2019)
+  char *timeFormat_HH_MM_SS,                                        // return the time in the format HH:MM:SS
+  SdFile *consoleFile                                                // this is the console.txt file
 )
 {
+SerialMon.println("\n348 Entering getPreviousTimestampedRecord()");
   boolean lineFeedFoundFlag = false;
   
-  consoleRecordStruct consoleRecordResults;
-  consoleRecordResults.progressPos = startPos;
+  boolean consoleRecordResultsFlag;
+  //char validDateTimeArray[20]   = {"YYYY-MM-DD HH:MM:SS"};        // timestamp YYYY-MM-DD HH:MM:SS
+  //char validDateArray[12]       = {"Mmm DD YYYY"};                // date in format Mmm DD YYYY (Oct 4 2012)
  
-  consoleFile.seekSet(consoleRecordResults.progressPos);
+  consoleFile->seekSet(progressPos);
   
   while (!lineFeedFoundFlag) {
-    consoleFile.seekCur(-1);
-    
-    if (consoleFile.peek() == 10) {      // check for LineFeed
+    consoleFile->seekCur(-1);
+SerialMon.print(consoleFile->peek());    
+    if (consoleFile->peek() == 10) {      // check for LineFeed
       lineFeedFoundFlag = true;
-      consoleRecordResults.progressPos = consoleFile.curPosition();
+      progressPos = consoleFile->curPosition();
     }
   }
   
-  consoleFile.seekCur(1);                                      // move past the LF
-  consoleFile.fgets(consoleRecordResults.line, sizeof(consoleRecordResults.line));
+  consoleFile->seekCur(1);                                      // move past the LF
+  consoleFile->fgets(line, sizeof(line));
 
-  timestampValidStruct temp = validateTimestamp(consoleRecordResults.line);
-  if (temp.timestampValidFlag) {
-    consoleRecordResults.secondsSince1Jan2000 = 1234;
-    for (int i=0; i<20; i++) consoleRecordResults.timestampFormat_YYYY_MM_DD_HH_MM_SS[i] = temp.validDateTimeArray[i];
-    for (int i=0; i<12; i++) consoleRecordResults.dateFormat_Mmm_DD_YYYY[i] = temp.validDateArray[i];
+  boolean temp = validateTimestamp(&dateFormat_Mmm_DD_YYYY[0], line);
+  if (temp) {
+    timestampSeconds = 1234;
+SerialMon.print("370: dateFormat_Mmm_DD_YYYY=");SerialMon.println(dateFormat_Mmm_DD_YYYY);    
   }
   
-  return consoleRecordResults;
+  return temp;
   
 }
 
 
 // METHOD get Console records
-void TIA_SdFat::TIA_getConsoleRecords(                                 // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+void TIA_SdFat::TIA_getConsoleRecords(                                // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
   char *destinationArray,                                             // pointer to array to hold console records
   String startDateTimeString,                                         // start reading at "YYYY-MM-DD HH:MM:SS"
   String endDateTimeString,                                           // end reading at "YYYY-MM-DD HH:MM:SS"
   int byteLimit                                                       // limit on the number of bytes to be returned      
 )
-{
-  //unsigned long int progressPos;
+{  
+  boolean resultsFlag;
   
-  consoleRecordStruct results;
+  char line[256];
+  unsigned long int progressPos             = 0;
+  unsigned long int timestampSeconds        = 0;
+  char dateFormat_YYYY_MM_DD[11]            = "YYYY-MM-DD";
+  char dateFormat_Mmm_DD_YYYY[12]           = "Mmm DD YYYY";
+  char timeFormat_HH_MM_SS[9]               = "HH:MM:SS";
   
-  SerialMon.print("<<< getting Console records, start=");
-  SerialMon.print(startDateTimeString);
-  SerialMon.print(", end=");
-  SerialMon.print(endDateTimeString);
-  SerialMon.print(", byteLimit=");
-  SerialMon.print(byteLimit);
-  SerialMon.println(" >>>");
+  double startDateTimeSecondsSince1Jan2000  = secondsSince1Jan2000(startDateTimeString);  // start reading console records at this datetime
+  double endDateTimeSecondsSince1Jan2000    = secondsSince1Jan2000(endDateTimeString);    // end reading console records after this datetime
+  
+  SerialMon.print("<<< getting Console records, start="); SerialMon.print(startDateTimeString);
+  SerialMon.print(", end="); SerialMon.print(endDateTimeString);
+  SerialMon.print(", byteLimit="); SerialMon.println(byteLimit);
   
   SdFile consoleFile;                                                 // console file
   
-  double startDateTimeSecondsSince1Jan2000 = secondsSince1Jan2000(startDateTimeString);   // start reading console records at this datetime
-  double endDateTimeSecondsSince1Jan2000 = secondsSince1Jan2000(endDateTimeString);       // end reading console records after this datetime
   
-  
-  if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
+  if (!consoleFile.open(consoleFilename, O_READ)) {                     // if the file doesn't open
     return -1;                                                        // return an error code
   }
   
-  consoleFile.seekEnd(); // point to eof
-  consoleFile.seekCur(-1);  // point to last character, likely LF
-  results = getPreviousTimestampedRecord(consoleFile, consoleFile.curPosition());
-  SerialMon.print("409: results.progressPos="); SerialMon.println(results.progressPos);
-  SerialMon.print("results.timestampFormat_YYYY_MM_DD_HH_MM_SS="); SerialMon.println(results.timestampFormat_YYYY_MM_DD_HH_MM_SS);
-  SerialMon.print("results.dateFormat_Mmm_DD_YYYY="); SerialMon.println(results.dateFormat_Mmm_DD_YYYY);
-  SerialMon.print("results.secondsSince1Jan2000=");SerialMon.println(results.secondsSince1Jan2000);
-  SerialMon.print("results.line=");SerialMon.println(results.line);
+  consoleFile.seekEnd();                                              // point to eof
+  consoleFile.seekCur(-1);                                            // point to last character, likely LF
+  getPreviousTimestampedRecord(&line[0], &progressPos, &timestampSeconds, &dateFormat_YYYY_MM_DD[0], &dateFormat_Mmm_DD_YYYY[0], &timeFormat_HH_MM_SS[0], &consoleFile);
+  
+  SerialMon.print("424: progressPos="); SerialMon.print(progressPos);SerialMon.println("<<<");
+  SerialMon.print("dateFormat_YYYY_MM_DD="); SerialMon.print(dateFormat_YYYY_MM_DD);SerialMon.println("<<<");
+  SerialMon.print("dateFormat_Mmm_DD_YYYY="); SerialMon.print(dateFormat_Mmm_DD_YYYY);SerialMon.println("<<<");
+  SerialMon.print("timeFormat_HH_MM_SS="); SerialMon.print(timeFormat_HH_MM_SS);SerialMon.println("<<<");
+  SerialMon.print("timestampSeconds=");SerialMon.print(timestampSeconds);SerialMon.println("<<<");
+  SerialMon.print("line=");SerialMon.print(line);SerialMon.println("<<<");
   
 return 42;
 }
