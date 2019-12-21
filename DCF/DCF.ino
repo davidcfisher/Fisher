@@ -1,4 +1,4 @@
-#define DCF_version = 20191220
+#define DCF_version = 20191221
 
 #include "TIA-Software_Mayfly_Card.h"
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
@@ -16,7 +16,7 @@ void setup()
   // get the console information
   const int byteLimit = 2000;
   char consoleBytes[byteLimit];
-  mayflyCard.SdCard.TIA_getConsoleRecords(&consoleBytes[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", byteLimit);
+  int result = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleBytes[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", byteLimit);
 
   //// get the console information
   //const int consoleRecordLimit = 200;

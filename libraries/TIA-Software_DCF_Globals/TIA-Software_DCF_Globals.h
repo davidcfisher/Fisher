@@ -14,6 +14,4 @@
 #define TIA_SD_CS_PIN SS                              // pin "SS" is defined in the Arduino library
 #define TIA_SD_CS_PIN SS                              // pin "SS" is defined in the Arduino library
 
-char *consoleFilename = "console.txt";
-
 #endif

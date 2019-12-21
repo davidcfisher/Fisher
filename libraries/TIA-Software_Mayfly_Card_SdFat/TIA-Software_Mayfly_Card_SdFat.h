@@ -3,7 +3,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191220
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191221
 
 #define consoleLineLength 1000                                    // maximum length of a console record
 
@@ -42,7 +42,7 @@ class TIA_SdFat : public SdFat {
       int limit                                                   // limit on the number of directory names + file names to be returned
     );
     
-    void TIA_getConsoleRecords(                                    // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+    int TIA_getConsoleRecords(                                    // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
       char *destinationArray,                                     // pointer to array to hold console records
       String startDateTimeString,                                 // start reading at "YYYY-MM-DD HH:MM:SS"
       String endDateTimeString,                                   // end reading at "YYYY-MM-DD HH:MM:SS"
