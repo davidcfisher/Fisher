@@ -13,6 +13,10 @@ void setup()
   delay(1000);                                                    // wait a second
   mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
+//char a1[] = {"test"};
+//int result = mayflyCard.SdCard.test(a1);
+//SerialMon.print("18: a1="); SerialMon.println(a1);
+
   // get the console information
   const int byteLimit = 2000;
   char consoleBytes[byteLimit];

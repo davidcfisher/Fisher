@@ -36,6 +36,10 @@ class TIA_SdFat : public SdFat {
     void TIA_setup(                                               // setup the SD Card
       boolean testFlag=false                                      // true=test the file write, read and remove capabilities of the SD Card
     );
+    
+int test(
+   char *a1
+);
 
     int TIA_dir(                                                  // list the files in the dir.  Returns the number of directory names + filenames
       SdCardDirectory *sd_card_directory,                         // array to hold directory results
