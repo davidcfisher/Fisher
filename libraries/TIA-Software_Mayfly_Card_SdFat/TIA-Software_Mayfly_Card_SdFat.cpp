@@ -277,11 +277,8 @@ boolean validateTimestamp(
   char *line                                                        // character array holding line to be validated
 )
 {
-SerialMon.print("280: dateTime_YYYY_MM_DD_HH_MM_SS_ptr=");SerialMon.println(dateTime_YYYY_MM_DD_HH_MM_SS_ptr);
-SerialMon.print("281: *dateTime_YYYY_MM_DD_HH_MM_SS_ptr=");SerialMon.println(*dateTime_YYYY_MM_DD_HH_MM_SS_ptr);
-  char dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[20] = {"YYYY-MM-DD HH:MM:SS"};  // template for dateTime in this format
-  char dateTemplate_Mmm_DD_YYYY[12] = {"Mmm DD YYYY"};                      // template for date in this format
-  char timeTemplate_HH_MM_SS[9] = {"HH:MM:SS"};                             // template for time in this format
+  char dateTemplate_Mmm_DD_YYYY[12] = {"Mmm DD YYYY"};              // template for date in this format
+  char timeTemplate_HH_MM_SS[9]     = {"HH:MM:SS"};                 // template for time in this format
   
   // used to construct dateTemplate_Mmm_DD_YYYY
   char months[][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
@@ -331,18 +328,18 @@ SerialMon.print("281: *dateTime_YYYY_MM_DD_HH_MM_SS_ptr=");SerialMon.println(*da
       potentialSecondInt >= 0       && potentialSecondInt <= 59
     )
   {
-    // construct the dateTimeTemplate_YYYY_MM_DD_HH_MM_SS to be returned as "YYYY-MM-DD HH:MM:SS"
-    for (int i=0; i<4; i++) dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[i]     = potentialYearArray[i];              // "YYYY"
-    dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[4]                             = '-';                                // '-'
-    for (int i=0; i<2; i++) dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[i+5]   = potentialMonthArray[i];             // "MM"
-    dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[7]                             = '-';                                // '-'
-    for (int i=0; i<2; i++) dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[i+8]   = potentialDayArray[i];               // "DD"
-    dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[10]                            = ' ';                                // ' '
-    for (int i=0; i<2; i++) dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[i+11]  = potentialHourArray[i];              // "HH"
-    dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[13]                            = ':';                                // ':'
-    for (int i=0; i<2; i++) dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[i+14]  = potentialMinuteArray[i];            // "MM"
-    dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[16]                            = ':';                                // ':'
-    for (int i=0; i<2; i++) dateTimeTemplate_YYYY_MM_DD_HH_MM_SS[i+17]  = potentialSecondArray[i];            // "SS"
+    // construct the dateTime_YYYY_MM_DD_HH_MM_SS_ptr to be returned as "YYYY-MM-DD HH:MM:SS"
+    for (int i=0; i<4; i++) dateTime_YYYY_MM_DD_HH_MM_SS_ptr[i]     = potentialYearArray[i];              // "YYYY"
+    dateTime_YYYY_MM_DD_HH_MM_SS_ptr[4]                             = '-';                                // '-'
+    for (int i=0; i<2; i++) dateTime_YYYY_MM_DD_HH_MM_SS_ptr[i+5]   = potentialMonthArray[i];             // "MM"
+    dateTime_YYYY_MM_DD_HH_MM_SS_ptr[7]                             = '-';                                // '-'
+    for (int i=0; i<2; i++) dateTime_YYYY_MM_DD_HH_MM_SS_ptr[i+8]   = potentialDayArray[i];               // "DD"
+    dateTime_YYYY_MM_DD_HH_MM_SS_ptr[10]                            = ' ';                                // ' '
+    for (int i=0; i<2; i++) dateTime_YYYY_MM_DD_HH_MM_SS_ptr[i+11]  = potentialHourArray[i];              // "HH"
+    dateTime_YYYY_MM_DD_HH_MM_SS_ptr[13]                            = ':';                                // ':'
+    for (int i=0; i<2; i++) dateTime_YYYY_MM_DD_HH_MM_SS_ptr[i+14]  = potentialMinuteArray[i];            // "MM"
+    dateTime_YYYY_MM_DD_HH_MM_SS_ptr[16]                            = ':';                                // ':'
+    for (int i=0; i<2; i++) dateTime_YYYY_MM_DD_HH_MM_SS_ptr[i+17]  = potentialSecondArray[i];            // "SS"
     
     // construct the dateTemplate_Mmm_DD_YYYY for format "Mmm DD YYYY" (e.g. Dec 19 2019), used to get the number of seconds since 1/1/2000
     for (int i=0; i<3; i++) dateTemplate_Mmm_DD_YYYY[i]   = months[potentialMonthInt - 1][i];                 // "Mmm"
@@ -354,29 +351,13 @@ SerialMon.print("281: *dateTime_YYYY_MM_DD_HH_MM_SS_ptr=");SerialMon.println(*da
     for (int i=0; i<2; i++) timeTemplate_HH_MM_SS[i+3] = potentialMinuteArray[i];                             // "MM"
     for (int i=0; i<2; i++) timeTemplate_HH_MM_SS[i+6] = potentialSecondArray[i];                             // "SS"
 
-SerialMon.print("*dateTime_YYYY_MM_DD_HH_MM_SS_ptr=");SerialMon.println(*dateTime_YYYY_MM_DD_HH_MM_SS_ptr);
-    char **tempPtr = *dateTime_YYYY_MM_DD_HH_MM_SS_ptr;
-SerialMon.print("*tempPtr=");SerialMon.println(*tempPtr);
-SerialMon.print("*dateTime_YYYY_MM_DD_HH_MM_SS_ptr=");SerialMon.println(*dateTime_YYYY_MM_DD_HH_MM_SS_ptr);
-    *tempPtr = 't';
-    tempPtr++;
-    *tempPtr = 'e';
-    tempPtr++;
-    *tempPtr = 's';
-    tempPtr++;
-    *tempPtr = 't';
-    tempPtr++;
-    *tempPtr = '\0';
-      
-    //rcpy(dateTime_YYYY_MM_DD_HH_MM_SS_ptr, dateTimeTemplate_YYYY_MM_DD_HH_MM_SS);
-    
     // establish the timestamp of the console record in seconds since 1/1/2000
     *timestampSecondsPtr = (DateTime(dateTemplate_Mmm_DD_YYYY, timeTemplate_HH_MM_SS)).get(); 
     
-SerialMon.print("352: in validateTimestamp(), dateTemplate_Mmm_DD_YYYY=");SerialMon.print(dateTemplate_Mmm_DD_YYYY);
-SerialMon.print(", timeTemplate_HH_MM_SS=");SerialMon.println(timeTemplate_HH_MM_SS);    
-SerialMon.print("... dateTimeTemplate_YYYY_MM_DD_HH_MM_SS=");SerialMon.print(dateTimeTemplate_YYYY_MM_DD_HH_MM_SS);    
-SerialMon.print(", *dateTime_YYYY_MM_DD_HH_MM_SS_ptr=");SerialMon.println(*dateTime_YYYY_MM_DD_HH_MM_SS_ptr);
+SerialMon.println("365: in validateTimestamp()");
+//SerialMon.print(", timeTemplate_HH_MM_SS=");SerialMon.println(timeTemplate_HH_MM_SS);    
+//SerialMon.print("... dateTimeTemplate_YYYY_MM_DD_HH_MM_SS=");SerialMon.print(dateTimeTemplate_YYYY_MM_DD_HH_MM_SS);    
+SerialMon.print("... dateTime_YYYY_MM_DD_HH_MM_SS_ptr=");SerialMon.println(dateTime_YYYY_MM_DD_HH_MM_SS_ptr);
 SerialMon.print("... *timestampSecondsPtr=");SerialMon.println(*timestampSecondsPtr);    
     return true;
   }
@@ -391,8 +372,8 @@ boolean getPreviousTimestampedRecord(
   char *line,                                                         // console record to be scanned
   unsigned long int *progressPosPtr                                   // position to start scanning the console record backwards
 )
-{  
-  char dateTime_YYYY_MM_DD_HH_MM_SS = {"YYYY-MM-DD HH:MM:SS"};   // return dateTime string
+{
+  char dateTime_YYYY_MM_DD_HH_MM_SS[20] = {"YYYY-MM-DD HH:MM:SS"};   // return dateTime string
   char *dateTemplate_Mmm_DD_YYYY = {"Mmm DD YYYY"};                     // return the date in the format Mmm DD YYYY (Dec 20 2019)
   char *timeTemplate_HH_MM_SS = {"HH:MM:SS"};                            // return the time in the format HH:MM:SS
   
@@ -419,9 +400,9 @@ boolean getPreviousTimestampedRecord(
     
   consoleFile.seekCur(1);                                             // move forward past the Line Feed
   consoleFile.fgets(line, consoleRecordLength);                       // get this whole console record
-
+SerialMon.print("422: calling validatetimestamp()");
   // if there's a valid timestamp
-  if (validateTimestamp(&dateTime_YYYY_MM_DD_HH_MM_SS, timestampSecondsPtr, line)) {
+  if (validateTimestamp(&dateTime_YYYY_MM_DD_HH_MM_SS[0], timestampSecondsPtr, line)) {
 SerialMon.print("387 valid timestamp found, timestampSecondsPtr=");SerialMon.println(*timestampSecondsPtr);    
     return true;
   }
@@ -440,15 +421,17 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
 )
 {  
   char line[consoleRecordLength]                = "";
-  unsigned long int progressPos                 = 0;  unsigned long int startPosition               = 0;
+  unsigned long int progressPos                 = 0;
+  unsigned long int startPosition               = 0;
   unsigned long int timestampSeconds            = 0;
-  unsigned long int *timestampSecondsPtr        = timestampSeconds;
+  unsigned long int *timestampSeconds_ptr       = timestampSeconds;
   char dateFormat_YYYY_MM_DD[11]                = "YYYY-MM-DD";
-  //char dateTemplate_Mmm_DD_YYYY[12]               = "Mmm DD YYYY";
-  char timeTemplate_HH_MM_SS[9]                   = "HH:MM:SS";
-  char *dateTime_YYYY_MM_DD_HH_MM_SS_ptr        = "YYYY-MM-DD HH:MM:SS";      // pointer to general datetime array
-  char *startDateTime_YYYY_MM_DD_HH_MM_SS_ptr   = "YYYY-MM-DD HH:MM:SS";      // datetime of the first console record in the console file
-  char endDateTime_YYYY_MM_DD_HH_MM_SS[19]      = "YYYY-MM-DD HH:MM:SS";      // datetime of the last console record in the console file
+  char timeTemplate_HH_MM_SS[9]                 = "HH:MM:SS";
+  
+  //char *dateTime_YYYY_MM_DD_HH_MM_SS_ptr        = "YYYY-MM-DD HH:MM:SS";      // pointer to general datetime array
+  char startDateTime_YYYY_MM_DD_HH_MM_SS[20]    = "YYYY-MM-DD HH:MM:SS";      // datetime of the first console record in the console file
+  char endDateTime_YYYY_MM_DD_HH_MM_SS[20]      = "YYYY-MM-DD HH:MM:SS";      // datetime of the last console record in the console file
+  
   unsigned long int startTimestamp              = 0;                          // timestamp for the first console record in the console file
   unsigned long int endTimestamp                = 0;                          // timestamp for the last console record in the console file
   unsigned long int startFilePosition           = 0;                          // file position for the start of the first console record in the console file
@@ -464,24 +447,26 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
   SdFile consoleFile;                                                 // console file
   
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
+    SerialMon.println("Error 469: console.txt did not open.");
     return -1;                                                        // return an error code
   }
   
   boolean firstRecordFoundFlag = false;
-  
+
+SerialMon.println("475: searching for first record.");  
   while (!firstRecordFoundFlag) {
     // get the next record of the console file
     consoleFile.fgets(line, consoleRecordLength);                     // get this whole console record
     startFilePosition = consoleFile.curPosition();                    // point to the last character
     
     // if the timestamp is valid, timestampSeconds will be set
-    if (validateTimestamp(*startDateTime_YYYY_MM_DD_HH_MM_SS_ptr, *timestampSecondsPtr, line)) {
-      startTimestamp = *timestampSecondsPtr;
-SerialMon.print("435 first valid timestamp found, timestampSecondsPtr=");SerialMon.println(*timestampSecondsPtr);
+    if (validateTimestamp(&startDateTime_YYYY_MM_DD_HH_MM_SS[0], *timestampSeconds_ptr, line)) {
+      startTimestamp = *timestampSeconds_ptr;
+SerialMon.print("482 first valid timestamp found, timestampSeconds_ptr=");SerialMon.println(*timestampSeconds_ptr);
       firstRecordFoundFlag = true;
-    }
+    }   
   }
-  
+SerialMon.println("469: searching for last record in file");  
   consoleFile.seekEnd();                                              // seek to eof
   consoleFile.seekCur(-1);                                            // seek to last character before the eof, likely LF
   progressPos = consoleFile.curPosition();                            // point to the last character
@@ -490,9 +475,9 @@ SerialMon.print("435 first valid timestamp found, timestampSecondsPtr=");SerialM
   getPreviousTimestampedRecord(&timestampSeconds, &line[0], &progressPos);
   
   SerialMon.println("<<< Console File Profile >>>");SerialMon.println("");
-  SerialMon.println("\t\tFirst Record\t\tLast Record");
-  SerialMon.print("     DateTime:\t");SerialMon.print(*startDateTime_YYYY_MM_DD_HH_MM_SS_ptr);SerialMon.println("YYYY-MM-DD HH:MM:SS\t");
-  SerialMon.print("File position:\t");SerialMon.print(startFilePosition);SerialMon.print("\t\t\t");SerialMon.println(progressPos);
+  SerialMon.println("\t\tFirst Record\tLast Record");
+  SerialMon.print("     DateTime:\t");SerialMon.print(startDateTime_YYYY_MM_DD_HH_MM_SS);SerialMon.println("\tYYYY-MM-DD HH:MM:SS");
+  SerialMon.print("File position:\t");SerialMon.print(startFilePosition);SerialMon.print("\t\t");SerialMon.println(progressPos);
   SerialMon.print("    Timestamp:\t");SerialMon.print(startTimestamp);SerialMon.print("\t\t");SerialMon.println(timestampSeconds);
   
 return 42;
