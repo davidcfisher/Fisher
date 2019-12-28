@@ -3,7 +3,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191225
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191228
 
 #define consoleLineLength 1000                                    // maximum length of a console record
 
@@ -37,9 +37,6 @@ class TIA_SdFat : public SdFat {
       boolean testFlag=false                                      // true=test the file write, read and remove capabilities of the SD Card
     );
     
-int test(
-   char *a1
-);
 
     int TIA_dir(                                                  // list the files in the dir.  Returns the number of directory names + filenames
       SdCardDirectory *sd_card_directory,                         // array to hold directory results
@@ -68,9 +65,9 @@ int test(
     void TIA_processDirectory(     
       SdCardDirectory *sd_card_directory,                         // array of SD Card directory entries
       SdFile CFile,                                               // current file being read
-      String dirName="Root",                                      // name of the current directory
-      int numTabs=0,                                              // number of tabs for displaying sub-directories
-      int limit=100                                               // limit on the number of directory+file names to be returned
+      String dirName = "Root",                                    // name of the current directory
+      int numTabs = 0,                                            // number of tabs for displaying sub-directories
+      int limit = 100                                             // limit on the number of directory+file names to be returned
     );                                         
 };
 
