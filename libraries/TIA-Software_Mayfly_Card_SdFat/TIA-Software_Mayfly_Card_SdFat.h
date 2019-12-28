@@ -32,23 +32,45 @@ class TIA_SdFat : public SdFat {
   public:
 
     TIA_SdFat();                                                  // constructor
-
-    void TIA_setup(                                               // setup the SD Card
+    
+    
+    // setup the SD Card
+    void TIA_setup(                                               
       boolean testFlag=false                                      // true=test the file write, read and remove capabilities of the SD Card
     );
     
-
-    int TIA_dir(                                                  // list the files in the dir.  Returns the number of directory names + filenames
+    
+    // list the files in the dir.  Returns the number of directory names + filenames
+    int TIA_dir(                                                  
       SdCardDirectory *sd_card_directory,                         // array to hold directory results
       int limit                                                   // limit on the number of directory names + file names to be returned
     );
     
+
+    // get the profile of console.txt
+    boolean TIA_getConsoleProfile(
+      char (*firstRecord)[consoleRecordLength],
+      char (*lastRecord)[consoleRecordLength],
+      
+      char (*firstDateTime_YYYY_MM_DD_HH_MM_SS)[20],                    // datetime of the first console record in the console file
+      char (*endDateTime_YYYY_MM_DD_HH_MM_SS)[20],                      // datetime of the last console record in the console file
+      
+      unsigned long int *startTimestampSeconds,                   // timestamp for the first console record in the console file
+      unsigned long int *endTimestampSeconds,                     // timestamp for the last console record in the console file
+        
+      unsigned long int *startFilePosition,                       // file position for the start of the first console record in the console file
+      unsigned long int *endFilePosition                          // file position for the start of the last console record in the console file
+    );
+
+
+    // get records from console.txt, specifing starting and ending dates    
     int TIA_getConsoleRecords(                                    // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
       char *destinationArray,                                     // pointer to array to hold console records
       String startDateTimeString,                                 // start reading at "YYYY-MM-DD HH:MM:SS"
       String endDateTimeString,                                   // end reading at "YYYY-MM-DD HH:MM:SS"
       int byteLimit                                               // limit on the number of bytes to be returned      
     );
+    
     
     int TIA_consoleReadLines(                                     // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
       consoleRecord *console_record,                              // array to hold console records

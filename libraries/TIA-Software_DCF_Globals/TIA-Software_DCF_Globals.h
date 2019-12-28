@@ -13,5 +13,6 @@
 #define TIA_pushbuttonPin 21                          // pushbutton connected to digital pin 21
 #define TIA_SD_CS_PIN SS                              // pin "SS" is defined in the Arduino library
 #define TIA_SD_CS_PIN SS                              // pin "SS" is defined in the Arduino library
+#define consoleRecordLength 256                       // maximum length of a record in console.txt on SD card
 
 #endif

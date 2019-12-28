@@ -4,6 +4,19 @@
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
 const String BeeModule = "Digi1234";                              // module in the Bee socket, default = "none"
 
+// variables used to hold the console.txt profile
+char firstRecord[consoleRecordLength]         = "";
+char lastRecord[consoleRecordLength]          = "";
+
+char firstDateTime_YYYY_MM_DD_HH_MM_SS[20];                       // datetime of the first console record in the console file
+char endDateTime_YYYY_MM_DD_HH_MM_SS[20];                         // datetime of the last console record in the console file
+
+unsigned long int startTimestampSeconds       = 0;                // timestamp for the first console record in the console file
+unsigned long int endTimestampSeconds         = 0;                // timestamp for the last console record in the console file
+  
+unsigned long int startFilePosition           = 0;                // file position for the start of the first console record in the console file
+unsigned long int endFilePosition             = 0;                // file position for the start of the last console record in the console file
+
 void setup()
 {
   mayflyCard.setup(BeeModule);                                    // setup the Mayfly Card.  True=test SD card file write, read and remove.
@@ -13,14 +26,22 @@ void setup()
   delay(1000);                                                    // wait a second
   mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
-//char a1[] = {"test"};
-//int result = mayflyCard.SdCard.test(a1);
-//SerialMon.print("18: a1="); SerialMon.println(a1);
+  // get the console profile
+  boolean profileFlag = mayflyCard.SdCard.TIA_getConsoleProfile(
+    &firstRecord,
+    &lastRecord,
+    &firstDateTime_YYYY_MM_DD_HH_MM_SS,                        // datetime of the first console record in the console file
+    &endDateTime_YYYY_MM_DD_HH_MM_SS,                           // datetime of the last console record in the console file
+    &startTimestampSeconds,                  // timestamp for the first console record in the console file
+    &endTimestampSeconds,                 // timestamp for the last console record in the console file
+    &startFilePosition,                  // file position for the start of the first console record in the console file
+    &endFilePosition                  // file position for the start of the last console record in the console file
+  );
 
   // get the console information
   const int byteLimit = 2000;
   char consoleBytes[byteLimit];
-  int result = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleBytes[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", byteLimit);
+  int result = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleBytes[0], "2019-10-01 15:30:00", "2019-10-01 16:29:00", byteLimit);
 
   //// get the console information
   //const int consoleRecordLimit = 200;
@@ -35,11 +56,27 @@ void setup()
 
   /***** the code below displays time information *****/
   /*                                                  */
-  SerialMon.print("dateTimeString: ");
+  SerialMon.print("current dateTimeString: ");
   SerialMon.println(mayflyCard.realTimeClock.getDateTimeNowString());
   
   
 
+  /***** the code below displays console.txt profile *****/
+  /*                                                     */
+  SerialMon.println("<<<<< CONSOLE FILE PROFILE >>>>>");
+  SerialMon.println("\t\tDateTime\t\tTimestamp\tFile Posn\tRecord");
+  SerialMon.print(" First Record:\t");
+  SerialMon.print(firstDateTime_YYYY_MM_DD_HH_MM_SS);SerialMon.print("\t");
+  SerialMon.print(startTimestampSeconds);SerialMon.print("\t");
+  SerialMon.print(startFilePosition);SerialMon.print("\t\t");
+  SerialMon.println(firstRecord);
+  SerialMon.print("  Last Record:\t");
+  SerialMon.print(endDateTime_YYYY_MM_DD_HH_MM_SS);SerialMon.print("\t");
+  SerialMon.print(endTimestampSeconds);SerialMon.print("\t");
+  SerialMon.print(endFilePosition);SerialMon.print("\t\t");
+  SerialMon.println(lastRecord);
+
+  
   /***** the code below displays the console record information *****/
   /*                                                                */
   //SerialMon.print("numberOfConsoleBytes=");SerialMon.println(numberOfConsoleBytes);
