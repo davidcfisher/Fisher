@@ -1,21 +1,21 @@
-#define DCF_version = 20191228
+#define DCF_version = 20191230
 
 #include "TIA-Software_Mayfly_Card.h"
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
 const String BeeModule = "Digi1234";                              // module in the Bee socket, default = "none"
 
-// variables used to hold the console.txt profile
-char firstRecord[consoleRecordLength]         = "";
-char lastRecord[consoleRecordLength]          = "";
+// variables used to hold results of the console.txt profile request
+char firstRecord[consoleRecordLength]         = "";               // holds the first record found in the console file
+char lastRecord[consoleRecordLength]          = "";               // holds the last record found in the console file
 
-char firstDateTime_YYYY_MM_DD_HH_MM_SS[20];                       // datetime of the first console record in the console file
-char endDateTime_YYYY_MM_DD_HH_MM_SS[20];                         // datetime of the last console record in the console file
+char firstDateTime_YYYY_MM_DD_HH_MM_SS[20];                       // holds the datetime of the first console record in the console file
+char endDateTime_YYYY_MM_DD_HH_MM_SS[20];                         // holds the datetime of the last console record in the console file
 
-unsigned long int startTimestampSeconds       = 0;                // timestamp for the first console record in the console file
-unsigned long int endTimestampSeconds         = 0;                // timestamp for the last console record in the console file
+unsigned long int startTimestampSeconds       = 0;                // holds the timestamp for the first console record in the console file
+unsigned long int endTimestampSeconds         = 0;                // holds the timestamp for the last console record in the console file
   
-unsigned long int startFilePosition           = 0;                // file position for the start of the first console record in the console file
-unsigned long int endFilePosition             = 0;                // file position for the start of the last console record in the console file
+unsigned long int startFilePosition           = 0;                // holds the file position for the start of the first console record in the console file
+unsigned long int endFilePosition             = 0;                // holds the file position for the start of the last console record in the console file
 
 void setup()
 {
@@ -28,14 +28,14 @@ void setup()
 
   // get the console profile
   boolean profileFlag = mayflyCard.SdCard.TIA_getConsoleProfile(
-    &firstRecord,
-    &lastRecord,
-    &firstDateTime_YYYY_MM_DD_HH_MM_SS,                        // datetime of the first console record in the console file
-    &endDateTime_YYYY_MM_DD_HH_MM_SS,                           // datetime of the last console record in the console file
-    &startTimestampSeconds,                  // timestamp for the first console record in the console file
-    &endTimestampSeconds,                 // timestamp for the last console record in the console file
-    &startFilePosition,                  // file position for the start of the first console record in the console file
-    &endFilePosition                  // file position for the start of the last console record in the console file
+    &firstRecord,                                                 // holds first record in the console file
+    &lastRecord,                                                  // holds last record in the console file
+    &firstDateTime_YYYY_MM_DD_HH_MM_SS,                           // holds datetime of the first console record in the console file
+    &endDateTime_YYYY_MM_DD_HH_MM_SS,                             // holds datetime of the last console record in the console file
+    &startTimestampSeconds,                                       // holds timestamp for the first console record in the console file
+    &endTimestampSeconds,                                         // holds timestamp for the last console record in the console file
+    &startFilePosition,                                           // holds file position for the start of the first console record in the console file
+    &endFilePosition                                              // holds file position for the start of the last console record in the console file
   );
 
   // get the console information

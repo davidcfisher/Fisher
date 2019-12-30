@@ -3,7 +3,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191228
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191230
 
 #define consoleLineLength 1000                                    // maximum length of a console record
 
@@ -49,21 +49,30 @@ class TIA_SdFat : public SdFat {
 
     // get the profile of console.txt
     boolean TIA_getConsoleProfile(
-      char (*firstRecord)[consoleRecordLength],
-      char (*lastRecord)[consoleRecordLength],
+      char (*firstRecord)[consoleRecordLength],                   // first record found in the console file
+      char (*lastRecord)[consoleRecordLength],                    // last record found in the console file
       
-      char (*firstDateTime_YYYY_MM_DD_HH_MM_SS)[20],                    // datetime of the first console record in the console file
-      char (*endDateTime_YYYY_MM_DD_HH_MM_SS)[20],                      // datetime of the last console record in the console file
+      char (*firstDateTime_YYYY_MM_DD_HH_MM_SS)[20],              // datetime of the first console record in the console file
+      char (*lastDateTime_YYYY_MM_DD_HH_MM_SS)[20],               // datetime of the last console record in the console file
       
-      unsigned long int *startTimestampSeconds,                   // timestamp for the first console record in the console file
-      unsigned long int *endTimestampSeconds,                     // timestamp for the last console record in the console file
+      unsigned long int *firstTimestampSeconds,                   // timestamp for the first console record in the console file
+      unsigned long int *lastTimestampSeconds,                    // timestamp for the last console record in the console file
         
-      unsigned long int *startFilePosition,                       // file position for the start of the first console record in the console file
-      unsigned long int *endFilePosition                          // file position for the start of the last console record in the console file
+      unsigned long int *firstFilePosition,                       // file position for the start of the first console record in the console file
+      unsigned long int *lastFilePosition                         // file position for the start of the last console record in the console file
     );
 
 
-    // get records from console.txt, specifing starting and ending dates    
+    /* get records from console.txt, specifing starting and ending dates
+     *
+     *  Returns the number of bytes placed in the *destinationArray.
+     *
+     *  Error returns:
+     *    -1 = requested start dateTime is after requested end dateTime
+     *    -2 = requested start dateTime is after last console record dateTime
+     *    -3 = requested end dateTime is before first console record dateTime
+     */
+    
     int TIA_getConsoleRecords(                                    // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
       char *destinationArray,                                     // pointer to array to hold console records
       String startDateTimeString,                                 // start reading at "YYYY-MM-DD HH:MM:SS"

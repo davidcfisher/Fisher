@@ -373,7 +373,7 @@ boolean TIA_SdFat::TIA_getConsoleProfile(
   char (*lastRecord)[consoleRecordLength],
   
   char (*firstDateTime_YYYY_MM_DD_HH_MM_SS)[20],                      // datetime of the first console record in the console file
-  char (*endDateTime_YYYY_MM_DD_HH_MM_SS)[20],                        // datetime of the last console record in the console file
+  char (*lastDateTime_YYYY_MM_DD_HH_MM_SS)[20],                       // datetime of the last console record in the console file
   
   unsigned long int *firstTimestampSeconds,                           // timestamp for the first console record in the console file
   unsigned long int *lastTimestampSeconds,                            // timestamp for the last console record in the console file
@@ -406,7 +406,6 @@ boolean TIA_SdFat::TIA_getConsoleProfile(
       strcpy(*firstRecord, line);                                     // save the first record
       line[19] = '\0';
       strncpy(*firstDateTime_YYYY_MM_DD_HH_MM_SS, line, 20);
-      //*firstDateTime_YYYY_MM_DD_HH_MM_SS[19] = '\0';
       firstRecordFoundFlag = true;
     }   
   }
@@ -425,7 +424,7 @@ boolean TIA_SdFat::TIA_getConsoleProfile(
     *lastFilePosition = consoleFile.curPosition();                    // save the file position of the last record
     strcpy(*lastRecord, line);                                        // save the last record
     line[19] = '\0';
-    strncpy(*endDateTime_YYYY_MM_DD_HH_MM_SS,line,20);                // save the dateTime of the last record
+    strncpy(*lastDateTime_YYYY_MM_DD_HH_MM_SS, line, 20);             // save the dateTime of the last record
   }   
 
   if (false) {
@@ -437,7 +436,7 @@ boolean TIA_SdFat::TIA_getConsoleProfile(
     SerialMon.print(*firstFilePosition);SerialMon.print("\t\t");
     SerialMon.println(*firstRecord);
     SerialMon.print("  Last Record:\t");
-    SerialMon.print(*endDateTime_YYYY_MM_DD_HH_MM_SS);SerialMon.print("\t");
+    SerialMon.print(*lastDateTime_YYYY_MM_DD_HH_MM_SS);SerialMon.print("\t");
     SerialMon.print(*lastTimestampSeconds);SerialMon.print("\t");
     SerialMon.print(*lastFilePosition);SerialMon.print("\t\t");
     SerialMon.println(*lastRecord);
@@ -445,7 +444,7 @@ boolean TIA_SdFat::TIA_getConsoleProfile(
 }
 
 
-// METHOD get console.txt records between two dates.  Dates specified as YYYY-MM-DD HH:MM:SS
+// METHOD: get console.txt records between two dates.  Dates specified as YYYY-MM-DD HH:MM:SS
 int TIA_SdFat::TIA_getConsoleRecords(                                 // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
   char *destinationArray,                                             // pointer to array to hold console records
   String returnStartDateTimeString,                                   // return records starting at "YYYY-MM-DD HH:MM:SS"
@@ -490,7 +489,7 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
     &lastFilePosition                                                 // file position for the start of the last console record in the console file
   );
   
-  // check for errors
+  // check for errors in the requested dates relative to the dates in the console file
   if (returnStartDateTimeSecondsSince1Jan2k > returnEndDateTimeSecondsSince1Jan2k) return -1; // requested start dateTime is after requested end dateTime
   if (returnStartDateTimeSecondsSince1Jan2k > lastTimestampSeconds) return -2;                // requested start dateTime is after last console record dateTime
   if (returnEndDateTimeSecondsSince1Jan2k < firstTimestampSeconds) return -3;                 // requested end dateTime is before first console record dateTime
@@ -505,10 +504,10 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
   // determine the position at which to start the seach for the requested starting record
   unsigned long int position = (lastFilePosition - firstFilePosition) * pct/100;
 
-  
-  if (true) {
+  boolean debug = true;
+  if (debug) {
     SerialMon.println("<<< CONSOLE FILE PROFILE >>> in getConsoleRecords()");
-    SerialMon.println("\t\tDateTime\t\tTimestamp\tFile Posn\tRecord");
+    SerialMon.println("\t\tDateTime\t\tTimestamp\tFile Position\tRecord");
     SerialMon.print(" First Record:\t");
     SerialMon.print(firstDateTime_YYYY_MM_DD_HH_MM_SS);SerialMon.print("\t");
     SerialMon.print(firstTimestampSeconds);SerialMon.print("\t");
@@ -529,24 +528,54 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
     SerialMon.print(returnEndDateTimeSecondsSince1Jan2k);SerialMon.println("\t");
   }
   
+  int loopCounter = 0;
   timestampSeconds = returnEndDateTimeSecondsSince1Jan2k;               // initialize the timestampSeconds
   
   // go backwards from this point until we find a record earlier than the requested start timestamp
   while (timestampSeconds >= returnStartDateTimeSecondsSince1Jan2k) {
-SerialMon.print("536: about to get position=");SerialMon.println(position);    
-    getPreviousRecord(&line[0], &position);                             // get the previous record
-    if (line[strlen(line)-1] = '\n') line[strlen(line)-1] = '\0';       // remove the New Line ('\n')
-    timestampSeconds = secondsSince1Jan2kFromTimestamp(line);           // get the number of seconds since 1/1/2000 for this record
     
-    // if the record had a valid timestamp
-    if (timestampSeconds > 0) {
-      //position = consoleFile.curPosition();                             // save the file position of this record
-SerialMon.print("542: seconds=");SerialMon.print(timestampSeconds);SerialMon.print(" vs ");SerialMon.print(returnStartDateTimeSecondsSince1Jan2k);
-SerialMon.print(", line=");SerialMon.println(line);      
-    }   
+    getPreviousRecord(&line[0], &position);                             // get the previous record
+    timestampSeconds = secondsSince1Jan2kFromTimestamp(line);           // get the number of seconds since 1/1/2000 for this record
+    if (debug) {
+      SerialMon.print(".");                                    // print out a period to show progress
+      loopCounter++;
+      if (loopCounter >= 100) {                                           // break progress display into multiple lines
+        loopCounter = 0;
+        SerialMon.println("");
+      }
+    }
   }
-SerialMon.print("548: seconds=");SerialMon.print(timestampSeconds);SerialMon.print(" vs ");SerialMon.print(returnStartDateTimeSecondsSince1Jan2k);
-SerialMon.print(", line=");SerialMon.println(line);      
+  
+  if (debug) SerialMon.println("");
+  
+  if (!consoleFile.open("console.txt", O_READ)) {                       // if the file doesn't open
+    SerialMon.println("Error 550: console.txt did not open.");
+    return -1;                                                          // return an error code
+  }
+  
+  consoleFile.seekSet(position);
+  
+  // get the next record of the console file
+  consoleFile.fgets(line, consoleRecordLength);                         // get this whole console record
+  timestampSeconds = secondsSince1Jan2kFromTimestamp(line);             // get the number of seconds since 1/1/2000 for this record
+  
+  int recordBytes   = 0;
+  int totalBytes    = 0;
+  
+  // keep getting lines until we go past the requested end date
+  while ((recordBytes = consoleFile.fgets(line, sizeof(line))) > 0 && timestampSeconds <= returnEndDateTimeSecondsSince1Jan2k) {
+    timestampSeconds = secondsSince1Jan2kFromTimestamp(line);           // get the number of seconds since 1/1/2000 for this record
+    if (debug) {
+      SerialMon.print("554: timestampSeconds="); SerialMon.print(timestampSeconds);
+      SerialMon.print(", line="); SerialMon.print(line);
+    }
+  }
+  
+SerialMon.print("563: timestampSeconds="); SerialMon.print(timestampSeconds);
+SerialMon.print(", recordBytes=");SerialMon.print(recordBytes);
+SerialMon.print(", line="); SerialMon.print(line);
+  
+
   
 return 42;
 }
