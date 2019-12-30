@@ -559,21 +559,31 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
   consoleFile.fgets(line, consoleRecordLength);                         // get this whole console record
   timestampSeconds = secondsSince1Jan2kFromTimestamp(line);             // get the number of seconds since 1/1/2000 for this record
   
+  int recordCounter = 0;
   int recordBytes   = 0;
   int totalBytes    = 0;
   
   // keep getting lines until we go past the requested end date
-  while ((recordBytes = consoleFile.fgets(line, sizeof(line))) > 0 && timestampSeconds <= returnEndDateTimeSecondsSince1Jan2k) {
+  while (
+    (recordBytes = consoleFile.fgets(line, sizeof(line))) > 0 &&
+    timestampSeconds <= returnEndDateTimeSecondsSince1Jan2k)
+  {
     timestampSeconds = secondsSince1Jan2kFromTimestamp(line);           // get the number of seconds since 1/1/2000 for this record
+    
+    if (totalBytes + recordBytes > byteLimit) break;                    // don't go over the byte limit
+    
+    totalBytes += recordBytes;                                          // add this record's bytes to the total byte count
+    
     if (debug) {
-      SerialMon.print("554: timestampSeconds="); SerialMon.print(timestampSeconds);
+      SerialMon.print(++recordCounter);
+      SerialMon.print(": record bytes=");SerialMon.print(recordBytes);
+      SerialMon.print(", total bytes=");SerialMon.print(totalBytes);
       SerialMon.print(", line="); SerialMon.print(line);
     }
   }
   
-SerialMon.print("563: timestampSeconds="); SerialMon.print(timestampSeconds);
-SerialMon.print(", recordBytes=");SerialMon.print(recordBytes);
-SerialMon.print(", line="); SerialMon.print(line);
+SerialMon.print("578: timestampSeconds="); SerialMon.print(timestampSeconds);
+SerialMon.print(", totalBytes=");SerialMon.println(totalBytes);
   
 
   

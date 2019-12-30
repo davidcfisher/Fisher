@@ -40,8 +40,8 @@ void setup()
 
   // get the console information
   const int byteLimit = 2000;
-  char consoleBytes[byteLimit];
-  int result = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleBytes[0], "2019-10-01 15:30:00", "2019-10-01 16:29:00", byteLimit);
+  char consoleRecords[byteLimit];
+  int numberOfConsoleBytes = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleRecords[0], "2019-10-01 15:30:00", "2019-10-01 16:29:00", byteLimit);
 
   //// get the console information
   //const int consoleRecordLimit = 200;
@@ -56,7 +56,7 @@ void setup()
 
   /***** the code below displays time information *****/
   /*                                                  */
-  SerialMon.print("current dateTimeString: ");
+  SerialMon.print("Current dateTimeString: ");
   SerialMon.println(mayflyCard.realTimeClock.getDateTimeNowString());
   
   
@@ -77,19 +77,11 @@ void setup()
   SerialMon.println(lastRecord);
 
   
-  /***** the code below displays the console record information *****/
-  /*                                                                */
-  //SerialMon.print("numberOfConsoleBytes=");SerialMon.println(numberOfConsoleBytes);
+  /***** the code below displays the console records *****/
+  /*                                                     */
+  SerialMon.println("<<< CONSOLE RECORDS >>>");
+  SerialMon.println(consoleRecords);
 
-  // process each record
-  //for (int i=0; i < numberOfConsoleBytes; i++) {
-
-    //SerialMon.print(i+1);
-    //SerialMon.print(F(": ("));
-    //SerialMon.print(console_record[i].bytes);
-    //SerialMon.print(F(" bytes) "));
-    //SerialMon.println(console_record[i].record);
-  //}
 
   /***** the code below simply displays the directory information received *****/
   // process each file
