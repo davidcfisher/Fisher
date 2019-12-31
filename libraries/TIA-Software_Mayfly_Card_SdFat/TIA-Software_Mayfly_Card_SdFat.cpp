@@ -445,7 +445,7 @@ boolean TIA_SdFat::TIA_getConsoleProfile(
 
 
 // METHOD: get console.txt records between two dates.  Dates specified as YYYY-MM-DD HH:MM:SS
-int TIA_SdFat::TIA_getConsoleRecords(                                 // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+int TIA_SdFat::TIA_getConsoleRecords(                                 // returns number of records read.
   char *destinationArray,                                             // pointer to array to hold console records
   String returnStartDateTimeString,                                   // return records starting at "YYYY-MM-DD HH:MM:SS"
   String returnEndDateTimeString,                                     // return records ending at "YYYY-MM-DD HH:MM:SS"
@@ -472,9 +472,9 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
   unsigned long int timestampSeconds            = 0;
   
   SerialMon.print("<<< getting Console records, start="); SerialMon.print(returnStartDateTimeString);
-  SerialMon.print(" (");SerialMon.print(returnStartDateTimeSecondsSince1Jan2k);SerialMon.print(" seconds)");
+  //SerialMon.print(" (");SerialMon.print(returnStartDateTimeSecondsSince1Jan2k);SerialMon.print(" seconds)");
   SerialMon.print(", end="); SerialMon.print(returnEndDateTimeString);
-  SerialMon.print(" (");SerialMon.print(returnEndDateTimeSecondsSince1Jan2k);SerialMon.print(" seconds)");
+  //SerialMon.print(" (");SerialMon.print(returnEndDateTimeSecondsSince1Jan2k);SerialMon.print(" seconds)");
   SerialMon.print(", byteLimit="); SerialMon.println(byteLimit);
   
   // get the console profile
@@ -504,7 +504,7 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
   // determine the position at which to start the seach for the requested starting record
   unsigned long int position = (lastFilePosition - firstFilePosition) * pct/100;
 
-  boolean debug = true;
+  boolean debug = false;
   if (debug) {
     SerialMon.println("<<< CONSOLE FILE PROFILE >>> in getConsoleRecords()");
     SerialMon.println("\t\tDateTime\t\tTimestamp\tFile Position\tRecord");
@@ -536,13 +536,12 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
     
     getPreviousRecord(&line[0], &position);                             // get the previous record
     timestampSeconds = secondsSince1Jan2kFromTimestamp(line);           // get the number of seconds since 1/1/2000 for this record
-    if (debug) {
-      SerialMon.print(".");                                    // print out a period to show progress
-      loopCounter++;
-      if (loopCounter >= 100) {                                           // break progress display into multiple lines
-        loopCounter = 0;
-        SerialMon.println("");
-      }
+    
+    SerialMon.print(".");                                               // print out a period to show progress
+    loopCounter++;
+    if (loopCounter >= 100) {                                           // break progress display into multiple lines
+      loopCounter = 0;
+      SerialMon.println("");
     }
   }
   
@@ -572,6 +571,14 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
     
     if (totalBytes + recordBytes > byteLimit) break;                    // don't go over the byte limit
     
+   
+    for (int i=0; i < recordBytes; i++) {
+      //SerialMon.print(">>>");SerialMon.println(line[i]);
+      *destinationArray = line[i];  // copy the line to the destination array
+      //SerialMon.print("+++");SerialMon.println(*destinationArray);
+      destinationArray++;
+    }
+    
     totalBytes += recordBytes;                                          // add this record's bytes to the total byte count
     
     if (debug) {
@@ -582,62 +589,62 @@ int TIA_SdFat::TIA_getConsoleRecords(                                 // returns
     }
   }
   
+   *destinationArray = '\0';
+  
 SerialMon.print("578: timestampSeconds="); SerialMon.print(timestampSeconds);
 SerialMon.print(", totalBytes=");SerialMon.println(totalBytes);
-  
 
-  
-return 42;
+return totalBytes;
 }
 
 
-// METHOD: read the console record
-int TIA_SdFat::TIA_consoleReadLines(                                  // returns the number of console records in the console_record array
-  consoleRecord *console_record,                                      // array to hold console records
-  String startDateTimeString,                                         // start reading at "YYYY-MM-DD HH:MM:SS"
-  String endDateTimeString,                                           // end reading at "YYYY-MM-DD HH:MM:SS"
-  int limit                                                           // limit on the number of colsole records to be returned      
-)
-{
-  SdFile console_file;                                                // console file
-  char line[consoleLineLength];                                       // holds a line read from the console file
-  int recordBytes;                                                    // number of characters from console_file into line
-  double recordSecondsSince1Jan2000;                                  // for the current record: holds number of seconds since 1/1/2000
-  
-  double startDateTime = secondsSince1Jan2000(startDateTimeString);   // start reading console records at this datetime
-  double endDateTime = secondsSince1Jan2000(endDateTimeString);       // end reading console records after this datetime
-  
-  boolean startDateTimeFoundFlag = false;                             // true=we've found a record with the startDateTime
-  
-  if (endDateTime <= startDateTime) return -2;                        // error: start time is after the end time
-  
-  if (!console_file.open("console.txt", O_READ)) {                    // if the file doesn't open
-    return -1;                                                        // return an error code
-  }
- 
-  int numberOfConsoleRecords = 0;                                     // keep track of the number of console records read
-  while ((recordBytes = console_file.fgets(line, sizeof(line))) > 0 && numberOfConsoleRecords < limit) {    // read the next record
-    
-    String record = String(line);                                     // get line as a String
-    record.replace("\n","");                                          // remove all \n's
-    recordSecondsSince1Jan2000 = secondsSince1Jan2000(record);        // get the number of seconds since 1/1/2000 for this record        
-    
-    if (recordSecondsSince1Jan2000 == -1 && startDateTimeFoundFlag) { // invalid timestamp on record, so don't check for start or end date exceptions
-    }
-    
-    // if the record is before the start time, continue the loop
-    else if (recordSecondsSince1Jan2000 < startDateTime) continue;
-    
-    // if the record is after the end time, stop processing
-    if (recordSecondsSince1Jan2000 > endDateTime) break;
-    
-    startDateTimeFoundFlag = true;                                    // we've found the startDateTime
-    
-    console_record[numberOfConsoleRecords].record = record;           // save the entry
-    console_record[numberOfConsoleRecords].bytes = recordBytes-1;     // save the number of bytes - trailing "\n" has been removed, hence the -1
-    
-    numberOfConsoleRecords++;                                         // increment the record counter
-  }
-
-  return numberOfConsoleRecords;
-}
+//// METHOD: read the console record
+//int TIA_SdFat::TIA_consoleReadLines(                                  // returns the number of console records in the console_record array
+//  consoleRecord *console_record,                                      // array to hold console records
+//  String startDateTimeString,                                         // start reading at "YYYY-MM-DD HH:MM:SS"
+//  String endDateTimeString,                                           // end reading at "YYYY-MM-DD HH:MM:SS"
+//  int limit                                                           // limit on the number of colsole records to be returned      
+//)
+//{
+//  SdFile console_file;                                                // console file
+//  char line[consoleLineLength];                                       // holds a line read from the console file
+//  int recordBytes;                                                    // number of characters from console_file into line
+//  double recordSecondsSince1Jan2000;                                  // for the current record: holds number of seconds since 1/1/2000
+//  
+//  double startDateTime = secondsSince1Jan2000(startDateTimeString);   // start reading console records at this datetime
+//  double endDateTime = secondsSince1Jan2000(endDateTimeString);       // end reading console records after this datetime
+//  
+//  boolean startDateTimeFoundFlag = false;                             // true=we've found a record with the startDateTime
+//  
+//  if (endDateTime <= startDateTime) return -2;                        // error: start time is after the end time
+//  
+//  if (!console_file.open("console.txt", O_READ)) {                    // if the file doesn't open
+//    return -1;                                                        // return an error code
+//  }
+// 
+//  int numberOfConsoleRecords = 0;                                     // keep track of the number of console records read
+//  while ((recordBytes = console_file.fgets(line, sizeof(line))) > 0 && numberOfConsoleRecords < limit) {    // read the next record
+//    
+//    String record = String(line);                                     // get line as a String
+//    record.replace("\n","");                                          // remove all \n's
+//    recordSecondsSince1Jan2000 = secondsSince1Jan2000(record);        // get the number of seconds since 1/1/2000 for this record        
+//    
+//    if (recordSecondsSince1Jan2000 == -1 && startDateTimeFoundFlag) { // invalid timestamp on record, so don't check for start or end date exceptions
+//    }
+//    
+//    // if the record is before the start time, continue the loop
+//    else if (recordSecondsSince1Jan2000 < startDateTime) continue;
+//    
+//    // if the record is after the end time, stop processing
+//    if (recordSecondsSince1Jan2000 > endDateTime) break;
+//    
+//    startDateTimeFoundFlag = true;                                    // we've found the startDateTime
+//    
+//    console_record[numberOfConsoleRecords].record = record;           // save the entry
+//    console_record[numberOfConsoleRecords].bytes = recordBytes-1;     // save the number of bytes - trailing "\n" has been removed, hence the -1
+//    
+//    numberOfConsoleRecords++;                                         // increment the record counter
+//  }
+//
+//  return numberOfConsoleRecords;
+//}

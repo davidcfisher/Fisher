@@ -3,7 +3,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191230
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191231
 
 #define consoleLineLength 1000                                    // maximum length of a console record
 
@@ -62,18 +62,19 @@ class TIA_SdFat : public SdFat {
       unsigned long int *lastFilePosition                         // file position for the start of the last console record in the console file
     );
 
-
-    /* get records from console.txt, specifing starting and ending dates
-     *
-     *  Returns the number of bytes placed in the *destinationArray.
-     *
-     *  Error returns:
-     *    -1 = requested start dateTime is after requested end dateTime
-     *    -2 = requested start dateTime is after last console record dateTime
-     *    -3 = requested end dateTime is before first console record dateTime
-     */
     
     int TIA_getConsoleRecords(                                    // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+
+      /* get records from console.txt, specifing starting and ending dates
+       *
+       *  Returns the number of bytes placed in the *destinationArray.
+       *
+       *  Error returns:
+       *    -1 = requested start dateTime is after requested end dateTime
+       *    -2 = requested start dateTime is after last console record dateTime
+       *    -3 = requested end dateTime is before first console record dateTime
+       */
+      
       char *destinationArray,                                     // pointer to array to hold console records
       String startDateTimeString,                                 // start reading at "YYYY-MM-DD HH:MM:SS"
       String endDateTimeString,                                   // end reading at "YYYY-MM-DD HH:MM:SS"
@@ -81,12 +82,12 @@ class TIA_SdFat : public SdFat {
     );
     
     
-    int TIA_consoleReadLines(                                     // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
-      consoleRecord *console_record,                              // array to hold console records
-      String startDateTimeString,                                 // start reading at "YYYY-MM-DD HH:MM:SS"
-      String endDateTimeString,                                   // end reading at "YYYY-MM-DD HH:MM:SS"
-      int limit                                                   // limit on the number of colsole records to be returned      
-    );
+    //int TIA_consoleReadLines(                                     // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+    //  consoleRecord *console_record,                              // array to hold console records
+    //  String startDateTimeString,                                 // start reading at "YYYY-MM-DD HH:MM:SS"
+    //  String endDateTimeString,                                   // end reading at "YYYY-MM-DD HH:MM:SS"
+    //  int limit                                                   // limit on the number of colsole records to be returned      
+    //);
     
   protected:
     void TIA_init();                                              // initialize the SD card

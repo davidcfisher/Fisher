@@ -1,7 +1,8 @@
-#define DCF_version = 20191230
+#define DCF_version = 20191231
 
 #include "TIA-Software_Mayfly_Card.h"
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
+
 const String BeeModule = "Digi1234";                              // module in the Bee socket, default = "none"
 
 // variables used to hold results of the console.txt profile request
@@ -43,28 +44,22 @@ void setup()
   char consoleRecords[byteLimit];
   int numberOfConsoleBytes = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleRecords[0], "2019-10-01 15:30:00", "2019-10-01 16:29:00", byteLimit);
 
-  //// get the console information
-  //const int consoleRecordLimit = 200;
-  //consoleRecord console_record[consoleRecordLimit];
-  //int numberOfConsoleRecords = mayflyCard.SdCard.TIA_consoleRead(&console_record[0], "2019-09-01 11:30:00", "2019-09-01 13:29:00", consoleRecordLimit);
-
   // get the directory from the SD Card
-  const int sdCardDirectoryLimit = 5;                            // limit the number of directory names + file names to be displayed
+  const int sdCardDirectoryLimit = 5;                             // limit the number of directory names + file names to be displayed
   SdCardDirectory sd_card_directory[sdCardDirectoryLimit];        // define an array to hold the SD Card directory results
   int numberOfEntries = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
 
 
-  /***** the code below displays time information *****/
-  /*                                                  */
+  /***** this code displays time information *****/
+  /*                                             */
   SerialMon.print("Current dateTimeString: ");
   SerialMon.println(mayflyCard.realTimeClock.getDateTimeNowString());
   
   
-
-  /***** the code below displays console.txt profile *****/
-  /*                                                     */
+  /***** this code displays console.txt profile *****/
+  /*                                                */
   SerialMon.println("<<<<< CONSOLE FILE PROFILE >>>>>");
-  SerialMon.println("\t\tDateTime\t\tTimestamp\tFile Posn\tRecord");
+  SerialMon.println("\t\tDateTime\t\tTimestamp\tFile Position\tRecord");
   SerialMon.print(" First Record:\t");
   SerialMon.print(firstDateTime_YYYY_MM_DD_HH_MM_SS);SerialMon.print("\t");
   SerialMon.print(startTimestampSeconds);SerialMon.print("\t");
@@ -77,13 +72,15 @@ void setup()
   SerialMon.println(lastRecord);
 
   
-  /***** the code below displays the console records *****/
-  /*                                                     */
+  /***** this code displays the console records *****/
+  /*                                                */
   SerialMon.println("<<< CONSOLE RECORDS >>>");
   SerialMon.println(consoleRecords);
+  SerialMon.println("<<< CONSOLE RECORDS COMPLETE >>>");
 
 
-  /***** the code below simply displays the directory information received *****/
+  /***** this code displays the directory information *****/
+  /*                                                      */
   // process each file
   for (int i=0; i < numberOfEntries; i++) {
 
