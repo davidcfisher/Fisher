@@ -1,9 +1,9 @@
-//  TIA-Softwaref_Mayfly_Card_SdFat.h - Copyright (c) 2019 TIA Software, LLC.  All rights reserved.
+//  TIA-Softwaref_Mayfly_Card_SdFat.h - Copyright (c) 2019 - 2020 TIA Software, LLC.  All rights reserved.
 //  v1.0
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20191231
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200101
 
 #define consoleLineLength 1000                                    // maximum length of a console record
 
@@ -21,11 +21,6 @@ typedef struct {                                                  // structure o
   boolean limitReached;                                           // true=more files may exist, but display limit reached
 } SdCardDirectory;
 
-
-typedef struct {                                                  // structure of a console record
-  String record;                                                  // record contents
-  int bytes;                                                      // number of bytes in the record
-} consoleRecord;
 
 
 class TIA_SdFat : public SdFat {

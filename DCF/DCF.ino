@@ -1,4 +1,4 @@
-#define DCF_version = 20191231
+#define DCF_version = 20200101
 
 #include "TIA-Software_Mayfly_Card.h"
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
@@ -10,17 +10,17 @@ char firstRecord[consoleRecordLength]         = "";               // holds the f
 char lastRecord[consoleRecordLength]          = "";               // holds the last record found in the console file
 
 char firstDateTime_YYYY_MM_DD_HH_MM_SS[20];                       // holds the datetime of the first console record in the console file
-char endDateTime_YYYY_MM_DD_HH_MM_SS[20];                         // holds the datetime of the last console record in the console file
+char lastDateTime_YYYY_MM_DD_HH_MM_SS[20];                        // holds the datetime of the last console record in the console file
 
-unsigned long int startTimestampSeconds       = 0;                // holds the timestamp for the first console record in the console file
-unsigned long int endTimestampSeconds         = 0;                // holds the timestamp for the last console record in the console file
+unsigned long int firstTimestampSeconds       = 0;                // holds the timestamp for the first console record in the console file
+unsigned long int lastTimestampSeconds        = 0;                // holds the timestamp for the last console record in the console file
   
-unsigned long int startFilePosition           = 0;                // holds the file position for the start of the first console record in the console file
-unsigned long int endFilePosition             = 0;                // holds the file position for the start of the last console record in the console file
+unsigned long int firstFilePosition           = 0;                // holds the file position for the start of the first console record in the console file
+unsigned long int lastFilePosition            = 0;                // holds the file position for the start of the last console record in the console file
 
 void setup()
 {
-  mayflyCard.setup(BeeModule);                                    // setup the Mayfly Card.  True=test SD card file write, read and remove.
+  mayflyCard.setup(BeeModule);                                    // setup the Mayfly Card with a BeeModule
   
   mayflyCard.redLED.turnOn();                                     // turn on the Red LED
   mayflyCard.greenLED.turnOn();                                   // turn on the Green LED
@@ -32,17 +32,17 @@ void setup()
     &firstRecord,                                                 // holds first record in the console file
     &lastRecord,                                                  // holds last record in the console file
     &firstDateTime_YYYY_MM_DD_HH_MM_SS,                           // holds datetime of the first console record in the console file
-    &endDateTime_YYYY_MM_DD_HH_MM_SS,                             // holds datetime of the last console record in the console file
-    &startTimestampSeconds,                                       // holds timestamp for the first console record in the console file
-    &endTimestampSeconds,                                         // holds timestamp for the last console record in the console file
-    &startFilePosition,                                           // holds file position for the start of the first console record in the console file
-    &endFilePosition                                              // holds file position for the start of the last console record in the console file
+    &lastDateTime_YYYY_MM_DD_HH_MM_SS,                            // holds datetime of the last console record in the console file
+    &firstTimestampSeconds,                                       // holds timestamp for the first console record in the console file
+    &lastTimestampSeconds,                                        // holds timestamp for the last console record in the console file
+    &firstFilePosition,                                           // holds file position for the start of the first console record in the console file
+    &lastFilePosition                                             // holds file position for the start of the last console record in the console file
   );
 
   // get the console information
   const int byteLimit = 2000;
   char consoleRecords[byteLimit];
-  int numberOfConsoleBytes = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleRecords[0], "2019-10-01 15:30:00", "2019-10-01 16:29:00", byteLimit);
+  int numberOfConsoleBytes = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleRecords[0], "2019-09-05 12:00:00", "2019-09-05 14:00:00", byteLimit);
 
   // get the directory from the SD Card
   const int sdCardDirectoryLimit = 5;                             // limit the number of directory names + file names to be displayed
@@ -52,31 +52,32 @@ void setup()
 
   /***** this code displays time information *****/
   /*                                             */
-  SerialMon.print("Current dateTimeString: ");
+  SerialMon.println(""); SerialMon.print(F("Current dateTimeString: "));
   SerialMon.println(mayflyCard.realTimeClock.getDateTimeNowString());
   
   
   /***** this code displays console.txt profile *****/
   /*                                                */
-  SerialMon.println("<<<<< CONSOLE FILE PROFILE >>>>>");
-  SerialMon.println("\t\tDateTime\t\tTimestamp\tFile Position\tRecord");
-  SerialMon.print(" First Record:\t");
-  SerialMon.print(firstDateTime_YYYY_MM_DD_HH_MM_SS);SerialMon.print("\t");
-  SerialMon.print(startTimestampSeconds);SerialMon.print("\t");
-  SerialMon.print(startFilePosition);SerialMon.print("\t\t");
+  SerialMon.println(F("")); SerialMon.println(F("<<<<< CONSOLE FILE PROFILE >>>>>"));
+  SerialMon.println(F("\t\tDateTime\t\tTimestamp\tFile Position\tRecord"));
+  SerialMon.print(F(" First Record:\t"));
+  SerialMon.print(firstDateTime_YYYY_MM_DD_HH_MM_SS); SerialMon.print(F("\t"));
+  SerialMon.print(firstTimestampSeconds); SerialMon.print(F("\t"));
+  SerialMon.print(firstFilePosition); SerialMon.print(F("\t\t"));
   SerialMon.println(firstRecord);
-  SerialMon.print("  Last Record:\t");
-  SerialMon.print(endDateTime_YYYY_MM_DD_HH_MM_SS);SerialMon.print("\t");
-  SerialMon.print(endTimestampSeconds);SerialMon.print("\t");
-  SerialMon.print(endFilePosition);SerialMon.print("\t\t");
+  SerialMon.print(F("  Last Record:\t"));
+  SerialMon.print(lastDateTime_YYYY_MM_DD_HH_MM_SS); SerialMon.print(F("\t"));
+  SerialMon.print(lastTimestampSeconds); SerialMon.print(F("\t"));
+  SerialMon.print(lastFilePosition); SerialMon.print(F("\t\t"));
   SerialMon.println(lastRecord);
 
   
   /***** this code displays the console records *****/
   /*                                                */
-  SerialMon.println("<<< CONSOLE RECORDS >>>");
+  SerialMon.println(F("")); SerialMon.println(F("<<< CONSOLE RECORDS >>>"));
+  SerialMon.print(numberOfConsoleBytes); SerialMon.println(F(" bytes returned:"));
   SerialMon.println(consoleRecords);
-  SerialMon.println("<<< CONSOLE RECORDS COMPLETE >>>");
+
 
 
   /***** this code displays the directory information *****/
@@ -107,6 +108,7 @@ void setup()
     }
   }
 }
+
 
 void loop() {
   delay(500);
