@@ -52,6 +52,8 @@ void setup()
   int numberOfEntries = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
 
 
+
+
   SerialMon.println(F("")); SerialMon.println(F("===== Starting Sketch Output ====="));
   /***** this code displays time information *****/
   /*                                             */
