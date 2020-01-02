@@ -378,7 +378,19 @@ boolean TIA_SdFat::TIA_getConsoleProfile(
 }
 
 
-// METHOD: get console.txt records between two dates.  Dates specified as YYYY-MM-DD HH:MM:SS
+//// METHOD: get console.txt records between two dates.  Dates specified as char array: YYYY-MM-DD HH:MM:SS
+//int TIA_SdFat::TIA_getConsoleRecords(                                 // returns number of records read.
+//  char *destinationArray,                                             // pointer to array to hold console records
+//  char requestedStartDateTimeString,                                  // return records starting at "YYYY-MM-DD HH:MM:SS"
+//  char requestedEndDateTimeString,                                    // return records ending at "YYYY-MM-DD HH:MM:SS"
+//  int byteLimit                                                       // limit on the number of bytes to be returned      
+//)
+//{
+//  SerialMon.println("************!!!!!!!!!!!!!!!");
+//}
+//
+
+// METHOD: get console.txt records between two dates.  Dates specified as String: YYYY-MM-DD HH:MM:SS
 int TIA_SdFat::TIA_getConsoleRecords(                                 // returns number of records read.
   char *destinationArray,                                             // pointer to array to hold console records
   String requestedStartDateTimeString,                                // return records starting at "YYYY-MM-DD HH:MM:SS"

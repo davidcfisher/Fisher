@@ -1,4 +1,4 @@
-#define DCF_version = 20200101
+#define DCF_version = 20200102
 
 #include "TIA-Software_Mayfly_Card.h"
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
@@ -42,7 +42,9 @@ void setup()
   // get the console information
   const int byteLimit = 2000;
   char consoleRecords[byteLimit];
-  int numberOfConsoleBytes = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleRecords[0], "2019-09-05 12:00:00", "2019-09-05 14:00:00", byteLimit);
+  char startDate[] = "2019-09-05 12:00:00";
+  char endDate[] = "2019-09-05 14:00:00";
+  int numberOfConsoleBytes = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleRecords[0], startDate, endDate, byteLimit);
 
   // get the directory from the SD Card
   const int sdCardDirectoryLimit = 5;                             // limit the number of directory names + file names to be displayed
@@ -50,6 +52,7 @@ void setup()
   int numberOfEntries = mayflyCard.SdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
 
 
+  SerialMon.println(F("")); SerialMon.println(F("===== Starting Sketch Output ====="));
   /***** this code displays time information *****/
   /*                                             */
   SerialMon.println(""); SerialMon.print(F("Current dateTimeString: "));
