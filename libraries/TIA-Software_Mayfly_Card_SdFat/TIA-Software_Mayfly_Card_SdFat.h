@@ -58,7 +58,7 @@ class TIA_SdFat : public SdFat {
     );
 
     
-    int TIA_getConsoleRecords(                                    // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+    int getConsoleRecords(                                        // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
 
       /* get records from console.txt, specifing starting and ending dates
        *
@@ -77,23 +77,23 @@ class TIA_SdFat : public SdFat {
     );
     
     
-    int TIA_getConsoleRecords(                                    // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
-
-      /* get records from console.txt, specifing starting and ending dates
-       *
-       *  Returns the number of bytes placed in the *destinationArray.
-       *
-       *  Error returns:
-       *    -1 = requested start dateTime is after requested end dateTime
-       *    -2 = requested start dateTime is after last console record dateTime
-       *    -3 = requested end dateTime is before first console record dateTime
-       */
-      
-      char *destinationArray,                                     // pointer to array to hold console records
-      char startDateTimeString,                                   // start reading at "YYYY-MM-DD HH:MM:SS"
-      char endDateTimeString,                                     // end reading at "YYYY-MM-DD HH:MM:SS"
-      int byteLimit                                               // limit on the number of bytes to be returned      
-    );
+    //int TIA_getConsoleRecords(                                    // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date
+    //
+    //  /* get records from console.txt, specifing starting and ending dates
+    //   *
+    //   *  Returns the number of bytes placed in the *destinationArray.
+    //   *
+    //   *  Error returns:
+    //   *    -1 = requested start dateTime is after requested end dateTime
+    //   *    -2 = requested start dateTime is after last console record dateTime
+    //   *    -3 = requested end dateTime is before first console record dateTime
+    //   */
+    //  
+    //  char *destinationArray,                                     // pointer to array to hold console records
+    //  char startDateTimeString,                                   // start reading at "YYYY-MM-DD HH:MM:SS"
+    //  char endDateTimeString,                                     // end reading at "YYYY-MM-DD HH:MM:SS"
+    //  int byteLimit                                               // limit on the number of bytes to be returned      
+    //);
     
     
     //int TIA_consoleReadLines(                                     // returns number of records read.  Error codes: -1=file didn't open, -2=end date before start date

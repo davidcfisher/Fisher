@@ -40,11 +40,11 @@ void setup()
   );
 
   // get the console information
-  const int byteLimit = 2000;
-  char consoleRecords[byteLimit];
-  char startDate[] = "2019-09-05 12:00:00";
-  char endDate[] = "2019-09-05 14:00:00";
-  int numberOfConsoleBytes = mayflyCard.SdCard.TIA_getConsoleRecords(&consoleRecords[0], startDate, endDate, byteLimit);
+  const int byteLimit = 2000;                                     // return full console records, not to exceed this total number of bytes
+  char consoleRecords[byteLimit];                                 // return the console records into this array
+  char startDate[] = "2019-09-05 12:00:00";                       // return console records starting at this dateTime
+  char endDate[] = "2019-09-05 14:00:00";                         // return console records ending at this dateTime
+  int numberOfConsoleBytes = mayflyCard.SdCard.getConsoleRecords(&consoleRecords[0], startDate, endDate, byteLimit);
 
   // get the directory from the SD Card
   const int sdCardDirectoryLimit = 5;                             // limit the number of directory names + file names to be displayed
