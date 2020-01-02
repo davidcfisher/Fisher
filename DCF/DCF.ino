@@ -28,7 +28,7 @@ void setup()
   mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
   // get the console profile
-  boolean profileFlag = mayflyCard.SdCard.getConsoleProfile(
+  boolean profileFlag = mayflyCard.SdCard.TIA_getConsoleProfile(
     &firstRecord,                                                 // holds first record in the console file
     &lastRecord,                                                  // holds last record in the console file
     &firstDateTime_YYYY_MM_DD_HH_MM_SS,                           // holds datetime of the first console record in the console file

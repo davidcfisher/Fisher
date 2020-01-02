@@ -316,7 +316,7 @@ boolean getPreviousConsoleRecord(                                            // 
 
 
 // METHOD: get console.txt profile
-boolean TIA_SdFat::getConsoleProfile(
+boolean TIA_SdFat::TIA_getConsoleProfile(
   
   char (*firstRecord)[consoleRecordLength],                           // set with the first record found in the console file
   char (*lastRecord)[consoleRecordLength],                            // set with the last record found in the console file
@@ -418,7 +418,7 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   SerialMon.print(F(", byteLimit=")); SerialMon.print(byteLimit); SerialMon.println(F(" >>>"));
   
   // get the console profile
-  boolean profileFlag = getConsoleProfile(
+  boolean profileFlag = TIA_getConsoleProfile(
     &firstRecord,                                                     // copy of the first record found
     &lastRecord,                                                      // copy of the last record found
     &firstDateTime_YYYY_MM_DD_HH_MM_SS,                               // datetime of the first console record in the console file
