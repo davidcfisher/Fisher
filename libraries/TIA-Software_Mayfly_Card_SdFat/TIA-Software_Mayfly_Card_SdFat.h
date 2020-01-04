@@ -1,9 +1,9 @@
-//  TIA-Softwaref_Mayfly_Card_SdFat.h - Copyright (c) 2019 - 2020 TIA Software, LLC.  All rights reserved.
+//  TIA-Softwaref_Mayfly_Card_SdFat.h - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 //  v1.0
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200102
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200104
 
 #define consoleLineLength 1000                                    // maximum length of a console record
 
@@ -30,9 +30,7 @@ class TIA_SdFat : public SdFat {
     
     
     // setup the SD Card
-    void TIA_setup(                                               
-      boolean testFlag=false                                      // true=test the file write, read and remove capabilities of the SD Card
-    );
+    void TIA_setup();
     
     
     // list the files in the dir.  Returns the number of directory names + filenames

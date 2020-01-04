@@ -1,9 +1,9 @@
-//  TIA-Software_Mayfly_Card.h - Copyright (c) 2019 TIA Software, LLC.  All rights reserved.
+//  TIA-Software_Mayfly_Card.h - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 //  v1.0
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_H
 #define TIA_SOFTWARE_MAYFLY_CARD_H
-#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20191217
+#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20200104
 
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"                         // global definitions
@@ -23,8 +23,7 @@ class Mayfly_card {
     static BeeSocket  Bee;                                    // create something on the BEE socket
     
     void setup(                                               // setup the Mayfly card.  
-      String beeModule="none",                                // module in the Bee socket
-      boolean testFlag=false                                  // true=do write, read and remove tests
+      String beeModule="none"                                 // module in the Bee socket
     );
 };
 
