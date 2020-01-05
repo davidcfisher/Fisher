@@ -45,28 +45,30 @@ int TIA_SdFat::TIA_dir(
 void TIA_SdFat::TIA_processDirectory(
   SdCardDirectory *sd_card_directory,                                 // pointer to array holding results of dir request
   SdFile CFile,                                                       // 
-  String dirName,                                                     // assume method is called while pointing to a directory name
+  char dirName[],                                                     // assume method is called while pointing to a directory name
   int numTabs,                                                        // number of tabs to indent this directories information
   int limit                                                           // limit on the number of direcory+file names to be returned
 )
 {
   SdFile file;
-  char filename[50];
-  directoryEntry sd_card_directoryEntry;                              // variable to hold the FAT directory entry
+  char filename[filenameLength];                                      // holds the filename
+  directoryEntry sd_card_directoryEntry;                              // holds the FAT directory entry
+  char amPm[3] = "?M";                                                // holds "AM" or "PM"
+  char mDateTime[20];                                                 // holds the last write time for the file
   
   // save the directory information
   sd_card_directory[numberOfFiles].folderLevel    = numTabs;
   sd_card_directory[numberOfFiles].directoryFlag  = true;
-  sd_card_directory[numberOfFiles].filename       = dirName;
-  sd_card_directory[numberOfFiles].modDateTime    = "";
   sd_card_directory[numberOfFiles].sizeKb         = 0;
   sd_card_directory[numberOfFiles].limitReached   = false;
+  
+  strcpy(sd_card_directory[numberOfFiles].filename, dirName);
   
   // increment the files counter
   numberOfFiles++;
   
   // if we've reached the maximum number of directory+file names allowed, terminate
-  if (numberOfFiles == limit) {
+  if (numberOfFiles >= limit) {
     sd_card_directory[numberOfFiles-1].limitReached = true;
     return;
   }
@@ -79,15 +81,14 @@ void TIA_SdFat::TIA_processDirectory(
       
       // if this is a sub-directory, process it
       if (file.isDir()) {
-        file.getName(filename,50);                                    // get the directory name
-        TIA_processDirectory(&sd_card_directory[0], file, String(filename), numTabs+1, limit);  // process this directory
+        file.getName(filename, filenameLength);                       // get the directory name
+        TIA_processDirectory(&sd_card_directory[0], file, filename, numTabs+1, limit);  // process this directory        
+        if (sd_card_directory[numberOfFiles-1].limitReached) return;  // if we've reached the limit, stop processing
       }
       
       // a regular file, not hidden or a directory
       else {
-        file.getName(filename,50);                                    // get the filename
- 
-        //directoryEntry sd_card_directoryEntry;                      // declare a variable to hold the FAT directory entry
+        file.getName(filename, filenameLength);                       // get the filename
         file.dirEntry(&sd_card_directoryEntry);                       // get the FAT directory entry
         
         // get the encoded last modification day
@@ -102,11 +103,10 @@ void TIA_SdFat::TIA_processDirectory(
         // get the encoded last modification hour
         unsigned int lastWriteHour = (sd_card_directoryEntry.lastWriteTime >> 11);
         
-        // set AM or PM
-        String AmPm = "AM";                                           // default is AM
+        amPm[0] = 'A';                                                // default is AM
         if (lastWriteHour > 12) {                                     // adjust for PM
           lastWriteHour -= 12;
-          AmPm = "PM";
+          amPm[0] = 'P';
         }
         
         // get the encoded last modification minute
@@ -114,23 +114,22 @@ void TIA_SdFat::TIA_processDirectory(
         char lastWriteMinute[3];
         sprintf(lastWriteMinute,"%02d", tempInt);                     // ensure minutes are two characters
         
-        // establish the last modification date and time
-        String modDateTime = String(lastWriteMonth) + "/" + String(lastWriteDay) + "/" + String(lastWriteYear) +
-          "  " + String(lastWriteHour) + ":" + String(lastWriteMinute) + " " + AmPm;
+        sprintf(mDateTime,"%4d-%02d-%02d %d:%02d %s", lastWriteYear, lastWriteMonth, lastWriteDay, lastWriteHour, tempInt, amPm);
         
         // save the file information
         sd_card_directory[numberOfFiles].folderLevel    = numTabs;
         sd_card_directory[numberOfFiles].directoryFlag  = false;
-        sd_card_directory[numberOfFiles].filename       = filename;
-        sd_card_directory[numberOfFiles].modDateTime    = modDateTime;
         sd_card_directory[numberOfFiles].sizeKb         = file.fileSize();
         sd_card_directory[numberOfFiles].limitReached   = false;
+
+        strcpy(sd_card_directory[numberOfFiles].filename, filename);
+        strcpy(sd_card_directory[numberOfFiles].modDateTime, mDateTime);
       
         // increment the files counter
         numberOfFiles++;
-        
+       
         // if we've reached the maximum number of directory+file names allowed, terminate
-        if (numberOfFiles == limit) {
+        if (numberOfFiles >= limit) {          
           sd_card_directory[numberOfFiles-1].limitReached = true;
           return;
         }
@@ -313,9 +312,24 @@ boolean TIA_SdFat::getConsoleProfile(
     strcpy(*lastRecord, line);                                        // save the last record
     line[19] = '\0';
     strncpy(*lastDateTime_YYYY_MM_DD_HH_MM_SS, line, 20);             // save the dateTime of the last record
-  }   
+  }
+  
+  
+  /***** use this code to display console.txt profile *****/
+  /*                                                      */
+  //SerialMon.println(F("")); SerialMon.println(F("<<<<< CONSOLE FILE PROFILE >>>>>"));
+  //SerialMon.println(F("\t\tDateTime\t\tTimestamp\tFile Position\tRecord"));
+  //SerialMon.print(F(" First Record:\t"));
+  //SerialMon.print(firstDateTime_YYYY_MM_DD_HH_MM_SS); SerialMon.print(F("\t"));
+  //SerialMon.print(firstTimestampSeconds); SerialMon.print(F("\t"));
+  //SerialMon.print(firstFilePosition); SerialMon.print(F("\t\t"));
+  //SerialMon.println(firstRecord);
+  //SerialMon.print(F("  Last Record:\t"));
+  //SerialMon.print(lastDateTime_YYYY_MM_DD_HH_MM_SS); SerialMon.print(F("\t"));
+  //SerialMon.print(lastTimestampSeconds); SerialMon.print(F("\t"));
+  //SerialMon.print(lastFilePosition); SerialMon.print(F("\t\t"));
+  //SerialMon.println(lastRecord);  
 }
-
 
 
 // METHOD: get console.txt records between two dates.  Dates specified as String: YYYY-MM-DD HH:MM:SS
