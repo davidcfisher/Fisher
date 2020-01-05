@@ -59,7 +59,7 @@ void setup()
     // otherwise, this is a file
     else {
       SerialMon.print(sd_card_directory[i].filename);     SerialMon.print(F("\t"));
-      if (strlen(sd_card_directory[i].filename) <= 10)    SerialMon.print(F("\t"));
+      if (strlen(sd_card_directory[i].filename) <= 12)    SerialMon.print(F("\t"));
       SerialMon.print(sd_card_directory[i].modDateTime);  SerialMon.print(F("\t"));
       SerialMon.print(sd_card_directory[i].sizeKb);       SerialMon.println(F(" KB"));
     }
