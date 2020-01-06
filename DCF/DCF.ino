@@ -1,4 +1,4 @@
-#define DCF_version = 20200105
+#define DCF_version = 20200106
 
 #include "TIA-Software_Mayfly_Card.h"
 
@@ -16,10 +16,10 @@ void setup()
   mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
   // get the console information
-  const int byteLimit = 2000;                                     // return full console records, not to exceed this total number of bytes
+  const int byteLimit = 6000;                                     // return full console records, not to exceed this total number of bytes
   char consoleRecords[byteLimit];                                 // return the console records into this array
-  char startDate[] = "2019-09-05 12:00:00";                       // return console records starting at this dateTime
-  char endDate[] = "2019-09-05 14:00:00";                         // return console records ending at this dateTime
+  char startDate[] = "2019-09-08 12:00:00";                       // return console records starting at this dateTime
+  char endDate[] = "2019-09-10 14:00:00";                         // return console records ending at this dateTime
   int numberOfConsoleBytes = mayflyCard.SdCard.getConsoleRecords(&consoleRecords[0], startDate, endDate, byteLimit);
 
   // get the directory from the SD Card
@@ -31,9 +31,6 @@ void setup()
 
 
   SerialMon.println(F("")); SerialMon.println(F("===== Starting Sketch Output ====="));
-  
-
-
   
   /***** this code displays the console records *****/
   /*                                                */

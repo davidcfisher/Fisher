@@ -3,7 +3,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200105
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200106
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
 #include "SdFat.h"                                                // SD Card support
@@ -16,7 +16,7 @@ typedef struct {                                                  // structure o
   int folderLevel;                                                // sub-directory depth, used to determine indentation level for displaying results
   boolean directoryFlag;                                          // true=directory, false=file
   char filename[filenameLength];                                  // directory or file name
-  char modDateTime[20];                                             // modification date and time
+  char modDateTime[20];                                           // modification date and time
   int sizeKb;                                                     // file size in KB
   boolean limitReached;                                           // true=more files may exist, but display limit reached
 } SdCardDirectory;
@@ -76,7 +76,8 @@ class TIA_SdFat : public SdFat {
     
     
   protected:
-    void TIA_processDirectory(     
+    
+    void processDirectory(                                        // recursively process SD card directory
       SdCardDirectory *sd_card_directory,                         // array of SD Card directory entries
       SdFile CFile,                                               // current file being read
       char dirName[] = "Root",                                    // name of the current directory

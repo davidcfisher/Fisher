@@ -3,10 +3,6 @@
 
 #include "TIA-Software_Mayfly_Card_SdFat.h"                           // include the header file
     
-File testFile;                                                        // test file object
-const char* testFilename = "TIA-Software_testFile.txt";               // test file name
-const String SdTestPhrase = "This is the test phrase!";               // test phrase
-
 int numberOfFiles;                                                    // number of files in directory, including directory names
 
 
@@ -34,15 +30,15 @@ int TIA_SdFat::TIA_dir(
   numberOfFiles = 0;
   
   if (file.open("/", O_READ)) {                                       // if opening the root directory was successful
-    TIA_processDirectory(&sd_card_directory[0], file, "Root", 0, limit);        // process the root directory
+    processDirectory(&sd_card_directory[0], file, "Root", 0, limit);        // process the root directory
   }
   
   return numberOfFiles;
 }
 
 
-// METHOD: TIA_processDirectory - recuresively get all directory names and filenames in a directory and sub-directories
-void TIA_SdFat::TIA_processDirectory(
+// METHOD: processDirectory - recuresively get all directory names and filenames in a directory and sub-directories
+void TIA_SdFat::processDirectory(
   SdCardDirectory *sd_card_directory,                                 // pointer to array holding results of dir request
   SdFile CFile,                                                       // 
   char dirName[],                                                     // assume method is called while pointing to a directory name
@@ -82,7 +78,7 @@ void TIA_SdFat::TIA_processDirectory(
       // if this is a sub-directory, process it
       if (file.isDir()) {
         file.getName(filename, filenameLength);                       // get the directory name
-        TIA_processDirectory(&sd_card_directory[0], file, filename, numTabs+1, limit);  // process this directory        
+        processDirectory(&sd_card_directory[0], file, filename, numTabs+1, limit);  // process this directory        
         if (sd_card_directory[numberOfFiles-1].limitReached) return;  // if we've reached the limit, stop processing
       }
       
