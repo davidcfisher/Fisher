@@ -41,7 +41,7 @@ int TIA_SdFat::TIA_dir(
 void TIA_SdFat::processDirectory(
   SdCardDirectory *sd_card_directory,                                 // pointer to array holding results of dir request
   SdFile CFile,                                                       // 
-  char dirName[],                                                     // assume method is called while pointing to a directory name
+  const char dirName[],                                                     // assume method is called while pointing to a directory name
   int numTabs,                                                        // number of tabs to indent this directories information
   int limit                                                           // limit on the number of direcory+file names to be returned
 )

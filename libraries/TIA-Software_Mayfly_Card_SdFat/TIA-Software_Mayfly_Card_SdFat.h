@@ -1,9 +1,8 @@
 //  TIA-Softwaref_Mayfly_Card_SdFat.h - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
-//  v1.0
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200106
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200107
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
 #include "SdFat.h"                                                // SD Card support
@@ -80,7 +79,7 @@ class TIA_SdFat : public SdFat {
     void processDirectory(                                        // recursively process SD card directory
       SdCardDirectory *sd_card_directory,                         // array of SD Card directory entries
       SdFile CFile,                                               // current file being read
-      char dirName[] = "Root",                                    // name of the current directory
+      const char dirName[] = "Root",                                    // name of the current directory
       int numTabs = 0,                                            // number of tabs for displaying sub-directories
       int limit = 100                                             // limit on the number of directory+file names to be returned
     );                                         

@@ -12,7 +12,7 @@ TIA_SdFat Mayfly_card::SdCard{};                              // Mayfly has an S
 BeeSocket Mayfly_card::Bee{};                                 // Mayfly has a Bee Socket
 
 // METHOD: setup the Mayfly Card
-void Mayfly_card::setup(String beeModule)
+void Mayfly_card::setup(const char *beeModule = "none")
 {
   SerialMon.begin(57600);                                     // initialize the Serial Monitor
   delay (100);

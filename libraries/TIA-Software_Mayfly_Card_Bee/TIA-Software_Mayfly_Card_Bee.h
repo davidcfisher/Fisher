@@ -1,9 +1,8 @@
-//  TIA-Softwaref_Mayfly_Card_Bee.h - Copyright (c) 2019 TIA Software, LLC.  All rights reserved.
-//  v1.0
+//  TIA-Software_Mayfly_Card_Bee.h - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_BEE_H
 #define TIA_SOFTWARE_MAYFLY_CARD_BEE_H
-#define TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION 20191217
+#define TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION 20200107
 
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"
@@ -14,7 +13,7 @@ class BeeSocket {
     BeeSocket();                                            // constructor
     
     void setup(                                             // METHOD: setup the Bee Socket
-      String module                                         // defines the module in the Bee socket
+      const char *beeModule                                 // defines the module in the Bee socket
     );
 };
 
