@@ -1,0 +1,1160 @@
+/* xBee_TIA-Software.h - Copyright (c) 2019 TIA Software, LLC.  All rights reserved.
+  XBee library
+  
+  Bugs:
+  This sequence fails:
+	Mayfly: wakes up and sends status
+	Server: sends "set variable - new wake_string with bad character
+	M:	sends back "failed"
+	S: 	trys again
+	M: 	sends back "failed"
+	S: 	sends back lastdate
+	M: 	(thinks it) sends 1 or more lines of csv data (but I can't confirm that it does- it probably doesn't)
+		this never reaches the server and the Mayfly times out
+		I can't figure out what the problem is, but it's so rare I'm going to ignore it. The next time the Mayfly sends data, all works fine.
+		
+	something to remember, the modem command mode drops after 10 seconds.
+*/
+
+#ifndef XBeeLib_h  // if multiple includes, it won't blow up
+#define XBeeLib_h
+#include <Sodaq_DS3231.h> // RTC Chip - OK even if it's already included  - take this out
+#include <utilities.h> // date, time and data manipulations
+#include <Mayfly_EEPROM_Class_TIA-Software.h>
+Eeprom_Class eeprom;// create an EEPROM instance
+
+// FUNCTION to execute and display an AT command *****************************************************************************************************************
+void run_at(char * at_cmd, char *at_long) { // call: (AT command, "text to explin"), returned: AT response 
+    modem.sendAT(at_cmd);
+    String at_out = modem.readResponseString(200);
+    SerialMon.print(at_long) ;
+    SerialMon.print(F(": ")) ;
+    SerialMon.println(at_out) ;
+}
+
+// FUNCTION to test and set a modem parameter *****************************************************************************************************************
+int test_and_set(char * at_cmd, char * value, char * parm) { //  AT command, Value to set, Text to display)
+    String value_string= String (value) ;
+	modem.sendAT(at_cmd); // test the existing value
+    String at_out = modem.readResponseString(200);
+    if (at_out == value_string) {
+        SerialMon.print(F("No need to set ")) ;
+        SerialMon.print(parm) ;
+        SerialMon.print(F(" already set to: ")) ;
+        SerialMon.println(value_string) ;
+        return 0 ;
+    }
+    else {
+        //SerialMon.print(F("  Setting " ) ;
+        modem.sendAT(at_cmd + value_string); // set it to value
+        modem.waitResponse(200) ;
+        SerialMon.print(F(" - we have set ")) ;
+        SerialMon.print(parm) ;
+        SerialMon.print(F(" to ")) ;
+        SerialMon.println(value_string) ;
+        return 1 ;
+    }
+}
+
+// FUNCTION to setup the XBee.  Will NOT return if XBee is dead (flashing red/green) ******************************************************
+void setup_xbee() {
+
+    // modem pins
+    pinMode(19, INPUT);   //to BEE pin 12 - BEE_CTS or ATTN in SPI mode. Don't mess with this
+    pinMode(20, INPUT);   // to BEE pin 16 - RTS. Don't mess with this either
+    pinMode(23, OUTPUT);    // to BEE pin 9 - Sleep control. This is the only pin that requires setting
+    digitalWrite(23, LOW);  // LOW is not sleep, HIGH is sleep, make sure you set sleep mode SM: 0=never sleep, 1=sleep by pin 23
+
+    // The system must be brought up by applying power to board via the USB, THEN power to the xbee via the battery
+    // I'd like to find a way to do this with signals to the xbee, but it doesn't seem possible.   Until then:
+
+    // Sequence to cause xbee unresponsive: (don't know why you would want to do this)
+    //   unplug xbee from USB
+    //   connect battery or leave battery connected
+    //   plug back into USB
+
+    // Sequence to bring up successfully:
+    //    Mayfly slide switch off
+    //    unplug from USB
+    //    unplug battery
+    //    Mayfly slide switch on
+    //    plug into USB
+    //    plug in battery quickly
+
+    // Print the battery voltage
+    SerialMon.print(F("Voltage: ")) ;
+    float v = get_voltage() ;
+    SerialMon.println(v) ;
+	
+	//  Missing SD card causes hang with solid red light
+	int first_time = 1 ;
+	while(1){
+		if (SD.begin(SD_CS_PIN)) break ;
+		if (first_time) {
+			SerialMon.println(F("SD Card failure! Hang here until inserted."));
+			digitalWrite(9, HIGH);
+		}
+		first_time = 0 ;
+    }
+	digitalWrite(9, LOW) ;
+	
+    // see if xbee is responsive
+    while(true) {
+        bool success = modem.testAT(7000L); // testAT does a commandMode() and a loop for 7 seconds testing for any return from the XBee
+        if (success) { // blink green 2 times and go on
+            SerialMon.println(F("XBee is operational (blink green 2x).")) ;
+            pinMode(8, OUTPUT);
+            digitalWrite(8, HIGH);            delay(1000) ;
+            digitalWrite(8, LOW);             delay(1000) ;
+            digitalWrite(8, HIGH);            delay(1000) ;
+            digitalWrite(8, LOW);
+            break ;
+        }
+        else { // hang blinking red/green like RR crossing. User must unplug Mayfly and XBee as per above UNLESS this is just a mis-matched baud rate
+            SerialMon.println(F("XBee Failed to start...")) ;
+            pinMode(8, OUTPUT);
+            pinMode(9, OUTPUT);
+            int State8 = LOW;
+            for(int i=0; i<6 ; i++) {
+                if (State8 == LOW) State8 = HIGH;
+                else State8 = LOW; 
+                digitalWrite(8, State8);
+                digitalWrite(9, !State8);
+                //digitalWrite(23,!State8) ; // try to get it out of sleep?  this doesn't work
+                delay(1000) ;
+            }
+        }
+    }
+
+    // put the xbee in command mode for the next series - it probably has reached 10 second timeout by code above
+    modem.commandMode() ;
+
+    // if you are having trouble getting some things to work BUT you can execute AT commands, then run FR or uncomment this to reset every time you bring modem up
+    // Force Reset
+    //modem.sendAT(GF("FR"));
+    //modem.waitResponse(200) ;
+    //SerialMon.println(F(" - Force Reset")) ;
+    //modem.commandMode() ; // put in command mode after reset
+
+    // Make any changes here that you like.  These are good for me.  If not using AT&T, set CP to 0
+    int change_cnt = 0 ;
+    change_cnt += test_and_set("SM", "1", "Sleep mode") ; 		// enabled to sleep with pin 23
+    change_cnt += test_and_set("AM", "0", "Airplane mode") ;	// off
+    change_cnt += test_and_set("CP", "2", "Carrier Profile") ; 	// Set for AT&T
+    change_cnt += test_and_set("AN", access_point_name, "Access Point Name") ; // should be hologram or whatever you set above
+    change_cnt += test_and_set("C0", "50", "Source Port Name") ; // Source port - it may be required for communication - I don't know
+    //change_cnt += test_and_set("DO", "8", "Device Options (no RM, yes PSM)") ; // I think this screws upthe modem  - don't do this until you figure out how to get out of PSM cleanly
+    change_cnt += test_and_set("DO", "0", "Device Options (no Remote Manager, no PSM)") ; // disable/disable bit 0=RM, bit 1=not used, bit 2=USB direct mode, bit 3=Power Saving Mode
+    change_cnt += test_and_set("N#", "2", "Preferred Network Technology (no NB-IOT, just LTE-M)") ;
+    change_cnt += test_and_set("AP", "0", "API Mode (not Bypass)") ;
+
+    // apply changes
+    if (change_cnt > 0) {
+        modem.sendAT(GF("AC")); // apply changes
+        modem.waitResponse(200) ;
+		modem.sendAT(GF("WR")); // write changes so modem will remember these settings on next boot
+        modem.waitResponse(200) ;
+        SerialMon.println(F("Applied changes from above")) ;
+    }
+
+    // Just display a bunch of things that are nice to know on bring-up
+	// run_at just executes the AT command and displays the text: then output of AT command
+    run_at("VR","Firmware version") ; // Firmware: I'm at 17.4.1.0.   Use Remote Manager or XCTU from Digi to download and install updates
+    run_at("IM","IMEI") ;// IMEI
+    run_at("S#","SIM") ;  // SIM card
+
+    // Show Remote Manager Status - it should be a "4" because we disconnected it above
+    run_at("DI","Digi Remote Manager Status (4 = off)") ; // 0=connected 1=before internet 2=in progress 3=disconnected 4=not configured ") ;
+
+} // end setup_xbee
+
+// function to connect to cellular.  *****************************************************************************************************************
+int connect_to_network() { // Returns # seconds to connect or 0 if failed
+    
+    // digitalWrite(23, LOW); // wake up bee if asleep I think this might cause XBee to lose connection when we restart
+    // do until we are connected (AI=0) - it can take 10 minutes. If it goes 14 minutes, give up.  We may have some measurements to make every 15 minutes
+    int i = 0;
+    int sec_delay = 10 ;
+    int loops = 12*60/sec_delay ; // 12 minutes * 60 seconds / 10 second delay = 72 loops
+    while (i < loops) {  // writes a line of status every 10 seconds until it connects. Will try for 720 seconds or 12 minutes then returns 0
+		if (digitalRead(21)) {
+			SerialMon.println(F("Let go of the button")) ;
+			while (digitalRead(21)) {} // don't want to jump out of the connect_to_network
+			return 0 ; // push the button to get out of this loop
+		}
+        modem.commandMode() ;  // make sure we are still in command mode
+        SerialMon.print(i) ;
+        modem.sendAT(GF("AI")); // registration status
+        //at_response = "" ;
+        String at_response = modem.readResponseString(200);
+        SerialMon.print(F(". AI: ")) ;
+        SerialMon.print(at_response) ;
+		if (at_response == "2C") {  // in power saving mode.  Wake it up with any network command
+			modem.sendAT(GF("LAlake-man.com")) ;
+			//at_out =
+			modem.readResponseString(200);
+			SerialMon.print(F(" Getting out of PSM with AT=LA lake-man.com ")) ;
+		}
+        modem.sendAT(GF("DB")); // Cell Strength
+        //at_out = modem.readResponseString(200);
+        SerialMon.print(F(", DB: ")) ;
+        SerialMon.print(modem.readResponseString(200)) ;
+        SerialMon.print(F(", Voltage: ")) ;
+        SerialMon.println( get_voltage()) ;// Print the battery voltage
+        if (at_response == "0") {
+            SerialMon.println(F("Connected to network")) ;
+            break ;
+        }
+        delay(sec_delay*1000) ;  // We'll replace this with a Mayfly sleep in the future
+        i++ ;
+        if (i == loops) {
+            SerialMon.println(F("Failed to connect to network. Exiting..")) ;
+            return 0 ;
+        }
+    }
+    int seconds_to_connect = i * sec_delay ;
+
+    //// other stuff I might want to display
+	// run_at("MY","My Address") ;  // internet address
+	// run_at("N1","DNS 1") ;  // DNS Server 1
+	// run_at("N2","DNS 2") ;  // DNS Server 2    
+    return seconds_to_connect ;
+} // end connect_to_network
+
+// function to connect to the host  *****************************************************************************************************************
+int connect_to_host(char host[], int port) { //  returns 0 if connected, -1 = failed
+    // first check if we've been given a URL or an IP@
+    char buf[100] ;
+    strcpy(buf,host) ;
+    char *x[30]; // could be a long domain name
+    x[0] = strtok(buf,".");  // strtok returns first token in string delimited by "."
+    //SerialMon.println(x[0]) ;  // no legal domain name is just a number.com
+    SerialMon.print(host) ;
+    if (0 != atoi(x[0])) {  // atoi returns zero if it has non-numeric characters - so if this check is true, we have an integer and evidently an IP@
+        SerialMon.println(F(" is IP@")) ;
+        // convert host to String then to ip
+        IPAddress ip = TinyGsmIpFromString(String(host)) ;
+        client.connect(ip, port) ; // does a IP, DL, DE, WR, AC, CN.  the LA is skipped if we give an ip address.  This can't fail so don't check for failure
+    }
+    else {
+        SerialMon.println(F(" is URL")) ; // Domain Lookup Address needs to happen
+        if (!client.connect(host, port)) { // does a LA then IP, DL, DE, WR, AC, CN.
+            SerialMon.println(F(" [fail]"));
+            return -1 ;
+        }
+    }
+    //SerialMon.print(F("Ready to send to "));
+    return 0 ;
+
+    // Cal's version of modemConnect - not complete but it does send
+    //  modem.sendAT(GF("LA"), "132.148.85.45");  // set destination
+    //  modem.waitResponse(200) ;
+    //  modem.sendAT(GF("IP1")); // go to TCP - will be done by connect below
+    //  modem.waitResponse(200) ;
+    //  modem.sendAT(GF("DL"), "132.148.85.45");  // set destination
+    //  modem.waitResponse(200) ;
+    //  modem.sendAT(GF("DEC0"));  // set destination
+    //  modem.waitResponse(200) ;
+    //  modem.sendAT(GF("WR"));  // write"
+    //  modem.waitResponse(200) ;
+    //  modem.sendAT(GF("AC"));  // apply changes
+    //  modem.waitResponse(200) ;
+    //  modem.sendAT(GF("CN"));  // exit command mode
+    //  modem.waitResponse(200) ;
+
+}	// end connect_to_host
+
+// function to read_incoming_data *****************************************************************************************************************
+int read_incoming_data(int output = 2) { // returns #bytes read  or negative value if failed
+	// specify output = 0 to get header and data
+	//			output = 1 to get just data
+	//			output = 2 to get data enclosed in ~~ from mayfly_server (default)
+	// returns bytes read if successful which includes 0
+	//	= -4 if failed to receive anything (timeout 5 seconds)
+	//	= -5 if no data inside ~~
+	// 	= -6 if buffer overrun
+    // Wait for data to arrive
+	strcpy(read_buffer,"") ; // wipe out the buffer so we don't ever see previous responses	
+	int cycles = 200 ;// Cal - probably should allow the server to set the cycles to wait or timeframe
+	int i = 0;
+    while (client.connected() && !client.available() && i < cycles) { // wait for 200 * 100 ms or 20 seconds for stuff to come back printing "."
+        delay(100);
+        SerialMon.print('.');
+        i++ ;
+    };
+    //SerialMon.println(F("Print received data:")); // I think putting things here will cause buffer overrun. So don't...
+    if ( i >= cycles) {
+        SerialMon.println(F("\nFailed to receive")) ;
+        return -4 ;
+    }
+
+    // Read data including headers
+    unsigned long timeout = millis();
+    unsigned long bytesReceived = 0;
+    while (client.connected() && millis() - timeout < 5000L) {
+        while (client.available()) {
+            char c = client.read();
+            read_buffer[bytesReceived] = c ;
+            //SerialMon.print(c);
+            bytesReceived += 1;
+			if (bytesReceived >= read_buffer_size) {
+				strcpy(read_buffer,"") ;
+				SerialMon.println(F("Read Buffer Overrun")) ;
+				return -6 ;
+			}
+            timeout = millis();
+        }
+    }
+    read_buffer[bytesReceived] = '\0' ;   // Done reading
+    SerialMon.println(F("End receiving data.")) ;
+//SerialMon.println(read_buffer) ;
+	if (bytesReceived == 0) {  // never got a response 
+		SerialMon.println(F("NO RESPONSE from server.")) ;
+		return -4 ;
+	}
+	if (output == 0) { // return header and data
+		return bytesReceived ;
+	}
+	char * r ;
+	if (output == 1) { // return data only
+		r = strtok(read_buffer,"Content-Length:") ;
+		r = strtok(NULL,'\n') ; // number of bytes as in "Content-Length: 345"
+		r = strtok(NULL,'\n') ; // number of bytes as in "Content-Length: 345"
+		r = strtok(NULL,"") ;   // should be all the data
+	}
+	else { // return only stuff inside ~~
+		r = strtok(read_buffer,"~~") ; // first stuff will be the header then "~~" then the response, then "~~"
+		r = strtok(NULL,"~~") ;  // this is the real response;
+		if (1 >= strlen(r)) { // something wrong. The server should send something.  print the header
+			SerialMon.println(F("RESPONSE from server not enclosed in ~~")) ; // probably NOT a response from mayfly_server
+			strcpy(read_buffer,"") ;
+			return -5 ;
+		}
+	}
+	strcpy(read_buffer,r) ;  // put the response at the front of the read_buffer
+	SerialMon.print(F("RESPONSE: ")) ;
+	SerialMon.println(read_buffer) ;	
+    return strlen(read_buffer) ; // the output is in the global variable "read_buffer"
+} // end read_incoming_data
+
+// function to make an HTTP GET request: *****************************************************************************************************************
+int http_get(char * host, char * resource, char * parms, int output = 2 ) { // response will be in static "read_buffer" if successful
+	// specify output = 0 to return received header and data
+	//			output = 1 to return just data
+	//			output = 2 to return data enclosed in ~~ from mayfly_server ( default)	
+	// rc >= bytesReceived (which includes 0) if successfully connected and sent
+	//	= -1 if couldn't connect to network
+	//	= -2 if couldn't connect to host
+	// 	= -3 if illegal request
+	//	= -4 if failed to receive anything (timeout 5 seconds)
+	//	= -5 if no data inside ~~
+	// 	= -6 if buffer overrun
+    if (0 > connect_to_network() ) return -1 ; // failed to connect
+    if (0 > connect_to_host(host, 80)) return -2 ; // failed to connect
+    String Sparms = String(parms) ; // make the parms character array easy to work with
+    if (Sparms.length() > 2048)  {
+        SerialMon.println(F("Get is restricted to 2048 bytes. You are trying to send more than that.  Exiting...")) ;
+        return -3 ;
+    }
+    Sparms.replace(" ","%20") ; // URL encode - probably need to do more here
+    String line1 = String("GET "); line1 += resource; line1 += "?" ; line1 += Sparms ; line1 += " HTTP/1.1\r\n" ;
+    String line2 = String("Host: "); line2 += host ; line2 += "\r\n" ;
+    String line3 = "Connection: close\r\n\r\n";
+    SerialMon.print(line1) ; 
+    SerialMon.print(line2) ;
+    SerialMon.print(line3);
+    client.print(line1) ;
+    client.print(line2) ;
+    client.print(line3) ;
+    int bytesReceived = read_incoming_data(output) ;
+	// response will be in read_buffer.  failed response: buffer = ""
+	return bytesReceived;
+}// end http_get
+
+// function to make an HTTP POST request: *****************************************************************************************************************
+int http_post(char *host, char *resource, char *data, int output = 2) { // returns bytesReceived or negative number.  Data will be in static "read_buffer"
+	// specify output = 0 to get header and data
+	//			output = 1 to get just data
+	//			output = 2 to get data enclosed in ~~ from mayfly_server ( default)	
+	// rc >= bytesReceived (which includes 0) if successfully connected and sent
+	//	= -1 if couldn't connect to network
+	//	= -2 if couldn't connect to host
+	//	= -4 if failed to receive anything (timeout 5 seconds)
+	//	= -5 if no data inside ~~
+	// 	= -6 if buffer overrun
+	int bytesReceived ;
+	for (int i=0; i<2; i++ ) { // allow a retry
+		// On second try, recycle the XBee
+		if (i==1) {
+			SerialMon.println(F("Power cylce the XBee")) ;
+			digitalWrite(23, HIGH);  //  HIGH is off, make sure you set sleep mode SM: 0=never sleep, 1=sleep by pin 23
+			for (int j=0; j<50; j++) {
+			    modem.commandMode() ; // make sure in command mode. same as +++ AT command.  onlaiy stays in AT mode for 10 seconds
+				modem.sendAT("AI");    // send the command
+				String at_out = modem.readResponseString(200);
+				Serial.println(at_out) ;
+				if (at_out != "0") break ;  // maybe this should be !=0 ?
+				delay(1000) ;
+			}
+			digitalWrite(23, LOW);  // LOW is on
+		}
+		if (0 > connect_to_network() ) return -1 ; // failed to connect
+		if (0 > connect_to_host(host, 80)) return -2 ; // failed to connect
+		// no need to URL encode on Post
+		// better way to do this is to build up all the stuff and print in 1 line
+		
+		int size = strlen(data) ;
+	SerialMon.print(F("POST "));
+	SerialMon.print(resource) ;
+	SerialMon.println(F(" HTTP/1.1")) ;
+	SerialMon.print(F("Host: "));
+	SerialMon.println(host) ;
+	SerialMon.print(F("Content-Length: "));
+	SerialMon.println(size); // length of data
+	SerialMon.println(F("Connection: close"));
+	SerialMon.println();
+	SerialMon.println(data);
+			
+		client.print(F("POST "));
+		client.print(resource) ;
+		client.println(F(" HTTP/1.1")) ;
+		client.print(F("Host: "));
+		client.println(host) ;
+		client.print(F("Content-Length: "));
+		client.println(size); // length of data
+		client.println(F("Connection: close"));
+		client.println();
+		client.println(data);
+		bytesReceived = read_incoming_data(output) ;
+		if (bytesReceived>0 || bytesReceived < -4) break ; // only retry if we never got any response.
+	}
+	return bytesReceived ;
+}// end http_post
+
+// function to collect status  //////////////////////////////////////////////////////////////////////////////////
+char * collect_status() {		// collect all the status in csv form.  Cal - change this to a string
+	static char statusChar[100] ;
+	connect_to_network() ; // do this now before we send status (DB willl not be right)
+	String status = "" ;
+	DateTime dt(rtc.makeDateTime(rtc.now().getEpoch()));
+	dt.addToString(status); 
+	
+	// add DB
+	status += ", DB " ;
+	modem.sendAT("DB") ;
+	String db = modem.readResponseString(200) ;
+    status += db ;
+
+	// add voltages
+	status += ", v. " ;
+	float v = get_voltage() ;
+	status += v ;
+	
+	// add memory
+	status += ", mem: " ;
+	long mem = freeMemory() ;
+	status += mem ;
+	
+	//SerialMon.println(status) ;
+	if (status.length()>=100) {
+		SerialMon.println(F("Status is too big for statusChar buffer")) ;
+		strcpy(statusChar, "unknown") ;
+		return statusChar ;
+	}
+	status.toCharArray(statusChar, 100); // convert String to char
+	//Serial.println(F("status char")); Serial.println(statusChar) ;
+	return statusChar ;
+}
+
+
+// send_server ######################################################################################
+// Sends some request to host and expects response  enclosed in "~~"
+// char *response = send_server("request" , "data" )
+// ex.  date = send_server("lastdate","") ;
+send_server (char *request, char *data) { //, char *reply = "") {  Cal - get rid of parms altogether and replace with send_buf
+	// build parms (request, data)
+	//Serial.println(F("send_server request & data")) ; Serial.println(request) ; Serial.println(data) ;
+
+    strcpy(parms, "request=") ;
+    strcat(parms,request) ;
+    strcat(parms,"&mayfly_id=") ;
+    strcat(parms,logger_name) ;
+    strcat(parms,"&data=" );
+    strcat(parms,data) ;
+	if (0 != strlen(reply)){    	// add reply=xxxx if it was sent
+		strcat(parms,"&reply=" );
+		strcat(parms,reply) ;
+		* reply = '\0' ;
+	}
+    SerialMon.print(F("Sending: ")) ;
+	SerialMon.print(host) ;
+	SerialMon.print(resource) ;
+	SerialMon.print(F(" as POST with parms: ")) ;
+	SerialMon.println(parms) ;
+
+    // call the host
+    http_post(host, resource, parms) ;
+	return ;
+} // end send_server
+
+// function to get the value of a key-value pair - probably not needed,  not tested ######################################################################################
+// find value of given key in array of key-value pairs
+char get_value(char *key, char *data) {
+    char *mykey = strtok(data,"=") ; // get the first key
+    char *myvalue = strtok(NULL,"&") ; // and the first value
+    while(mykey != NULL) {
+        SerialMon.print(F("key: ")) ;
+        SerialMon.println(mykey) ;
+        SerialMon.println(myvalue) ;
+        if (0 == strcmp(mykey,key)) {  // this is the key I want
+            SerialMon.println(F("FOUND")) ;
+            return myvalue ;
+        }
+        mykey = strtok(NULL,"=") ; // get the first key
+        myvalue = strtok(NULL,"&") ; // and the first value
+    }
+    return "" ;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// function to translate a msmt line to a structure  (date in seconds, id, parms[], parm_cnt).
+int get_parms(char *p,struct msmt_line * m) {
+	
+  // input: p points to the start of this line
+  // output:epoch_seconds  and parms[] gets loaded with the values
+  // also returns the ptr to the start the next line
+ 
+  // get the date
+  int i=0 ;     // index into line - skips over date time:  yyyy-mm-dd hh:mm:ss,Zzzz,123.456,...
+  while(p[i] != ',') { // look for end of date
+	if (p[i] == '~' || p[i] == '\0') {return 0 ;} // this line is not a legal record
+	i++ ;
+  }
+  if (i<15) {return 0 ;} // this line is not a legal record - datetime too small
+  m->seconds = date_to_time(p) ;
+//Serial.print(F("seconds in get_parms: ")) ;   Serial.println(m->seconds) ;
+  if (m->seconds == 0) {return 0 ;} // this line is not a legal record - datetime invalid
+  
+  // get the id
+  i++ ;
+  int id_cnt = 0 ;
+  while(p[i] != ',') { // look for end of id
+	if (p[i] == '~' || p[i] == '\0') {return 0 ;} // this line is not a legal record
+	//Serial.print(p[i]) ;
+	m->id[id_cnt] = p[i] ;
+	id_cnt++ ;
+	m->id[id_cnt] = '\0' ;
+	i++ ;
+  }
+  //Serial.print(F("mayfly id: ")) ; Serial.println(m->id) ; 
+
+  // now get the parms by filling a buf with each and storing it's floating point value in the structure
+  i++ ;
+  m->parm_cnt = 0 ; // number of parms  so far
+  char buf[20] = "";
+  int bufcnt = 0 ;
+  while (p[i] != '\0' ) { // step through line until we see an end char. Really don't need this test since we break out anyway
+	//Serial.print("p[i]") ; Serial.println(p[i]) ;
+    if ( p[i] == ',' || p[i] == '~') { // found a parm
+      m->parms[m->parm_cnt] = atof(buf) ;
+	//Serial.print(F("parm#: ")) ; Serial.print(m->parm_cnt) ; Serial.print(F(", buf: ")) ; Serial.print(buf) ;Serial.print(F(", parms")) ;Serial.println(m->parms[m->parm_cnt]) ;
+	  m->parm_cnt++ ; 
+      bufcnt = 0 ;
+      if (p[i] == '~') return p + i + 1 ; // end of this line. return the number of parms
+    }
+    else { // fill a buffer with this parm
+      buf[bufcnt] = p[i] ; // get another character
+      bufcnt++ ;
+    }
+    i++ ;
+    buf[bufcnt] = '\0' ; // keep terminating this parm as we fill it
+  }
+  return p + i ;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// function to compress a line of data in the buffer to transmit
+ // note: if anything (besides parm values) changed from last line, I reset stuff by sending an uncompressed line.  That saves the server from getting confused.
+ char * compress_line(char * start_ptr) { 
+	// start_ptr is the start of this line to compress
+	// returns the ptr to the last character of the compressed or uncompressed line
+	char * insert_ptr = start_ptr ;  // where I will insert a new compressed line
+	m1 = m2 ; // move the last struct to the first struct
+	char *next_ptr = get_parms(start_ptr, &m2) ; // process this line to 2nd struct,  and get ptr to next line
+	m2.last_delta = -999999 ; // start with NO DEFINED last_delta for m2
+	*next_ptr = '\0' ; // terminate this line so I can print it.  We are compressing as we fill the send_buf, so there isn't a line after this yet and the '\0' will get overwritten by next line
+	Serial.print(F("Compress this line: ")) ; Serial.println(start_ptr) ; 
+	m2.valid=1 ; // this will become m1 on the next go around
+	if (m1.valid == 0 ) { // just starting on a fresh transmit
+		//	m1.valid = 1 ;  // why did I do this?  I should get rid of it
+		Serial.print(F("*** First Line ***")) ;
+		goto SEND2 ;// we always send the first line so it can stay right where it is
+	}
+	
+	// compare this line with the last
+   if (0 != strcmp(m1.id,m2.id)) {
+    Serial.print(F("different mayfly id's: ")) ; Serial.print(m1.id) ; Serial.print(F(" ")) ; Serial.println(m2.id) ;
+    goto SEND2 ;
+   }
+    
+    if (m1.parm_cnt != m2.parm_cnt) { //  Must have changed # of sensors or started with the wrong # of sensors.
+      Serial.println(F("Parameter counts don't match")) ;
+      goto SEND2 ;
+    }   
+
+    // store the interval in code or in seconds.  I'm just going to check for a few common values
+    //intervals = ( 1, 2, 3, 4, 5, 6, 10, 12, 15, 20, 30, 60, 120, 480, 360, 480, 720, 1440 ) ;    # minutes
+	
+    long delta_seconds = m2.seconds - m1.seconds ;
+//Serial.print(F("m2 sec: ")); Serial.print(m2.seconds) ; Serial.print(F(" m1 sec: ")); Serial.print(m1.seconds); Serial.print(F(" Diff: ")); Serial.println(delta_seconds) ;
+    if (delta_seconds < 0) { // negative value - shouldn't happen
+      Serial.println(F("Date of this msmt is before last.")) ;
+      goto SEND2 ;
+    }
+	// now we are committed to a compression
+    if (m1.last_delta == delta_seconds) {
+      // do nothing.  we'll get a comma in the parms section so our line will start with ,
+    }
+    else if (delta_seconds == 900) {
+      strcpy(insert_ptr, "i") ;  // i is 15 minutes = 900 seconds
+      insert_ptr++ ;    }
+    else if (delta_seconds == 1800) {
+      strcpy(insert_ptr, "k") ;  // k is 30 minutes = 1800 seconds
+      insert_ptr++ ;
+    }
+    else { // just enter the number of seconds
+      char interval[20] = "";
+      //itoa(delta_seconds, interval, 10) ;
+	  sprintf(interval, "%lu",delta_seconds); // using ul (unsigned long) notation to get this to work! itoa won't!!!  Negative values never get here.
+//Serial.print(F("interval: ")) ; Serial.println(interval) ;
+      strcpy(insert_ptr, interval);
+      insert_ptr += strlen(interval) ;
+    }
+    m2.last_delta = delta_seconds ;  // save this delta seconds in m2 so it will be in m1 next time around
+    for (int i = 0; i < m1.parm_cnt; i++) { // go through each parm  
+      strcpy(insert_ptr, ",") ; // start putting parm in the buffer - also adds '\0'
+      insert_ptr++ ;
+      float diff = m2.parms[i] - m1.parms[i] ;
+//Serial.print(i) ; Serial.print(F(". ")) ; Serial.print(m2.parms[i]) ;   Serial.print(F(" - ")) ; Serial.print(m1.parms[i]) ; Serial.print(F(" = ")) ; Serial.println(diff) ;
+      if (diff == 0) {             //Serial.println(F("zero")) ;
+        continue ; // don't have to put anything there for a zero
+      }
+      char diff_char[10] = "" ;
+      float_to_char (diff, diff_char, 2) ;  // diff_char now is nn.nn
+      strcpy(insert_ptr, diff_char) ;
+      insert_ptr += strlen(diff_char) ;
+    }
+//Serial.println(F(""))) ;
+    strcpy(insert_ptr, "~") ; // terminate this line
+    insert_ptr++ ;
+	strcpy(insert_ptr,"") ;// terminate this line so I can print it
+	Serial.print(F("Compressed: ")) ; 	Serial.println(start_ptr) ; // print this compressed line
+	return insert_ptr-1 ;
+
+SEND2: // leave this line uncompressed 
+    Serial.print(F("No compression")) ; 	Serial.println(start_ptr) ; // print this uncompressed line
+	return next_ptr-1 ;
+ } // end compress_line
+
+
+
+// send_msmts
+// function to send new measurements from SD Card  *****************************************************************************************************************
+/*  process:
+    - read backwards through the SD Card until we find lastdate
+    - move forward to the next record
+    - set up a HTTP Post, and start sending
+    - read forward sending each byte of data
+    - server may respond with date of last record received (and processed I assume)
+*/
+
+int send_msmts() { 	// assumes we have a valid timestamp in server_lastdate global variable
+	//    return codes:
+	//    0  - nothing more to send - server_lastdate same as my lastdate
+	//    > 0  - a valid batch of msmts sent and received
+	//	-1 - msmt file or sd card.  send error to server
+	// other negative numbers are errors in sending or receiving
+
+    File msmt_file = SD.open(msmt_file_name);
+    while (!msmt_file) { // 
+        SerialMon.println(F("Can't find measurement file")) ;
+		// send msg to server. Server should send email to cal - no msmt file
+		return -1 ;
+    }
+	m2.valid = 0 ; // If compressing msmts,  when we are starting send_msmts, we need to invalidate any data that was left over in the m2 structure from a previous send.
+    long int filesize = msmt_file.size();
+    SerialMon.print(F("filesize: ")) ; SerialMon.println(filesize) ;
+
+    byte x ;      // 1 byte we read from SD Car
+	long int i ;  // pointer to a byte in msmt_file
+	long int previous_line = 0 ; // pointer to a byte in msmt_file
+	char * bufptr = send_buf ;  // this is the buffer I'll send with a http_post
+
+	// go from end of file backwards, counting lines with valid timestamps
+	int msmt_count = 0 ;
+	for (i=filesize-3; i>0; i--) { // start before lineend chars
+		msmt_file.seek(i) ;
+		x = msmt_file.read();
+		
+		// found the end:start of a line
+		if (x == 10) {      // \n found which is the end of the next line
+			// We are now in the file of lines: Aaaaaaa\nBbbbbbb\nCccccccc\n~Dddddddd
+			//                                          ^
+			// The line buffer contains line B and we are pointing at the end of A.
+			// We want to compare the date_time in B to what the server sent us.
+			// If matches, we want to send data starting with line C.
+			*bufptr = '\0' ; // terminate this line
+			strrev(send_buf) ; // reverse the line 
+			long int num_bytes = strlen(send_buf) ;
+			previous_line = i+num_bytes + 2 ;   // remember pointer to line C - if we match with B, we start sending from here (+ 2 for \n and next byte)
+			// break out of this loop if this line has a valid timestamp equal or less than the given timestamp
+			if (( num_bytes >= 19) && (0 == validate_timestamp(send_buf, 19))) { // valid timestamp
+				// compare timestamps(a,b): a<b returns -1,  a==b returns 0, a>b returns +1, invalid b returns -2
+				int y = compare_timestamps(server_lastdate,send_buf) ; // -1 SDcard is later, +1 SDcard is earlier, 0 is =
+				if (y == 0 || y == 1 ) {
+					SerialMon.println (F("Found same or earlier date.")) ;
+					break;
+				}
+				msmt_count++ ;  // only count valid dates older than what I'm looking for
+			}
+			bufptr = send_buf ; // start filling next line at beginning of send_buf
+		}
+		else {
+			*bufptr = x ; // add this char to buffer and point to next  ;
+			bufptr++ ;
+		}
+	} // end going backwards
+	if (msmt_count == 0) { 
+		SerialMon.println(F("Nothing to do - server is up-to-date")) ;
+		return 0 ;
+	}
+	else if (i <= 0) SerialMon.print(F("Trying to send the entire file. #lines: ")) ;
+	else SerialMon.print(F("Total lines to send: ")) ;
+	SerialMon.println(msmt_count) ;
+		
+	// build the post 
+	strcpy(send_buf, "request=savemsmts&mayfly_id=") ; // load the request and ID parms 
+	strcat(send_buf,logger_name) ;
+	strcat(send_buf,"&data=" ); // start the data parm
+	long int data_size = filesize-previous_line ; // size of uncompressed msmts to send
+	int parm_size = strlen(send_buf)  ;  // size of data in send_buf so far
+	
+	 // read in the msmts
+	 msmt_file.seek(previous_line) ;
+	char *p = send_buf + parm_size ;
+	char *end_buf = send_buf + batchsize -1 ;
+	char * last_start = p ;
+	int line_cnt = 0 ;
+	for(i=0; i<data_size; i++) { // send only data_size bytes
+		*p = msmt_file.read();
+		if (*p == 13) *p = ' ' ; // replace \r with blank - so that the byte count remains correct
+		if (*p == 10) {
+			*p = '~' ; // replace \n with line separaters
+
+			// here is where we can compress the last line
+			if (compression == 1) {
+				p = compress_line(last_start) ; // Will build a compressed line here, or leave it as is. Returns ptr to the last character in the line.
+			}
+			last_start = p+1 ;
+			line_cnt++ ;
+		}
+		p++ ;
+		if (p >= end_buf) break ;	// ran out of buffer		
+	}
+	*last_start =  '\0' ; // terminate buf at last full line
+	SerialMon.print(F("Actual lines to send: ")); SerialMon.println(line_cnt) ;
+	int rc = http_post(host, resource, send_buf) ; // SEND THE POST
+	return rc ; // = bytesReceived if successful or negative number if not
+} // end send_msmts
+
+
+//function to determine hour[] min[] arrays from array of multiple h1:m1;h2:m2... event times //////////////////////////////////////////////////////////////////////////////////
+int wake_bee_arrays(){
+  int temp_wakes=0 ; // work with temp variables in case we have a problem.  Existing vars will still be valid
+  int temp_hour[24] ; 
+  int temp_min[24] ;
+  // use the send_buf for a save area - it should be big enough and nobody should be using it now !?
+	strcpy(send_buf,wake_bee_event_string) ; 	// save the string because strtok destroys it.  restore it later.
+  char *r = strtok(wake_bee_event_string,":") ; // Start tokenizing with ":" then ";" Can't use"," because that separates key=val pairs in setvars
+  while(temp_wakes<24) {  // we only accept 24 values
+    if (r == NULL ) break ;
+    if (!digits_only(r)) return 0 ; // non-digits found - fail this attempt. Leave it up to the server to warn users
+    temp_hour[temp_wakes] = atoi(r) ;
+    r = strtok(NULL,";") ;  // search for ";"
+    if (!digits_only(r)) return 0 ; // non-digits found. fail this attempt
+    temp_min[temp_wakes] = atoi(r) ;
+    //SerialMon.print(String(wake_bee_hour[num_wakes]) + ":" + String(wake_bee_min[num_wakes]) + " ") ;  
+    r = strtok(NULL,":") ;  // now get the next token
+    temp_wakes++ ;
+  }
+  strcpy(wake_bee_event_string, send_buf) ; // restore wake string
+
+ SerialMon.print(F("Computing xBee wake times: "));
+ num_wakes = temp_wakes ;
+ for (int i=0; i<num_wakes; i++) {
+	wake_bee_hour[i] = temp_hour[i] ;
+	wake_bee_min[i] = temp_min[i] ;
+  SerialMon.print(wake_bee_hour[i]); 
+  SerialMon.print(F(":")) ;
+  SerialMon.print(wake_bee_min[i]) ;
+  SerialMon.print(F(";")) ;  
+ }
+ SerialMon.println("") ;
+ return 1 ; // everything OK
+} // end wake_bee_arrays
+
+// function to handle a (unsolicited) command that the server sent //////////////////////////////////////////////////////////////////////////////////
+int server_command() {  // specific command is in read_buffer. Format: command=ccc & id=### & data=dddddddddddddddddddddddd
+	// returns >=1 if successful
+	// returns 0 if not
+	char * p = read_buffer+8 ; 			 // skip over "command=
+	char * command_name = strtok(p,"&") ; // get the command name
+	strtok(NULL,"=") ;	// skip over id=
+	char * idchar = strtok(NULL,"&") ; 		 // get the id of the command table
+	int idnum = atoi(idchar) ;  // convert id char to number
+    char * data = strtok(NULL,"") ; 	 // get the data which could be anything (use NULL delimiter to get the rest of the data)
+	data +=5 ; // skip over "data="
+	SerialMon.print(F("Server Command: ")) ;
+	SerialMon.print(command_name) ;
+	SerialMon.print(F(" data: ")) ;
+	SerialMon.println(data) ;
+	
+	// wake_string - can also set wake string using setvars
+	if (0 == strcmp(command_name,"wake_string")) { 		
+		strcpy(wake_bee_event_string, data) ;
+		// convert string to arrays
+		if (!wake_bee_arrays()) {
+			SerialMon.println(F("Failed setting wake_array variable!")) ;
+			return 0 ;
+		}
+		else {
+			return idnum ;
+		}
+	}
+	// at_cmds
+	if (0 == strcmp(command_name,"at_cmds")) {
+		// go through data pairs: cmd1, cmd2, ...
+		char * at_cmd = strtok(data,",") ; // get the first var name
+		String at_reply = String("AT CMDS: ") ;
+		String at_out ;
+		while(true) {
+			if (at_cmd == NULL ) break ;
+SerialMon.print(F("Sending AT: ")) ; SerialMon.println(at_cmd) ;
+			modem.commandMode() ; // make sure in command mode. same as +++ AT command.  only stays in AT mode for 10 seconds
+			modem.sendAT(at_cmd);// execute at_cmd
+			at_out = modem.readResponseString(200);
+SerialMon.print(F("Receiving: ")) ; SerialMon.println(at_out) ;
+			at_reply += at_cmd ; at_reply += ":" ; at_reply += at_out ; at_reply += ", " ;
+			at_cmd = strtok(NULL,",") ; // get the next cmd
+		}
+		SerialMon.println(at_reply) ;
+		int str_length = at_reply.length() ;  // length of this data - we're going to put it in the reply buffer but we need to know if it's big enough
+		if (str_length >= reply_size){
+SerialMon.print(F("855 new reply buf from: ")) ; SerialMon.print(reply_size) ; SerialMon.print(F(" to ")) ; SerialMon.print(str_length); SerialMon.println(F(" + 1")) ;
+SerialMon.println(F("free for reply")) ; 
+			free(reply) ;
+			reply_size = str_length + 1 ;
+SerialMon.print(F("malloc for reply: ")) ; SerialMon.println(reply_size) ;
+			reply = (char *)malloc(reply_size);
+			if (!reply ) {
+				SerialMon.println(F("Could not get storage for reply. line 860")) ;
+				return ;
+			}
+		}
+		at_reply.toCharArray(reply, str_length) ; // put it in reply
+		return -idnum ;
+	}
+	
+	// setvars - handles setting any number of vars
+	if (0 == strcmp(command_name,"setvars")) { 
+		// go through data pairs: var1=val1, var2=val2,
+		char * var = strtok(data,"=") ; // get the first var name
+		while(1) {
+			if (var == NULL ) return idnum ;
+			char * val = strtok(NULL,",") ; // get the value
+			// set var=val ;
+			SerialMon.print(F("Setting: ")) ; SerialMon.print(var) ; SerialMon.print(F(" = ")) ; SerialMon.println(val) ;
+			if      (0 == strcmp(var,"host")) strcpy(host,val) ; 
+			else if (0 == strcmp(var,"resource")) strcpy(resource,val) ;
+			else if (0 == strcmp(var,"access_point_name")) strcpy(access_point_name,val) ; 
+			else if (0 == strcmp(var,"batchsize")) {
+				int old_batchsize = batchsize ;
+				batchsize = atoi(val) ; // get new batchsize
+				free(send_buf) ;
+				SerialMon.print(F("free then malloc for send_buf: ")) ; SerialMon.println(batchsize) ;
+				char * send_buf = (char *)malloc(batchsize ); // get memory for the parms and the data and for a work area
+				if (!send_buf ) {
+					SerialMon.println(F("Could not get storage for send_buf. Reverting to last size.")) ;
+					batchsize = old_batchsize ;
+					char * send_buf = (char *)malloc(batchsize ); // get memory for the parms and the data and for a work area
+					if (!send_buf ) {
+						SerialMon.println(F("Could not get storage for send_buf. Communication will be shut down. Logginig will continue.")) ;
+					}
+				}
+			}
+			else if (0 == strcmp(var,"num_batches")) num_batches = atoi(val) ;
+			else if (0 == strcmp(var,"min_xbee_voltage")) min_xbee_voltage = atoi(val) ; 
+			else if (0 == strcmp(var,"sense_period")) sense_period = atoi(val) ; 
+			else if (0 == strcmp(var,"msmt_file_name")) strcpy(msmt_file_name,val) ;  // can change the msmt_file_name when it gets big
+			else if (0 == strcmp(var,"location")) strcpy(location,val) ;
+			else if (0 == strcmp(var,"logger_name")) strcpy(logger_name,val) ;
+			else if (0 == strcmp(var,"read_buffer_size")) {
+
+// Cal - fix this.  I'm working on data that is in the read_buffer.  can't free/malloc this now
+SerialMon.println(F("can't set read_buffer_size until Cal fixes problem.")) ;
+
+					//read_buffer_size = atoi(val) + 1 ;
+					//SerialMon.println(F("free for read_buffer")) ; 
+					//free(read_buffer) ;
+					//SerialMon.print(F("malloc for read_buffer_size: ")) ; SerialMon.println(read_buffer_size) ;
+					//char * read_buffer = (char *)malloc(read_buffer_size );
+					//if (!read_buffer ) {
+					//	SerialMon.println(F("Could not get storage for read_buffer.")) ;  // Cal - add code to go back to original read buffer size
+					//	return ;
+					//}
+			}
+			else if (0 == strcmp(var,"wake_string")) {  // setvars expects var1=val1,var2=val2 and wake_string=1:0;2:0;3:0;..., so everything OK
+				strcpy(wake_bee_event_string, data+12) ; // +12 skips over "wake_string="
+				if (!wake_bee_arrays()) { // convert string to arrays
+					SerialMon.println(F("Failed setting wake_array variable!")) ;
+					return -1 ;
+				}	
+			}
+			else {
+				Serial.print(F("unknown variable: ")) ;
+				Serial.print(var) ;
+				return -1 ;
+			}
+			var = strtok(NULL,"=") ; // get the next var if there is one
+		}
+		return idnum ;	
+	} // end setvars
+	
+	// set_clock
+	else if (0 == strcmp(command_name,"set_clock")) {
+			// data will be: nnnnnnnnn where nnn is epoch seconds
+			char * junk ; // junk will contain a ptr after data - I don't use this
+			long time = strtoul(data, &junk, 10); // convert large number to base 10 - couldn't get atoi to work
+			time += 4 ; // it will take about 4 seconds elapsed time to get this command.
+Serial.print(F("Setting clock to: "))  ;
+Serial.println(time) ;
+			rtc.setEpoch(uint32_t (time));			
+			String timestamp = getDateTime();  // sets the currentyear,,, vars
+Serial.println(timestamp) ;
+			DST = get_dst() ; // set the DST to agree with what server sent us.
+			return idnum ;	
+	} 
+	
+	else if (0 == strcmp(command_name,"write_eeprom")) {
+		 // get json string from server
+		 char * json = strtok(data,"=") ; // get the first var name
+Serial.print(F("json: ")) ; Serial.println(json) ;
+		 eeprom.writeStringToEEPROM( 0, json) ;
+		return idnum ;
+	}
+	else if (0 == strcmp(command_name,"read_eeprom")) {  // reads and sets the variables
+		 eeprom.initializeProvisioningVariables() ;
+		return idnum ;
+	}
+	else if (0 == strcmp(command_name,"send_status")) {
+		char * status = collect_status() ;
+		int status_size = strlen(status) ;
+		if (status_size >= reply_size){
+SerialMon.print(F("925 new reply buf from: ")) ; SerialMon.print(reply_size) ; SerialMon.print(F(" to ")) ; SerialMon.print(status_size); SerialMon.println(F(" + 1")) ;
+SerialMon.println(F("free for reply")) ; 
+			free(reply) ;
+			reply_size = status_size + 1 ;
+SerialMon.print(F("malloc for reply: ")) ; SerialMon.println(reply_size) ;
+			reply = (char *)malloc(reply_size);
+			if (!reply ) {
+				SerialMon.println(F("Could not get storage for reply - line 948")) ;
+				return ;
+			}
+		}
+		strcpy(reply,status) ;
+		return -idnum ; // sending NEGATIVE idnum tells the caller we have a reply
+	}
+	else if (0 == strcmp(command_name,"erase_file")) {
+		if (SD.remove(data)) return idnum ; // successful
+		else return 0 ;
+	}
+	else if (0 == strcmp(command_name,"rename_file")) {
+		char *from = strtok(data,",") ;
+		char *to = strtok(NULL,"") ;
+		File fromFile = SD.open(from, FILE_READ);
+		if (!fromFile){
+			Serial.println(F("failed to open FROM")) ;
+			return 0 ;
+		}
+		SD.remove(to) ; // otherwise will append to whatever is there
+		File toFile = SD.open(to, FILE_WRITE);//create "TO" file
+		if (!toFile) {
+			Serial.println(F("could not open TO")) ;
+			fromFile.close();
+			return 0;
+		}
+		// copy records
+		while ( fromFile.available()) {
+			char x = fromFile.read() ;
+			toFile.write(x);
+			//Serial.print(x) ;
+		}
+		toFile.close();  //Close the file to save it
+		fromFile.close();  //Close the file to save it
+		SD.remove(from) ; // successful
+		return idnum ;
+	}
+	else if (0 == strcmp(command_name,"showvars")) {
+		
+		// this will only be used for testing.  I'll have to have the Mayfly on my desk to see what it's printing.
+		//SerialMon.print(F("read_buffer_size ")) ;		SerialMon.println(read_buffer_size) ;
+		//SerialMon.print(F("host ")) ;					SerialMon.println(host ) ;
+		//SerialMon.print(F("resource ")) ;				SerialMon.println(resource ) ;
+		//SerialMon.print(F("access_point_name ")) ;		SerialMon.println(access_point_name ) ;
+		//SerialMon.print(F("batchsize ")) ;				SerialMon.println(batchsize) ;
+		//SerialMon.print(F("num_batches ")) ;			SerialMon.println(num_batches) ;
+		//SerialMon.print(F("wake_string "));	SerialMon.println(wake_bee_event_string ) ;
+		//SerialMon.print(F("min_xbee_voltage ")) ;		SerialMon.println(min_xbee_voltage ) ;
+		//SerialMon.print(F("sense_period ")) ;			SerialMon.println(sense_period ) ;
+		//SerialMon.print(F("location " ) ;				SerialMon.println(location ) ;
+		//SerialMon.print(F("msmt_file_name ")) ;		SerialMon.println(msmt_file_name ) ;
+		//SerialMon.print(F("logger_name ")) ;  			SerialMon.println(logger_name ) ;
+		//SerialMon.print(F("compression ")) ;  			SerialMon.println(compression ) ;  
+
+		
+		// reply to this command. data must be in the format: reply=var1:val1;var2:val2;...  
+		String showvars = String( "read_buffer_size:") ;
+		showvars +=  String(read_buffer_size)  +
+		String(",host:") 					+ String(host) + 
+		String(",resource:") 				+ String(resource) + 
+		String(",access_point_name:")		+ String(access_point_name) + 
+		String(",batchsize:")				+ String(batchsize)  +
+		String(",num_batches:")  			+ String(num_batches)  + 
+		String(",wake_string:")				+ String(wake_bee_event_string) + 
+		String(",min_xbee_voltage:") 		+ String(min_xbee_voltage) + 
+		String(",sense_period:") 			+ String(sense_period) + 
+		String(",location:")				+ String(location) + 
+		String(",msmt_file_name:") 		    + String(msmt_file_name) + 
+		String(",logger_name:")			    + String(logger_name)  ;
+		String(",compression:")			    + String(compression)  ;
+		                                               
+		int str_length = 1+showvars.length() ;  // length of this data - we're going to put it in the reply buffer but we need to know if it's big enough
+		if (str_length >= reply_size){
+SerialMon.print(F("998 new reply buf from: ")) ; SerialMon.print(reply_size) ; SerialMon.print(F(" to ")) ; SerialMon.print(str_length); SerialMon.println(F(" + 1")) ;
+SerialMon.println(F("free for reply")) ; 
+			free(reply) ;
+			reply_size = str_length + 1 ;
+			reply = (char *)malloc(reply_size);
+SerialMon.print(F("malloc for reply: ")) ; SerialMon.println(reply_size) ;
+			if (!reply ) {
+				SerialMon.println(F("Could not get storage for reply. line 1025")) ;
+				return ;
+			}
+		}
+		showvars.toCharArray(reply, str_length) ; // put it in reply	
+		return -idnum ; // sending NEGATIVE idnum tells the caller we have a reply
+	}
+	else {
+		Serial.print(F("Illegal server command: ")) ;
+		Serial.println(command_name) ;
+	}
+	
+	return 0 ; // illegal command
+} //end server_command
+
+// function to send status to server //////////////////////////////////////////////////////////////////////////////////
+void send_status() {
+	send_server("status", collect_status()) ;  // expects date of last record in server table OR some other command for the Mayfly to perform - like set constants
+	//SerialMon.println(r) ;
+	return ;
+} // end send status
+
+// function dialog - to converse with server //////////////////////////////////////////////////////////////////////////////////
+// send my status and check responses for my following actions
+void dialog() {
+	
+	// Start the dialog by sending any new msmts.  If I don't have any new msmts, send status.
+	// don't wake/sleep the XBee here because it will make problems for the Mayfly_testtool which alows running "dialog"
+	int batch_cnt = 0 ;
+	if (0 == validate_timestamp(server_lastdate,strlen(server_lastdate))) { // we have a valid saved timestamp	
+		int rc = send_msmts() ;  // will send any new msmts and return >0.  If server lastdate is up to date, returns 0 without ever sending any data, returns -1 if failed to find msmt file
+		// I should do something if I can't find the msmt file.
+		
+		if (rc == 0) { // Server is up-to-date and we didn't send data.  But since it's time to report, I send status in case the server wants to tell me something.
+			SerialMon.println(F("Server is up-to-date, but I will send status since I'm just entering a dialog.")) ;
+			send_status() ; //  Give the server a chance to respond and [ optionally send some commands] then sends his lastdate
+		}
+		batch_cnt++ ; // we sent a batch
+	}
+	else {
+		SerialMon.println(F("No valid lastdate saved for server. Will send status first before any msmts.")) ;
+		send_status() ; //  Give the server a chance to respond and optionally send some commands. Finally, server will send his lastdate
+	}
+
+	// Now respond to the server				
+	while (true) {
+		// keep doing what the server asks.  The response is always in read_buffer and is ready to be checked.  read_buffer will be blank if there was an error
+
+Serial.println(F("Inside the Dialog loop...")) ;
+		
+		if (0== strncmp("command=",read_buffer,8)) { // these commands come from the command table queued up in the server.
+			// We need to respond with the identifier so the server knows the command was acknowledge and can be taken off the queue
+			// Server tells Mayfly to execute a command (set variable, clock, etc).
+			int id = server_command() ;	// executes the command,  returns id =  identifying number of the of command in the command table. id = 0 if there is an error
+			char idc[6] ;
+			if (id < 0) { // there was a response to this command put in the reply buffer
+				itoa(-id,idc,10) ; // base 10 conversion int to char	
+				send_server("complete", idc) ; //,reply) ; // sends response to server:  valid id if accepted, otherwise sends 0
+			}
+			else {
+				char idc[6]  ;
+				itoa(id,idc,10) ; // base 10 conversion int to char		
+				send_server("complete", idc) ; // sends response to server:  valid id if accepted, otherwise sends 0
+			}
+			// falls through
+		}
+		else if (0== strncmp("lastdate=",read_buffer,9)) { // Server gave us his last date
+			strncpy(server_lastdate, read_buffer + 9, 19) ; // save server_lastdate
+			if (batch_cnt < num_batches) {
+				int rc = send_msmts() ; 	// send msmts if we have any.  rc = 1 if we did, which means we will loop here in the dialog until all msmts are sent.
+					//    0  - nothing more to send - server_lastdate same as my lastdate
+					//    >0  - a valid batch of msmts sent and received
+					//	<0 - some kind of error.  log it
+				batch_cnt++ ; // we sent a batch
+				if (rc <= 0) break ;  		// we can quit if server is up-to-date OR we have an error.  Otherwise, we will loop sending batches
+Serial.println(F("Sent a batch of measurements. Server may want more...")) ;
+				// or fall through
+			}
+			else {
+				Serial.println(F("Max number of batches sent")) ;
+				break ;
+			}
+		}
+		else if(0 == strncmp("setclock=",read_buffer, 9)) { // set the clock.
+			// This is the automatic set clock when the server notices a drift in the clock. The clock can also be set via the command table via "set_clock"
+			// read_buffer will be "setclock=nnnnnnnnn" where nnn is epoch seconds
+			char * ptr ;
+			long time = strtoul(read_buffer+9, &ptr, 10); // convert large numberto base 10 - couldn't get atoi to work
+Serial.print(F("Setting clock to ")) ;
+Serial.println(time) ;
+			time += 6 ; // it will take about 6 seconds elapsed time to get a response.
+			rtc.setEpoch(uint32_t (time));			
+			String timestamp = getDateTime();
+			DST = get_dst() ; // set the DST to agree with what server sent us.
+Serial.println(timestamp) ;
+			send_status() ;
+			// fall through
+		}
+		// else other automatic commands
+		
+		
+		else break ; // the server didn't respond or give us a legal command or communication failed somehow
+	}
+Serial.println(F("leaving dialog")) ;
+	// sleep the XBee in the code after returning from dialog
+	return ;
+} // end dialog
+
+
+#endif
