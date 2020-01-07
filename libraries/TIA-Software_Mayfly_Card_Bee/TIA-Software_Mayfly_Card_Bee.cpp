@@ -1,5 +1,4 @@
-//  TIA-Software_Mayfly_Card_Bee.cpp - Copyright (c) 2019 TIA Software, LLC.  All rights reserved.
-//  v1.0
+//  TIA-Software_Mayfly_Card_Bee.cpp - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 
 #include "TIA-Software_Mayfly_Card_Bee.h"                     // include the header file
 
@@ -8,8 +7,16 @@
 BeeSocket::BeeSocket() {}                                     // constructor
 
 
-// METHOD: setup an LED
-void BeeSocket::setup(const char *beeModule)
+// METHOD: setup module in bee socket
+boolean BeeSocket::setup(const char *beeModule)
 {
-  SerialMon.print("<<< setting up the bee socket with module: "); SerialMon.print(beeModule); SerialMon.println(" >>>");
+  if (strcmp(beeModule, "Digi1234") == 0) {
+    SerialMon.print("<<< setting up the bee socket with module: "); SerialMon.print(beeModule); SerialMon.println(" >>>");
+    return true;
+  }
+  
+  else {
+    SerialMon.print("<<< ERROR: unknown moduel in the bee socket: "); SerialMon.print(beeModule); SerialMon.println(" >>>");
+    return false;
+  }
 }

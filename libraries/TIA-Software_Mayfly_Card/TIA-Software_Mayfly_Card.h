@@ -11,15 +11,14 @@
 #include "TIA-Software_Mayfly_Card_SdFat.h"                   // include the SD Card library
 #include "TIA-Software_Mayfly_Card_Bee.h"                     // include the Bee Socket library
 
-
 class Mayfly_card { 
   public: 
     Mayfly_card();                                            // Mayfly card constructor
     static TIA_RTC    realTimeClock;                          // create real time clock instance "realTimeClock"
     static LED        redLED;                                 // create red led instance "redLED"
     static LED        greenLED;                               // create green led instance "greenLED"
-    static TIA_SdFat  SdCard;                                 // create SD Card instance "SdCard"
-    static BeeSocket  Bee;                                    // create something on the BEE socket
+    static TIA_SdFat  sdCard;                                 // create SD Card instance "SdCard"
+    static BeeSocket  beeSocket;                              // create something on the BEE socket
     
     void setup(                                               // setup the Mayfly card.  
       const char *beeModule                                   // module in the Bee socket

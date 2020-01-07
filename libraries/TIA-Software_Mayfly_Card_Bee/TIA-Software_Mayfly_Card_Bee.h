@@ -12,7 +12,7 @@ class BeeSocket {
     
     BeeSocket();                                            // constructor
     
-    void setup(                                             // METHOD: setup the Bee Socket
+    boolean setup(                                          // METHOD: setup the Bee Socket
       const char *beeModule                                 // defines the module in the Bee socket
     );
 };
