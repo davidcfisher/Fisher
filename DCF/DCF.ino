@@ -2,7 +2,7 @@
 
 #include "TIA-Software_Mayfly_Card.h"
 
-const char beeModule[] = "Digi1234";                              // module in the Bee socket, default = "none"
+const char beeModule[] = "DigiLTE-M";                             // module in the Bee socket, default = "none"
 
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
 

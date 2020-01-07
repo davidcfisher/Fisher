@@ -10,7 +10,7 @@ BeeSocket::BeeSocket() {}                                     // constructor
 // METHOD: setup module in bee socket
 boolean BeeSocket::setup(const char *beeModule)
 {
-  if (strcmp(beeModule, "Digi1234") == 0) {
+  if (strcmp(beeModule, "DigiLTE-M") == 0) {
     SerialMon.print("<<< setting up the bee socket with module: "); SerialMon.print(beeModule); SerialMon.println(" >>>");
     return true;
   }
