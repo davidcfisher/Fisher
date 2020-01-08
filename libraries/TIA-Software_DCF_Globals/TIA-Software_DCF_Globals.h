@@ -2,7 +2,7 @@
 
 #ifndef TIA_SOFTWARE_DCF_GLOBALS_H
 #define TIA_SOFTWARE_DCF_GLOBALS_H
-#define TIA_SOFTWARE_DCF_GLOBALS_VERSION 20200107
+#define TIA_SOFTWARE_DCF_GLOBALS_VERSION 20200108
 
 #define SerialMon Serial                              // establish the Serial Monitor
 #define SerialAT Serial1                              // establish the Cellular connection

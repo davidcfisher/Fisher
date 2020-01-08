@@ -1,5 +1,6 @@
 //  TIA-Software_Mayfly_Card_SdFat.cpp - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 
+#include "TIA-Software_Mayfly_Card.h"                                 // include the Mayfly Card
 #include "TIA-Software_Mayfly_Card_SdFat.h"                           // include the header file
     
 int numberOfFiles;                                                    // number of files in directory, including directory names
@@ -16,6 +17,36 @@ void TIA_SdFat::TIA_setup() {
   }
   else {
   }    
+}
+
+
+// METHOD: log text to console.txt
+boolean TIA_SdFat::log(
+  char *text                                                          // text to be writen to the log file
+)
+{
+  extern Mayfly_card mfc;                                             // the Mayfly Card is defined elsewhere
+  SdFile consoleFile;                                                 // console file
+
+  if (!consoleFile.open("console.txt", O_WRITE)) {                    // if the file doesn't open
+    Serial.print(F("ERROR: console.txt did not open in line ")); Serial.print(__LINE__);
+    Serial.print(F(", file: ")); Serial.println(__FILE__);
+    return false; 
+  } 
+
+  String textString = mfc.rtc.getDateTimeNowString();                 // get the current dateTime as a String
+  textString += " ";                                                  // append a blank
+  textString += text;                                                 // append the text string
+  
+  consoleFile.seekEnd();                                              // seek to eof
+  consoleFile.println(textString);                                    // write the console record
+  Serial.print("Logging to console.txt: ");                           // display the console record
+  Serial.println(textString);
+  
+  //setFileTimestamp(consoleFile, T_WRITE);                           // don't know if we need to do this, or if Arduino updates the file write date automagically
+  consoleFile.close();                                                // close the file to save it
+
+  return true;
 }
 
 
@@ -40,7 +71,7 @@ int TIA_SdFat::TIA_dir(
 void TIA_SdFat::processDirectory(
   SdCardDirectory *sd_card_directory,                                 // pointer to array holding results of dir request
   SdFile CFile,                                                       // 
-  const char dirName[],                                                     // assume method is called while pointing to a directory name
+  const char dirName[],                                               // assume method is called while pointing to a directory name
   int numTabs,                                                        // number of tabs to indent this directories information
   int limit                                                           // limit on the number of direcory+file names to be returned
 )
@@ -214,7 +245,7 @@ unsigned long int secondsSince1Jan2kFromDateTime(
 
 
 // FUNCTION: scan thru console file backwards looking for the previous record
-boolean getPreviousConsoleRecord(                                            // true=previous record found
+boolean getPreviousConsoleRecord(                                     // true=previous record found
   char *line,                                                         // char array holding the previous record
   unsigned long int *progressPos_ptr                                  // position to start scanning the console record backwards
 )
@@ -269,7 +300,7 @@ boolean TIA_SdFat::getConsoleProfile(
   boolean firstRecordFoundFlag    = false;
   
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
-    SerialMon.println(F("Error 339: console.txt did not open."));
+    SerialMon.println(F("Error 303: console.txt did not open."));
     return -1;                                                        // return an error code
   }
   
@@ -359,6 +390,7 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   
   SdFile consoleFile;                                                 // console file
   char line[consoleRecordLength]                = "";
+  char lastLine[consoleRecordLength]            = "";
   unsigned long int timestampSeconds            = 0;
   
   SerialMon.println(F(""));
@@ -393,15 +425,13 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   // determine the position at which to start the seach for the requested starting record
   unsigned long int position = (lastFilePosition - firstFilePosition) * pct/100;
 
-  int loopCounter = 0;
+  int loopCounter = 0;                                                // periodically print out a new line so the dots don't go on forever
   timestampSeconds = requestedEndTimestamp;                           // initialize the timestampSeconds
   
   // go backwards from this point until we find a record earlier than the requested start timestamp
   while (timestampSeconds >= requestedStartTimestamp) {
-    
     getPreviousConsoleRecord(&line[0], &position);                    // get the previous record
-    timestampSeconds = secondsSince1Jan2kFromDateTime(line);          // get the number of seconds since 1/1/2000 for this record
-      
+    timestampSeconds = secondsSince1Jan2kFromDateTime(line);          // get the number of seconds since 1/1/2000 for this record      
     SerialMon.print(F("."));                                          // print out a period to show progress
     loopCounter++;  
     if (loopCounter >= 100) {                                         // break progress display into multiple lines
@@ -412,38 +442,49 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   
   SerialMon.println(F(""));
   
+  // now start reading forward in console.txt, a whole line at a time until we find the requested start date
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
     SerialMon.println(F("Error 466: console.txt did not open."));
     return -1;                                                        // return an error code
   }
   
-  consoleFile.seekSet(position);
+  consoleFile.seekSet(position);                                      // set out position to where we stopped backing up
   
-  // get the next record of the console file
-  consoleFile.fgets(line, consoleRecordLength);                       // get this whole console record
-  timestampSeconds = secondsSince1Jan2kFromDateTime(line);            // get the number of seconds since 1/1/2000 for this record
+  int recordBytes   = 0;                                              // number of bytes in a console record
+  int totalBytes    = 0;                                              // total number of bytes processed so far
   
-  //int recordCounter = 0;
-  int recordBytes   = 0;
-  int totalBytes    = 0;
+  // work our way forwards until we find the requested start dateTime
+  while (timestampSeconds < requestedStartTimestamp) {
+    
+    // remember the last line we read
+    strcpy(lastLine, line);
+    
+    // get the next record of the console file
+    recordBytes = consoleFile.fgets(line, consoleRecordLength);       // get this whole console record
+    timestampSeconds = secondsSince1Jan2kFromDateTime(line);          // get the number of seconds since 1/1/2000 for this record
+  }
   
-  // keep getting lines until we go past the requested end date
+  // put the record just prior to the requested start timestamp into the destination array
+  for (int i=0; i < recordBytes; i++) {
+    *destinationArray = lastLine[i];                                  // copy a character of the line to the destination array
+    destinationArray++;                                               // point to the next location in the destinationArray
+  }
+    
+  // keep getting lines, and putting them into the destination array, until we go past the requested end date
   while (
-    (recordBytes = consoleFile.fgets(line, sizeof(line))) > 0 &&
-    timestampSeconds <= requestedEndTimestamp)
+    (recordBytes = consoleFile.fgets(line, sizeof(line))) > 0 &&      // while another console record exists, AND
+    timestampSeconds <= requestedEndTimestamp)                        // the last record's timestamp wasn't past the requested end timestamp
   {
     timestampSeconds = secondsSince1Jan2kFromDateTime(line);          // get the number of seconds since 1/1/2000 for this record
     
     if (totalBytes + recordBytes > byteLimit) break;                  // don't go over the byte limit
     
-   
     for (int i=0; i < recordBytes; i++) {
       *destinationArray = line[i];                                    // copy the line to the destination array
       destinationArray++;                                             // point to the next location in the destinationArray
     }
     
     totalBytes += recordBytes;                                        // add this record's bytes to the total byte count
-    
   }
   
   *destinationArray = '\0';                                           // add string terminator

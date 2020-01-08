@@ -2,15 +2,15 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200107
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200108
 
+#include "TIA-Software_Mayfly_Card.h"                             // include the Mayfly Card
 #include "TIA-Software_DCF_Globals.h"                             // global headers
 #include "SdFat.h"                                                // SD Card support
 #include "Sodaq_DS3231.h"                                         // Real Time Clock support
 
 const int filenameLength = 200;                                   // maximum length of directory name or filename
    
-    
 typedef struct {                                                  // structure of an SD Card directory return
   int folderLevel;                                                // sub-directory depth, used to determine indentation level for displaying results
   boolean directoryFlag;                                          // true=directory, false=file
@@ -30,6 +30,11 @@ class TIA_SdFat : public SdFat {
     // setup the SD Card
     void TIA_setup();
     
+    
+    // write to the console.txt log file
+    boolean log(
+      char *text                                                  // text to be writen to the log file
+    );                                    
     
     // list the files in the dir.  Returns the number of directory names + filenames
     int TIA_dir(                                                  
