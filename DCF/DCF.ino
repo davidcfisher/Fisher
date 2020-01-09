@@ -111,9 +111,8 @@ void setup()
   delay(1000);                                                    // wait a second
   mfc.redLED.turnOff();                                           // turn off the red LED
 
-  char tempC[] = "Logging test";
-  boolean returnFlag = mfc.sd.log(&tempC[0]);
-  Serial.print("104: returnFlag=");Serial.println(returnFlag);
+  char tempC[] = "Logging test on Thursday";
+   mfc.sd.log(&tempC[0]);
 
   // get the console profile
   mfc.sd.getConsoleProfile(

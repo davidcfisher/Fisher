@@ -432,7 +432,7 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   while (timestampSeconds >= requestedStartTimestamp) {
     getPreviousConsoleRecord(&line[0], &position);                    // get the previous record
     timestampSeconds = secondsSince1Jan2kFromDateTime(line);          // get the number of seconds since 1/1/2000 for this record      
-    SerialMon.print(F("."));                                          // print out a period to show progress
+    SerialMon.print(F("-"));                                          // print out a period to show progress
     loopCounter++;  
     if (loopCounter >= 100) {                                         // break progress display into multiple lines
       loopCounter = 0;  
@@ -462,14 +462,23 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
     // get the next record of the console file
     recordBytes = consoleFile.fgets(line, consoleRecordLength);       // get this whole console record
     timestampSeconds = secondsSince1Jan2kFromDateTime(line);          // get the number of seconds since 1/1/2000 for this record
+    SerialMon.print(F("+"));                                          // print out a period to show progress
+    loopCounter++;  
+    if (loopCounter >= 100) {                                         // break progress display into multiple lines
+      loopCounter = 0;  
+      SerialMon.println(F(""));
+    }
   }
   
-  // put the record just prior to the requested start timestamp into the destination array
-  for (int i=0; i < recordBytes; i++) {
-    *destinationArray = lastLine[i];                                  // copy a character of the line to the destination array
-    destinationArray++;                                               // point to the next location in the destinationArray
-  }
-    
+  //// put the record just prior to the requested start timestamp into the destination array
+  //for (int i=0; i < recordBytes; i++) {
+  //  *destinationArray = lastLine[i];                                  // copy a character of the line to the destination array
+  //  destinationArray++;                                               // point to the next location in the destinationArray
+  //}
+  //
+  //destinationArray = '\n';
+  //destinationArray++;
+  //  
   // keep getting lines, and putting them into the destination array, until we go past the requested end date
   while (
     (recordBytes = consoleFile.fgets(line, sizeof(line))) > 0 &&      // while another console record exists, AND
