@@ -1,23 +1,26 @@
-#define DCF_version = 20200108
+#define DCF_version = 20200109
 
 #include "TIA-Software_Mayfly_Card.h"
-#include "RTCTimer.h"                                             // Real Time Clock support
 #include <MemoryFree.h>                                           // for memory command to see how much memory is left
+#include "RTCTimer.h"                                             // Real Time Clock support
+#include <Wire.h>                                                 // I2C devices 
+
 
 
 /*** Fisher's Office ***/
 /*                     */
 #define DATA_HEADER "dateTime,logger,temp_mayfly,voltage_12v,depth,temp_water,voltage_lipo" // for sdi12
+const char dataHeader[] = DATA_HEADER;
 #define TINY_GSM_MODEM_XBEE                                       // Select for Digi brand WiFi or Cellular XBee's
-const char beeModule[]  = "DigiLTE-M";                            // module in the Bee socket
-char logger_name[5]     = "Z" ;                                   // SSET:  2 char limit.  A or B or z6 ... what's printed on cardreader. contained in each msmt line
-int sense_period        = 15 ;                                    // SSET:  Minutes between reading - should be evenly divisible into 60
-char location[100]      = "Fisher's Office" ;                     // SSET: Leelanau Narrows, Crystal, GLWLC Narrows, GLWLC Dam, Culvert3 Upstream or Downstream
-char msmt_file_name[50] = "fisher.csv" ;                          // SSET: File for the msmts
-char msmt_type[10]      = "sdi12" ;                               // get msmts from OTT or CS451 sensors
-char sdi12_msmt_cmd[5]  = "0M!" ;                                 // command for OTT  for Glen Lake and Crystal
-double sdi12_conversion = 1 ;                                     // multiply by 1 (no conversion) for Glen Lake and Crystal
-char carrier[2]         = "0";                                    // Autodetect cellular carrier
+const char beeModule[20]    = "DigiLTE-M";                        // module in the Bee socket
+char logger_name[5]         = "Z" ;                               // SSET:  2 char limit.  A or B or z6 ... what's printed on cardreader. contained in each msmt line
+int sense_period            = 15 ;                                // SSET:  Minutes between reading - should be evenly divisible into 60
+char location[100]          = "Fisher's Office" ;                 // SSET: Leelanau Narrows, Crystal, GLWLC Narrows, GLWLC Dam, Culvert3 Upstream or Downstream
+char msmt_file_name[50]     = "fisher.csv" ;                      // SSET: File for the msmts
+char msmt_type[10]          = "sdi12" ;                           // get msmts from OTT or CS451 sensors
+char sdi12_msmt_cmd[5]      = "0M!" ;                             // command for OTT  for Glen Lake and Crystal
+double sdi12_conversion     = 1 ;                                 // multiply by 1 (no conversion) for Glen Lake and Crystal
+char carrier[2]             = "0";                                // Autodetect cellular carrier
 
 /*** common variables ***/
 int read_buffer_size        = 1024;                               // SSET: read buffer initially 1024 but can be set by server command.  See function: "read_incoming_data"
@@ -47,8 +50,8 @@ struct msmt_line {
   long seconds;                                                   // epoch time
   char id[5];                                                     // logger_id
   double parms[20];                                               // all the msmt values
-  int parm_cnt          = 0;                                      // number of msmts
-  int valid             = 0;                                      // this structure has been loaded
+  int parm_cnt              = 0;                                  // number of msmts
+  int valid                 = 0;                                  // this structure has been loaded
   long last_delta;                                                // the number of seconds between this msmt and the previous msmt
 };
 
@@ -84,7 +87,6 @@ TinyGsm modem(SerialAT);                                          // comment thi
 TinyGsmClient client(modem);
 #include <xBee_TIA-Software.h>                                    // TIA-Software XBEE library - must be included AFTER the variable definitions
 
-Mayfly_card mfc;                                                  // establish instance of Mayfly Card
 
 // following variables are set when a call is made to profile the console file:  mfc.sd.getConsoleProfile()
 char firstRecord[consoleRecordLength];                            // returns first record found in the console file
@@ -96,6 +98,7 @@ unsigned long int lastTimestampSeconds;                           // returns tim
 unsigned long int firstFilePosition;                              // returns file position for the start of the first record in the console file
 unsigned long int lastFilePosition;                               // returns file position for the start of the last record in the console file
 
+Mayfly_card mfc;                                                  // establish instance of Mayfly Card
 
 
 void setup()
@@ -103,16 +106,131 @@ void setup()
   // setup the Mayfly Card
   mfc.setup(
     &logger_name[0],                                              // Mayfly ID
-    &beeModule[0]                                                 // module in the Bee socket
+    &dataHeader[0],                                               // definition of contents of measurement file
+    &msmt_file_name[0],                                           // measurement file name
+    &beeModule[0],                                                // module in the Bee socket
+    &location[0]                                                  // Mayfly deployment location
   );
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//  logAndPrint(F("Mayfly just booted")) ;
+  mfc.sd.log(String("Mayfly just booted"));
+
+  // !!!!!!!!!!!!!  CAL - LOOK AT THIS
+  //rtc.setEpoch(uint32_t (1552182900L)); // sets clock to 2019-3-10 right before DST
+
+  // initialize the variables from EEProm
+  // Eeprom_Class eeprom;// create an EEPROM instance
+  // eeprom.initializeProvisioningVariables() ;
+
+//  // 2 Malloc's for variables - read_buffer and send_buf
+//  read_buffer = (char *)malloc(read_buffer_size ); // read buffer initially 1024 but can be set by server command.  It won't grow automatically in case someone sends junk to this Mayfly
+  char read_buffer[read_buffer_size];
   
+//  send_buf = (char *)malloc(batchsize ); // get memory for the parms and the data and for a work area
+//  if (!send_buf ) {
+//    logAndPrint("Could not get storage for send_buf. Hanging....") ;
+//    while (1) {}
+//  }
+  char send_buf[batchsize];
+
+  // set the clock IF required
+  if (set_clock > 0) {
+    Wire.begin();
+    rtc.begin();
+    rtc.setDateTime(dt); //Adjust date-time as defined 'dt' above
+    SerialMon.println("Setting Clock") ;
+  }
+
+//  //Initialize the serial connection
+//  SerialMon.begin(57600);   // communication to/from Mayfly over USB
+//  //SerialAT.begin(9600) ;  // Baud Rate is determined in setup_xbee.  Legal values 9600 and 19200. 19200 may make it easier to attach battery without hanging the modem
+  rtc.begin();
+  delay(100);
+//  pinMode(8, OUTPUT);
+//  pinMode(9, OUTPUT);
+//  greenred4flash();    //blink the LEDs to show the board is on
+  mfc.greenLED.blink(4);                                          // blink the LEDs to show the board is on
+
+/*  
+  setupLogFile();
+  setupTimer();        //Setup timer events
+  setupSleep();        //Setup sleep mode
+  SerialMon.print("Power On.  Will read sensors every ");
+  SerialMon.print(sense_period) ;
+  SerialMon.print(" minutes at location: ") ;
+  SerialMon.println(location) ;
+  showTime(getNow());
+  DST = get_dst() ; // set the DST according to the date & time
+  Serial.print(currentyear) ; Serial.print("-") ;
+  Serial.print(currentmonth) ; Serial.print("-") ;
+  Serial.print(currentday) ; Serial.print(" ") ;
+  Serial.print(currenthour) ; Serial.print(":") ;
+  Serial.print(currentminute) ; Serial.print(":") ;
+  Serial.print(currentsecond) ; Serial.print("  DOW:") ;
+  Serial.print(currentdow) ; Serial.print(" DST: ") ;
+  Serial.print(DST) ; Serial.print(" Epoch: ")  ;
+  Serial.println(currentepochtime) ;
+
+  // Power the sensors;
+  if (POWER_PIN > 0) {
+    SerialMon.println("Powering up sensors...");
+    pinMode(POWER_PIN, OUTPUT);
+    digitalWrite(POWER_PIN, HIGH);
+    delay(200);
+  }
+  
+  // MS5803 setup
+  // Begin class with selected I2C address of sensor and max pressure range
+  //  ADDRESS_water = 0x76
+  //  ADDRESS_air  = 0x77
+  sensor_water.begin(0x76, 1); // Address, Max pressure range (use "1" for 01BA which is exactly 1/10 of 14BA)
+  sensor_air.begin(0x77, 1);
+  //Retrieve calibration constants for conversion math.
+  sensor_air.reset(); 
+  sensor_water.reset();
+  // end MS5803
+  
+  mySDI12.begin();  //setup SDI12 comm to CS451  or OTT sensor
+  //mySDI12.sendCommand("0XCONFIG=1,4,1.0,0.0!");     // configure sensor for Feet and F° units  - didn't seem to work
+
+  setup_xbee() ;  // this code gets the modem ready
+  // maybe put a function here that will contact the server to get latest variables on power-on.
+  wake_bee_arrays() ;  // determine hour:min pairs for waking the xbee - put this inside setup_xbee
+
+  SerialMon.print("read_buffer_size") ;   SerialMon.println(read_buffer_size) ;
+  SerialMon.print("host ") ;          SerialMon.println(host ) ;
+  SerialMon.print("resource ") ;        SerialMon.println(resource ) ;
+  SerialMon.print("access_point_name ") ;   SerialMon.println(access_point_name ) ;
+  SerialMon.print("batchsize ") ;       SerialMon.println(batchsize) ;
+  SerialMon.print("num_batches ") ;     SerialMon.println(num_batches) ;
+  SerialMon.print("wake_bee_event_string ");  SerialMon.println(wake_bee_event_string ) ;
+  SerialMon.print("min_xbee_voltage ") ;    SerialMon.println(min_xbee_voltage ) ;
+  SerialMon.print("sense_period ") ;      SerialMon.println(sense_period ) ;
+  SerialMon.print("location " ) ;       SerialMon.println(location ) ;
+  SerialMon.print("msmt_file_name ") ;    SerialMon.println(msmt_file_name ) ;
+  SerialMon.print("logger_name ") ;       SerialMon.println(logger_name ) ;
+
+  email_txt = "Mayfly booted up: " ;
+  email_txt += getDateTime() ;
+  
+  logAndPrint(F("Mayfly booted")) ;
+*/
+
+
+
+
+
+
+
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   mfc.redLED.turnOn();                                            // turn on the Red LED
   mfc.greenLED.turnOn();                                          // turn on the Green LED
   delay(1000);                                                    // wait a second
   mfc.redLED.turnOff();                                           // turn off the red LED
-
-  char tempC[] = "Logging test on Thursday";
-   mfc.sd.log(&tempC[0]);
 
   // get the console profile
   mfc.sd.getConsoleProfile(

@@ -11,16 +11,64 @@ TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclas
 
 
 // METHOD: setup - setup the SD Card
-void TIA_SdFat::TIA_setup() {
+boolean TIA_SdFat::TIA_setup(
+  const char *id,                                                     // Mayfly ID
+  const char *dataHeader,                                             // definition of contents of measurement file
+  const char *measurementFilename,                                    // measurement filename
+  const char *location                                                // Mayfly deployment location
+)
+{
+  strcpy (_id, id);                                                   // save the Mayfly ID
+  strcpy (_dataHeader, dataHeader);                                   // save the definition of the contents of the measurement file
+  strcpy (_measurementFilename, measurementFilename);                 // save the measurement filenane
+  strcpy (_location, location);                                       // save the measurement filenane
   
-  if (begin(TIA_SD_CS_PIN)) {                                         // if the SD Card Reader begins successfully
+  SdFile consoleFile;                                                 // console file
+  
+  // try to begin the SD card
+  if (!begin(TIA_SD_CS_PIN)) {                                        // if the SD Card Reader fails to begin
+    Serial.print("ERROR - SD card failed to initialize or is missing on line ");
+    Serial.print(__LINE__); Serial.print(" in file: "); Serial.println(__FILE__);
+    return false;
   }
-  else {
-  }    
+  
+  // see if the console file exists
+  if (!consoleFile.exists("console.txt")) {                             // if the file doesn't exist
+    
+    // try to create console.txt
+    if (!consoleFile.open("console.txt", O_WRITE)) {                    // if the file doesn't open
+      Serial.print(F("ERROR: console.txt could not be created in line ")); Serial.print(__LINE__);
+      Serial.print(F(", file: ")); Serial.println(__FILE__);
+      return false; 
+    }
+    
+    consoleFile.close();                                                // close the file
+  }
+  
+  // see if the measurement file exists
+  if (!consoleFile.exists(_measurementFilename)) {
+    
+    // try to create measurement file
+    if (!consoleFile.open(_measurementFilename, O_WRITE)) {             // if the file doesn't open
+      Serial.print(F("ERROR: measurement file could not be created in line ")); Serial.print(__LINE__);
+      Serial.print(F(", file: ")); Serial.println(__FILE__);
+      return false; 
+    }
+    
+    consoleFile.print("Mayfly ID: ") ;
+    consoleFile.print(_id) ;
+    consoleFile.print("  Location: ") ;
+    consoleFile.println(_location) ;
+    consoleFile.println(_dataHeader);
+    //setFileTimestamp(logFile, T_CREATE);
+    consoleFile.close();
+    
+    return true;
+  }
 }
 
 
-// METHOD: log text to console.txt
+// METHOD: log char array to console.txt
 boolean TIA_SdFat::log(
   char *text                                                          // text to be writen to the log file
 )
@@ -49,6 +97,16 @@ boolean TIA_SdFat::log(
   return true;
 }
 
+
+// METHOD: log String to the console.txt log
+boolean TIA_SdFat::log(
+  String text
+)
+{
+  char tempText[consoleRecordLength];
+  text.toCharArray(tempText, sizeof(tempText));
+  return log(&tempText[0]);
+}
 
 // METHOD: TIA_dir - get the directory names and filenames on the SD Card
 int TIA_SdFat::TIA_dir(
@@ -470,15 +528,6 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
     }
   }
   
-  //// put the record just prior to the requested start timestamp into the destination array
-  //for (int i=0; i < recordBytes; i++) {
-  //  *destinationArray = lastLine[i];                                  // copy a character of the line to the destination array
-  //  destinationArray++;                                               // point to the next location in the destinationArray
-  //}
-  //
-  //destinationArray = '\n';
-  //destinationArray++;
-  //  
   // keep getting lines, and putting them into the destination array, until we go past the requested end date
   while (
     (recordBytes = consoleFile.fgets(line, sizeof(line))) > 0 &&      // while another console record exists, AND
