@@ -2,7 +2,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200110
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200111
 
 #include "TIA-Software_Mayfly_Card.h"                             // include the Mayfly Card
 #include "TIA-Software_DCF_Globals.h"                             // global headers

@@ -247,8 +247,8 @@ void setup()
   // get the console information
   const int byteLimit = 6000;                                     // return full console records, not to exceed this total number of bytes
   char consoleRecords[byteLimit];                                 // return the console records into this array
-  char startDate[] = "2019-12-31 23:59:59";                       // return console records starting at this dateTime
-  char endDate[] = "2020-09-08 12:30:00";                         // return console records ending at this dateTime
+  char startDate[] = "2019-09-15 23:59:59";                       // return console records starting at this dateTime
+  char endDate[] = "2019-09-14 12:30:00";                         // return console records ending at this dateTime
   int numberOfConsoleBytes = mfc.sd.getConsoleRecords(&consoleRecords[0], startDate, endDate, byteLimit);
 
   // get the directory from the SD Card
