@@ -1,4 +1,4 @@
-#define DCF_version = 20200125
+#define Mayfly_initialization_version = 20200125
 
 #include "TIA-Software_Mayfly_Card.h"
 
