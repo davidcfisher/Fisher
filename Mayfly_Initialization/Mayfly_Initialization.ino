@@ -1,4 +1,4 @@
-#define Mayfly_Initialization_version = 20200120
+#define Mayfly_Initialization_version = 20200125
 
 #include "TIA-Software_Mayfly_Card.h"
 
@@ -6,14 +6,18 @@ const char beeModule[] = "DigiLTE-M";                             // module in t
 
 Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
 
-DateTime computerDateTime;
+DateTime computerDateTime(__DATE__, __TIME__);
 DateTime mayflyDateTime;
+String mayflyDateAndTimeString;
 
 void setup()
 {
   mayflyCard.setup(&beeModule[0]);                                // setup the Mayfly Card with a BeeModule
   
+  mayflyDateAndTimeString = mayflyCard.realTimeClock.getDateTimeNowString("Mmm DD YYYY");
   mayflyDateTime = mayflyCard.realTimeClock.getDateTimeNow();
+  long unsigned int mayflyDateTimeSeconds = mayflyDateTime.get();
+  long unsigned int computerDateTimeSeconds = computerDateTime.get();
  
   mayflyCard.redLED.turnOn();                                     // turn on the Red LED
   mayflyCard.greenLED.turnOn();                                   // turn on the Green LED
@@ -21,10 +25,10 @@ void setup()
   mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
   // show the computer's and Mayfly's dates and times
-  Serial.print(F("Computer's date and time: ")); Serial.print(__DATE__); Serial.print(F(" "));Serial.println(__TIME__); 
-  String mayflyDateAndTimeString = mayflyCard.realTimeClock.getDateTimeNowString("Mmm DD YYYY");
-  Serial.print(F("  Mayfly's date and time: ")); Serial.print(mayflyDateAndTimeString); 
-  Serial.print(F("  (")); Serial.print(mayflyDateTime); Serial.println(F(")"));
+  Serial.print(F("Computer's date and time: ")); Serial.print(__DATE__); Serial.print(F(" "));Serial.print(__TIME__);  Serial.print(F("  (")); Serial.print(computerDateTimeSeconds); Serial.println(F(")"));
+  Serial.print(F("  Mayfly's date and time: ")); Serial.print(mayflyDateAndTimeString); Serial.print(F("  (")); Serial.print(mayflyDateTimeSeconds); Serial.println(F(")"));
+
+  while (mayflyCard.pushbutton.readState() == LOW);
 
   // get the console information
   const int byteLimit = 6000;                                     // return full console records, not to exceed this total number of bytes

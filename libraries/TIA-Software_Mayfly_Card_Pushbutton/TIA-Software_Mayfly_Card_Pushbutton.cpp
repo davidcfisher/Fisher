@@ -1,0 +1,24 @@
+//  TIA-Software_Mayfly_Card_Pushbutton.cpp - Copyright (c) 2020 TIA Software, LLC.  All rights reserved.
+
+#include "TIA-Software_Mayfly_Card_Pushbutton.h"              // include the header file
+#include "TIA-Software_DCF_Globals.h"
+
+// CONSTRUCTOR
+Pushbutton::Pushbutton() {}                                   // constructor
+
+
+// METHOD: setup module in bee socket
+void Pushbutton::setup()
+{
+  pinMode(TIA_pushbuttonPin, INPUT);                          // the pushbutton pin is used as input
+  boolean _state = LOW;                                       // initialize the state to LOW
+}
+
+
+// METHOD: read the state of the pushbutton
+boolean Pushbutton::readState()
+{
+   _state = digitalRead(TIA_pushbuttonPin);
+  Serial.print("Pushbutton state=");Serial.println(_state ? "Pushed" : "Not pushed");
+  return _state;
+}
