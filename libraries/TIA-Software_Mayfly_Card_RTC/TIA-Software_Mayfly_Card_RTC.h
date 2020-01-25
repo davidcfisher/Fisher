@@ -1,9 +1,8 @@
-//  TIA-Softwaref_Mayfly_Card_RTC.h - Copyright (c) 2019 TIA Software, LLC.  All rights reserved.
-//  v1.0
+//  TIA-Softwaref_Mayfly_Card_RTC.h - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_RTC_H
 #define TIA_SOFTWARE_MAYFLY_CARD_RTC_H
-#define TIA_SOFTWARE_MAYFLY_CARD_RTC_VERSION 20191216
+#define TIA_SOFTWARE_MAYFLY_CARD_RTC_VERSION 20200124
 
 #include "Arduino.h"
 #include "Sodaq_DS3231.h"                                   // Real Time Clock support
@@ -14,6 +13,7 @@ class TIA_RTC {
     
     TIA_RTC();                                              // constructor
     
+    void TIA_setup();                                       // setup the real time clock
     DateTime getDateTimeNow();                              // get the current date and time as a DateTime object
     String getYearString(DateTime dT);                      // get the year as a String
     String getMonthString(DateTime dT, String format="MM");        // get the month as a String. formats: "MM", "Mmm"

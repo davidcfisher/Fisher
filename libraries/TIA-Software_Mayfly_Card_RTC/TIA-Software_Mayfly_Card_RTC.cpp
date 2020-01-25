@@ -1,12 +1,17 @@
-//  TIA-Software_Mayfly_Card_RTC.cpp - Copyright (c) 2019 TIA Software, LLC.  All rights reserved.
-//  v1.0
+//  TIA-Software_Mayfly_Card_RTC.cpp - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 
-#include "TIA-Software_Mayfly_Card_RTC.h"                       // include the header file
+#include "TIA-Software_Mayfly_Card_RTC.h"                         // include the header file
 String months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 
 // CONSTRUCTOR
 TIA_RTC::TIA_RTC() {}                                             // constructor
+
+
+// METHOD: TIA_setup()                                            // setup the real time clock
+void TIA_RTC::TIA_setup()
+{
+}
 
 
 // METHOD: getYearString()

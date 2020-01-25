@@ -18,6 +18,7 @@ void Mayfly_card::setup(const char *beeModule = "none")
 
   redLED.setup(TIA_redLedPin, "Red LED");                     // setup the red LED
   greenLED.setup(TIA_greenLedPin, "Green LED");               // setup the green LED
+  realTimeClock.TIA_setup();                                  // setup the real time clock
   sdCard.TIA_setup();                                         // setup the SD card
   beeSocket.setup(beeModule);                                 // setup the Bee Socket
 }

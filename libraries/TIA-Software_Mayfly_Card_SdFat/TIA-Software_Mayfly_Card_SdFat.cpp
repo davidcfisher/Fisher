@@ -279,7 +279,7 @@ boolean TIA_SdFat::getConsoleProfile(
     
     // get the next record of the console file
     consoleFile.fgets(line, consoleRecordLength);                     // get this whole console record
-    if (line[strlen(line)-1] = '\n') line[strlen(line)-1] = '\0';     // remove the New Line ('\n')
+    if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';    // remove the New Line ('\n')
     
     *firstTimestampSeconds = secondsSince1Jan2kFromDateTime(line);    // save the timestamp of the first record, 0=invalid dateTime
 
@@ -298,7 +298,7 @@ boolean TIA_SdFat::getConsoleProfile(
   consoleFile.seekCur(-1);                                            // seek to last character before the eof, likely LF
   *lastFilePosition = consoleFile.curPosition();                      // point to the last character
   getPreviousConsoleRecord(&line[0], lastFilePosition);               // position to start scanning the console record backwards
-  if (line[strlen(line)-1] = '\n') line[strlen(line)-1] = '\0';       // remove the New Line ('\n')
+  if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';      // remove the New Line ('\n')
 
   *lastTimestampSeconds = secondsSince1Jan2kFromDateTime(line);       // get the number of seconds since 1/1/2000 for this record
   
@@ -310,6 +310,7 @@ boolean TIA_SdFat::getConsoleProfile(
     strncpy(*lastDateTime_YYYY_MM_DD_HH_MM_SS, line, 20);             // save the dateTime of the last record
   }
   
+  return true;
   
   /***** use this code to display console.txt profile *****/
   /*                                                      */
@@ -367,7 +368,7 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   SerialMon.print(F(", byteLimit=")); SerialMon.print(byteLimit); SerialMon.println(F(" >>>"));
   
   // get the console profile
-  boolean profileFlag = getConsoleProfile(
+  getConsoleProfile(
     &firstRecord,                                                     // copy of the first record found
     &lastRecord,                                                      // copy of the last record found
     &firstDateTime_YYYY_MM_DD_HH_MM_SS,                               // datetime of the first console record in the console file
@@ -423,7 +424,6 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   consoleFile.fgets(line, consoleRecordLength);                       // get this whole console record
   timestampSeconds = secondsSince1Jan2kFromDateTime(line);            // get the number of seconds since 1/1/2000 for this record
   
-  int recordCounter = 0;
   int recordBytes   = 0;
   int totalBytes    = 0;
   
