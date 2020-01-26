@@ -37,21 +37,20 @@ void setup()
     // wait for a keyboard entry
     while (Serial.available() <= 0);
     
-    char keyboardChar = Serial.read();                                                     // get a character from the keyboard
+    char keyboardChar = Serial.read();                                                      // get a character from the keyboard
 
     // if ENTER was pressed
     if (keyboardChar == 'y') {
+
+      while (Serial.available() > 0);                                                       // strip off any newlines
       
       Serial.println(F("setting the Mayfly clock\n"));
 
-      Serial.println(F("       +1  -1"));
-      Serial.println(F("       --  --"));
-      Serial.println(F("Year    e   i"));
-      Serial.println(F("Month   o   t"));
-      Serial.println(F("Day     a   y"));
-      Serial.println(F("Hour    h   r"));
-      Serial.println(F("Minute  m   e"));
-      Serial.println(F("Second  s   d\n"));
+      Serial.println(F("    Year Month Day Hour Minute Second"));
+      Serial.println(F("    ---- ----- --- ---- ------ ------"));
+      Serial.println(F("+1   e    o     a  h    m      s"));
+      Serial.println(F("-1    i     t    y    r      e      d\n"));
+
       Serial.println(F("Repeat last adjustment: ENTER"));
       Serial.println(F("Target date & time ok, continue: k"));
 
