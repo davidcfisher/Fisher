@@ -1,4 +1,4 @@
-#define Mayfly_Initialization_version = 20200125
+#define Mayfly_Initialization_version = 20200126
 
 #include "TIA-Software_Mayfly_Card.h"
 
@@ -25,10 +25,45 @@ void setup()
   mayflyCard.redLED.turnOff();                                    // turn off the red LED
 
   // show the computer's and Mayfly's dates and times
-  Serial.print(F("Computer's date and time: ")); Serial.print(__DATE__); Serial.print(F(" "));Serial.print(__TIME__);  Serial.print(F("  (")); Serial.print(computerDateTimeSeconds); Serial.println(F(")"));
-  Serial.print(F("  Mayfly's date and time: ")); Serial.print(mayflyDateAndTimeString); Serial.print(F("  (")); Serial.print(mayflyDateTimeSeconds); Serial.println(F(")"));
+  Serial.print(F("Computer: ")); Serial.print(__DATE__); Serial.print(F(" "));Serial.print(__TIME__);  Serial.print(F("  (")); Serial.print(computerDateTimeSeconds); Serial.println(F(")"));
+  Serial.print(F("  Mayfly: ")); Serial.print(mayflyDateAndTimeString); Serial.print(F("  (")); Serial.print(mayflyDateTimeSeconds); Serial.println(F(")"));
 
-  while (mayflyCard.pushbutton.readState() == LOW);
+  unsigned long int deltaSeconds = computerDateTimeSeconds - mayflyDateTimeSeconds;
+
+  // if it looks like the Mayfly clock needs to be set
+  if (deltaSeconds > 30000) {
+    Serial.print(F("Looks like the Mayfly clock needs to be set.\nEnter 'y' to set the clock..."));
+
+    // wait for a keyboard entry
+    while (Serial.available() <= 0);
+    
+    char keyboardChar = Serial.read();                                                     // get a character from the keyboard
+
+    // if ENTER was pressed
+    if (keyboardChar == 'y') {
+      
+      Serial.println(F("setting the Mayfly clock\n"));
+
+      Serial.println(F("       +1  -1"));
+      Serial.println(F("       --  --"));
+      Serial.println(F("Year    e   i"));
+      Serial.println(F("Month   o   t"));
+      Serial.println(F("Day     a   y"));
+      Serial.println(F("Hour    h   r"));
+      Serial.println(F("Minute  m   e"));
+      Serial.println(F("Second  s   d\n"));
+      Serial.println(F("Repeat last adjustment: ENTER"));
+      Serial.println(F("Target date & time ok, continue: k"));
+
+      // wait for a keyboard entry
+      while (Serial.available() <= 0);
+
+    }
+
+    else {
+      Serial.println(F("skipping clock setting"));
+    }
+  }
 
   // get the console information
   const int byteLimit = 6000;                                     // return full console records, not to exceed this total number of bytes

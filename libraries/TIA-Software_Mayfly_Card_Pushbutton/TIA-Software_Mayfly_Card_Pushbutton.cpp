@@ -4,14 +4,16 @@
 #include "TIA-Software_DCF_Globals.h"
 
 // CONSTRUCTOR
-Pushbutton::Pushbutton() {}                                   // constructor
+Pushbutton::Pushbutton()                                      // constructor
+{
+  boolean _state = LOW;                                       // initialize the pushbutton state
+}
 
 
 // METHOD: setup module in bee socket
 void Pushbutton::setup()
 {
   pinMode(TIA_pushbuttonPin, INPUT);                          // the pushbutton pin is used as input
-  boolean _state = LOW;                                       // initialize the state to LOW
 }
 
 
@@ -19,6 +21,6 @@ void Pushbutton::setup()
 boolean Pushbutton::readState()
 {
    _state = digitalRead(TIA_pushbuttonPin);
-  Serial.print("Pushbutton state=");Serial.println(_state ? "Pushed" : "Not pushed");
+  //Serial.print("Pushbutton state=");Serial.println(_state ? "Pushed" : "Not pushed");
   return _state;
 }
