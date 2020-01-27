@@ -2,61 +2,125 @@
 
 #include "TIA-Software_Mayfly_Card.h"
 
-const char beeModule[] = "DigiLTE-M";                             // module in the Bee socket
+const char beeModule[] = "DigiLTE-M";                                   // module in the Bee socket
 
-Mayfly_card mayflyCard;                                           // establish instance of Mayfly Card
+Mayfly_card mayflyCard;                                                             // establish instance of Mayfly Card
 
-DateTime computerDateTime(__DATE__, __TIME__);
-DateTime mayflyDateTime;
-String mayflyDateAndTimeString;
+DateTime computerDT(__DATE__, __TIME__);
+DateTime mayflyDT;
+String mayflyDtString;
 
 void setup()
 {
-  mayflyCard.setup(&beeModule[0]);                                // setup the Mayfly Card with a BeeModule
+  char keyboardChar;                                                                // holds a character from the keyboard
+  char lastKeyboardChar;                                                            // holds the last character, so it can be repeated without re-entering
+  String months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  char month[4];                                                                    // month character string
   
-  mayflyDateAndTimeString = mayflyCard.realTimeClock.getDateTimeNowString("Mmm DD YYYY");
-  mayflyDateTime = mayflyCard.realTimeClock.getDateTimeNow();
-  long unsigned int mayflyDateTimeSeconds = mayflyDateTime.get();
-  long unsigned int computerDateTimeSeconds = computerDateTime.get();
- 
-  mayflyCard.redLED.turnOn();                                     // turn on the Red LED
-  mayflyCard.greenLED.turnOn();                                   // turn on the Green LED
-  delay(1000);                                                    // wait a second
-  mayflyCard.redLED.turnOff();                                    // turn off the red LED
+  // signal that we've entered Mayfly setup
+  mayflyCard.redLED.turnOn();                                                       // turn on the Red LED
+  mayflyCard.greenLED.turnOn();                                                     // turn on the Green LED
+  
+  mayflyCard.setup(&beeModule[0]);                                                  // setup the Mayfly Card with a BeeModule
+  
+  mayflyCard.redLED.turnOff();                                                      // signal that we've exited Mayfly setup - turn off the red LED
+
+  mayflyDtString = mayflyCard.realTimeClock.getDateTimeNowString("Mmm DD YYYY");    // String containing Mayfly's current date and time
+  mayflyDT = mayflyCard.realTimeClock.getDateTimeNow();                             // DateTime object of Mayfly's current date and time
+  long unsigned int mayflyDtSeconds = mayflyDT.get();                               // seconds since 1/1/2000 for Mayfly
+  long unsigned int computerDtSeconds = computerDT.get();                           // seconds since 1/1/2000 for Computer
+  unsigned long int deltaSeconds = computerDtSeconds - mayflyDtSeconds;             // difference between computer's seconds and Mayfly's seconds
 
   // show the computer's and Mayfly's dates and times
-  Serial.print(F("Computer: ")); Serial.print(__DATE__); Serial.print(F(" "));Serial.print(__TIME__);  Serial.print(F("  (")); Serial.print(computerDateTimeSeconds); Serial.println(F(")"));
-  Serial.print(F("  Mayfly: ")); Serial.print(mayflyDateAndTimeString); Serial.print(F("  (")); Serial.print(mayflyDateTimeSeconds); Serial.println(F(")"));
-
-  unsigned long int deltaSeconds = computerDateTimeSeconds - mayflyDateTimeSeconds;
+  Serial.print(F("Computer: ")); Serial.print(__DATE__); Serial.print(F(" "));Serial.print(__TIME__);  Serial.print(F("  (")); Serial.print(computerDtSeconds); Serial.println(F(")"));
+  Serial.print(F("  Mayfly: ")); Serial.print(mayflyDtString); Serial.print(F("  (")); Serial.print(mayflyDtSeconds); Serial.println(F(")"));
 
   // if it looks like the Mayfly clock needs to be set
   if (deltaSeconds > 30000) {
-    Serial.print(F("Looks like the Mayfly clock needs to be set.\nEnter 'y' to set the clock..."));
+    Serial.println(F("\nLooks like the Mayfly clock needs to be set.\nEnter 'y' to set the clock..."));
 
-    // wait for a keyboard entry
-    while (Serial.available() <= 0);
-    
-    char keyboardChar = Serial.read();                                                      // get a character from the keyboard
+    while (Serial.available() <= 0);                                                // wait for a keyboard entry
+    keyboardChar = Serial.read();                                                   // get a character from the keyboard
 
-    // if ENTER was pressed
-    if (keyboardChar == 'y') {
+    // process the entry
+    if (keyboardChar == 'y' || keyboardChar == 'Y') {
 
-      while (Serial.available() > 0);                                                       // strip off any newlines
-      
-      Serial.println(F("setting the Mayfly clock\n"));
+      mayflyDtSeconds = computerDtSeconds + 60;                                     // start with the computer's seconds, with a little time added
 
-      Serial.println(F("    Year Month Day Hour Minute Second"));
-      Serial.println(F("    ---- ----- --- ---- ------ ------"));
-      Serial.println(F("+1   e    o     a  h    m      s"));
-      Serial.println(F("-1    i     t    y    r      e      d\n"));
+      char mayflyDtArray[21];                                                       // holds the date string: "Jan 29 1954 23:04:33"
+      boolean breakout = false;                                                     // true=break out of the proposed time adjustment
 
-      Serial.println(F("Repeat last adjustment: ENTER"));
-      Serial.println(F("Target date & time ok, continue: k"));
+      while (!breakout) {                                                           // keep adjusting the proposed time until it what we like
 
-      // wait for a keyboard entry
-      while (Serial.available() <= 0);
+        mayflyDT = DateTime(mayflyDtSeconds);                                       // get a DateTime object corresponding to the seconds
+        strcpy(month, months[mayflyDT.month()-1]);
+        //monthNum = mayflyDT.month()-1;                                              // get the offset into the months array
+Serial.print("57: month=");Serial.println(month);        
+        sprintf(                                                                    // create the date string to display
+          mayflyDtArray,
+          "%s %02d %4d %02d:%02d:%02d", 
+          month, mayflyDT.date(), mayflyDT.year(), mayflyDT.hour(), mayflyDT.minute(), mayflyDT.second()
+        );
 
+        Serial.println(F("\n================================================"));
+        Serial.print(F("   Enter an adjustment for: ")); Serial.println(mayflyDtArray);
+
+        Serial.println(F("         Hour Minute Second"));
+        Serial.println(F("         ---- ------ ------"));
+        Serial.println(F("   +1 ->  h    m      s"));
+        Serial.println(F("   -1 ->    r      e      d\n"));
+
+        Serial.println(F("   Repeat last adjustment: ENTER"));
+        Serial.println(F("   Target date & time ok, continue: k"));
+
+        while (Serial.available() > 0) char trash = Serial.read();                    // strip off any newlines
+        while (Serial.available() <= 0);                                              // wait for a keyboard entry
+        keyboardChar = Serial.read();                                                 // get a character from the keyboard
+        
+        if (keyboardChar == 10) {                                                     // if the ENTER key was pressed by itself
+          keyboardChar = lastKeyboardChar;                                            // repeat the last character
+        }
+        
+        switch (keyboardChar) {                                                       // handle the character
+          case 'S':                                                                   // increase second
+          case 's':
+            mayflyDtSeconds++;
+            lastKeyboardChar = keyboardChar;
+            break;
+          case 'D':                                                                   // decrease second
+          case 'd':
+            mayflyDtSeconds--;
+            lastKeyboardChar = keyboardChar;
+            break;
+          case 'M':                                                                   // increase the minute
+          case 'm':
+            mayflyDtSeconds += 60;
+            lastKeyboardChar = keyboardChar;
+            break;
+          case 'E':                                                                   // decrease the minute
+          case 'e':
+            mayflyDtSeconds -= 60;
+            lastKeyboardChar = keyboardChar;
+            break;
+          case 'H':                                                                   // increase the hour
+          case 'h':
+            mayflyDtSeconds += 3600;        
+            lastKeyboardChar = keyboardChar;
+            break;
+          case 'R':                                                                   // decrease the hour
+          case 'r':
+            mayflyDtSeconds -= 3600;
+            lastKeyboardChar = keyboardChar;
+            break;
+          case 'K':                                                                   // set the time to this value
+          case 'k':
+            breakout = true;
+            break;
+          default:
+            Serial.print(F("\nERROR: unknown request - key pressed = ")); Serial.println(keyboardChar);
+            break;
+        }
+      }    
     }
 
     else {
