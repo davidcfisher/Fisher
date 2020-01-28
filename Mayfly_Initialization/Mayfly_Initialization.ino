@@ -2,28 +2,30 @@
 
 #include "TIA-Software_Mayfly_Card.h"
 
-const char beeModule[] = "DigiLTE-M";                                           // module in the Bee socket
+const char beeModule[] = "DigiLTE-M";                                             // module in the Bee socket
 
-Mayfly_card mayflyCard;                                                         // establish instance of Mayfly Card
+Mayfly_card mayflyCard;                                                           // establish instance of Mayfly Card
 
 
 void setup() {
-  DateTime computerDT(__DATE__, __TIME__);                                        // DateTime of the compile
-  DateTime mayflyDT;                                                              // DaatTime of the Mayfly
-  String mayflyDtString;                                                          // holds the Mayfly DateTime
-  char keyboardChar;                                                              // holds a character from the keyboard
-  
   // signal that we've entered Mayfly setup
   mayflyCard.redLED.turnOn();                                                     // turn on the Red LED
   mayflyCard.greenLED.turnOn();                                                   // turn on the Green LED
   
   mayflyCard.setup(&beeModule[0]);                                                // setup the Mayfly Card with a BeeModule
-  
-  mayflyCard.redLED.turnOff();                                                    // signal that we've exited Mayfly setup - turn off the red LED
+
+  /***** Test the LEDs *****/
+  /*                       */
+  mayflyCard.railroadLED();                                                       // 
 
 
   /***** Set the clock, if needed *****/
   /*                                  */
+  DateTime computerDT(__DATE__, __TIME__);                                        // DateTime of the compile
+  DateTime mayflyDT;                                                              // DaatTime of the Mayfly
+  String mayflyDtString;                                                          // holds the Mayfly DateTime
+  char keyboardChar;                                                              // holds a character from the keyboard
+  
   mayflyDtString = mayflyCard.realTimeClock.getDateTimeNowString("Mmm DD YYYY");  // String containing Mayfly's current date and time
   mayflyDT = mayflyCard.realTimeClock.getDateTimeNow();                           // DateTime object of Mayfly's current date and time
   long int mayflyDtSeconds = mayflyDT.get();                                      // seconds since 1/1/2000 for Mayfly
@@ -43,7 +45,7 @@ void setup() {
     // process the entry
     if (keyboardChar == 'y' || keyboardChar == 'Y') {
       Serial.println(F("setting the clock"));
-      mayflyCard.realTimeClock.setClock(computerDtSeconds + 60);                  // set the clock time, propose a minute after the compile time
+      mayflyCard.realTimeClock.adjustClock(computerDtSeconds + 60);               // set the clock time, propose a minute after the compile time
     }
 
     else {

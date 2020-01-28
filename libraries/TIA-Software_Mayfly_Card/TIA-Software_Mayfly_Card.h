@@ -2,7 +2,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_H
 #define TIA_SOFTWARE_MAYFLY_CARD_H
-#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20200107
+#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20200128
 
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"                         // global definitions
@@ -24,6 +24,11 @@ class Mayfly_card {
     
     void setup(                                               // setup the Mayfly card.  
       const char *beeModule                                   // module in the Bee socket
+    );
+    
+    void railroadLED(                                         // alternately flash the LEDs
+      int cycleMs = 500,                                      // flash cycle in ms
+      int cycleCount = 10                                     // number of cycles to flash
     );
 };
 

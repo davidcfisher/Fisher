@@ -27,7 +27,9 @@ class TIA_RTC {
       String dateFormat="YYYY-MM-DD",
       String timeFormat="HH:MM:SS"
     );
-    boolean setClock(long int mayflyDtSeconds);               // set the Mayfly clock, using seconds since 1/1/2000
+    boolean adjustClock(                                      // adjust the Mayfly clock
+      long int mayflyDtSeconds                                // seconds since 1/1/2000, which is the proposed date and time
+    );
     
   protected:
     int _pin;                                                 // LED pin number

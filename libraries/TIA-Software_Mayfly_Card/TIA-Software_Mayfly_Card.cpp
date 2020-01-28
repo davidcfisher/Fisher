@@ -11,6 +11,7 @@ Pushbutton  Mayfly_card::pushbutton{};                        // Mayfly has a pu
 TIA_SdFat   Mayfly_card::sdCard{};                            // Mayfly has an SD Card
 BeeSocket   Mayfly_card::beeSocket{};                         // Mayfly has a Bee Socket
 
+
 // METHOD: setup the Mayfly Card
 void Mayfly_card::setup(const char *beeModule = "none")
 {
@@ -23,4 +24,22 @@ void Mayfly_card::setup(const char *beeModule = "none")
   pushbutton.setup();                                         // setup the pushbutton
   sdCard.TIA_setup();                                         // setup the SD card
   beeSocket.setup(beeModule);                                 // setup the Bee Socket
+}
+
+
+// METHOD: railroad - alternately flash the LEDs
+void Mayfly_card::railroadLED(                                // alternately flash the LEDs
+  int cycleMs,                                                // flash cycle in ms
+  int cycleCount                                              // number of cycles to flash
+)
+{
+  int halfCycleMs = cycleMs/2;                                // each LED stays lit for half the cycle time
+  greenLED.turnOff();                                         // start with the green LED off
+  redLED.turnOn();                                            // start with the red LED on
+  
+  for (int i=0; i < cycleCount; i++) {                        // cycle thru the requested number of times
+    delay(halfCycleMs);                                       // delay for half the cycle
+    greenLED.switchState();                                   // switch the state of the green lED
+    redLED.switchState();                                     // switch the state of the red LED
+  }
 }

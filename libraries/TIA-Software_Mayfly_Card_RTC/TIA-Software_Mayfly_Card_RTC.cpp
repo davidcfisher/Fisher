@@ -126,8 +126,8 @@ String TIA_RTC::getDateTimeNowString(String dateFormat, String timeFormat)
   return getDateNowString(dateFormat) + " " + getTimeNowString(timeFormat);
 }
 
-// METHOD: set the Mayfly clock, using seconds since 1/1/2000
-boolean TIA_RTC::setClock(long int mayflyDtSeconds)
+// METHOD: adjust the Mayfly clock, using seconds since 1/1/2000
+boolean TIA_RTC::adjustClock(long int mayflyDtSeconds)
 {
   DateTime mayflyDT;                                                            // holds DateTime of the Mayfly
   char mayflyDtArray[22];                                                       // holds the date string, format: "Jan 29, 1954 23:04:33"
