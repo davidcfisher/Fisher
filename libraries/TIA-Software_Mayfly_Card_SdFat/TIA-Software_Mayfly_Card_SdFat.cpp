@@ -225,7 +225,7 @@ boolean getPreviousConsoleRecord(                                            // 
   SdFile consoleFile;                                                 // console file
     
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
-    SerialMon.println(F("Console.txt did not open.")); 
+    Serial.println(F("Console.txt did not open.")); 
     return false; 
   } 
     
@@ -270,7 +270,7 @@ boolean TIA_SdFat::getConsoleProfile(
   boolean firstRecordFoundFlag    = false;
   
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
-    SerialMon.println(F("Error 339: console.txt did not open."));
+    Serial.println(F("Error 339: console.txt did not open."));
     return -1;                                                        // return an error code
   }
   
@@ -314,18 +314,18 @@ boolean TIA_SdFat::getConsoleProfile(
   
   /***** use this code to display console.txt profile *****/
   /*                                                      */
-  //SerialMon.println(F("")); SerialMon.println(F("<<<<< CONSOLE FILE PROFILE >>>>>"));
-  //SerialMon.println(F("\t\tDateTime\t\tTimestamp\tFile Position\tRecord"));
-  //SerialMon.print(F(" First Record:\t"));
-  //SerialMon.print(firstDateTime_YYYY_MM_DD_HH_MM_SS); SerialMon.print(F("\t"));
-  //SerialMon.print(firstTimestampSeconds); SerialMon.print(F("\t"));
-  //SerialMon.print(firstFilePosition); SerialMon.print(F("\t\t"));
-  //SerialMon.println(firstRecord);
-  //SerialMon.print(F("  Last Record:\t"));
-  //SerialMon.print(lastDateTime_YYYY_MM_DD_HH_MM_SS); SerialMon.print(F("\t"));
-  //SerialMon.print(lastTimestampSeconds); SerialMon.print(F("\t"));
-  //SerialMon.print(lastFilePosition); SerialMon.print(F("\t\t"));
-  //SerialMon.println(lastRecord);  
+  //Serial.println(F("")); Serial.println(F("<<<<< CONSOLE FILE PROFILE >>>>>"));
+  //Serial.println(F("\t\tDateTime\t\tTimestamp\tFile Position\tRecord"));
+  //Serial.print(F(" First Record:\t"));
+  //Serial.print(firstDateTime_YYYY_MM_DD_HH_MM_SS); Serial.print(F("\t"));
+  //Serial.print(firstTimestampSeconds); SerialMprint(F("\t"));
+  //Serial.print(firstFilePosition); Serial.print(F("\t\t"));
+  //Serial.println(firstRecord);
+  //Serial.print(F("  Last Record:\t"));
+  //Serial.print(lastDateTime_YYYY_MM_DD_HH_MM_SS); Serial.print(F("\t"));
+  //Serial.print(lastTimestampSeconds); Serial.print(F("\t"));
+  //Serial.print(lastFilePosition); Serial.print(F("\t\t"));
+  //Serial.println(lastRecord);  
 }
 
 
@@ -362,10 +362,10 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   char line[consoleRecordLength]                = "";
   unsigned long int timestampSeconds            = 0;
   
-  SerialMon.println(F(""));
-  SerialMon.print(F("<<< getting Console records, start=")); SerialMon.print(requestedStartDateTimeString);
-  SerialMon.print(F(", end=")); SerialMon.print(requestedEndDateTimeString);
-  SerialMon.print(F(", byteLimit=")); SerialMon.print(byteLimit); SerialMon.println(F(" >>>"));
+  Serial.println(F(""));
+  Serial.print(F("<<< getting Console records, start=")); Serial.print(requestedStartDateTimeString);
+  Serial.print(F(", end=")); Serial.print(requestedEndDateTimeString);
+  Serial.print(F(", byteLimit=")); Serial.print(byteLimit); Serial.println(F(" >>>"));
   
   // get the console profile
   getConsoleProfile(
@@ -403,18 +403,18 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
     getPreviousConsoleRecord(&line[0], &position);                    // get the previous record
     timestampSeconds = secondsSince1Jan2kFromDateTime(line);          // get the number of seconds since 1/1/2000 for this record
       
-    SerialMon.print(F("."));                                          // print out a period to show progress
+    Serial.print(F("."));                                             // print out a period to show progress
     loopCounter++;  
     if (loopCounter >= 100) {                                         // break progress display into multiple lines
       loopCounter = 0;  
-      SerialMon.println(F(""));
+      Serial.println(F(""));
     }
   }
   
-  SerialMon.println(F(""));
+  Serial.println(F(""));
   
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
-    SerialMon.println(F("Error 466: console.txt did not open."));
+    Serial.println(F("Error 466: console.txt did not open."));
     return -1;                                                        // return an error code
   }
   

@@ -1,11 +1,10 @@
-//  TIA-Software_DCF_Globals.h - Copyright (c) 2019 TIA Software, LLC.  All rights reserved.
-//  v1.0
+//  TIA-Software_DCF_Globals.h - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 
 #ifndef TIA_SOFTWARE_DCF_GLOBALS_H
 #define TIA_SOFTWARE_DCF_GLOBALS_H
-#define TIA_SOFTWARE_DCF_GLOBALS_VERSION 20191220
+#define TIA_SOFTWARE_DCF_GLOBALS_VERSION 20200128
 
-#define SerialMon Serial                              // establish the Serial Monitor
+//#define SerialMon Serial                              // establish the Serial Monitor
 #define SerialAT Serial1        `                     // establish the Cellular connection
 #define TIA_redLedPin 9                               // red LED connected to digital pin 9
 #define TIA_greenLedPin 8                             // green LED connected to digital pin 8

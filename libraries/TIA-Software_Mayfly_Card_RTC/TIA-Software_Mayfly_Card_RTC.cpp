@@ -125,3 +125,86 @@ String TIA_RTC::getDateTimeNowString(String dateFormat, String timeFormat)
 {
   return getDateNowString(dateFormat) + " " + getTimeNowString(timeFormat);
 }
+
+// METHOD: set the Mayfly clock, using seconds since 1/1/2000
+boolean TIA_RTC::setClock(long int mayflyDtSeconds)
+{
+  DateTime mayflyDT;                                                            // holds DateTime of the Mayfly
+  char mayflyDtArray[22];                                                       // holds the date string, format: "Jan 29, 1954 23:04:33"
+  char keyboardChar;                                                            // holds a character from the keyboard
+  char lastKeyboardChar;                                                        // holds the last character, so it can be repeated without re-entering
+  char months[12][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};  // format used by DateTime functions
+  boolean breakout = false;                                                     // true=break out of the proposed time adjustment loop
+
+  while (!breakout) {                                                           // keep adjusting the proposed time until it what we like
+    mayflyDT = DateTime(mayflyDtSeconds);                                       // get a DateTime object corresponding to the seconds
+    sprintf(                                                                    // create the date string to display
+      mayflyDtArray,
+      "%s %02d, %4d %02d:%02d:%02d", 
+      months[mayflyDT.month()-1], mayflyDT.date(), mayflyDT.year(), mayflyDT.hour(), mayflyDT.minute(), mayflyDT.second()
+    );
+  
+    Serial.println(F("\n================================================"));
+    Serial.print(F("   Enter an adjustment to: ")); Serial.println(mayflyDtArray);
+
+    Serial.println(F("          Increment Decrement"));
+    Serial.println(F("          --------- ---------"));
+    Serial.println(F("     Hour:    h         r"));
+    Serial.println(F("   Minute:    m         e"));
+    Serial.println(F("   Second:    s         d\n"));
+
+    Serial.println(F("   Repeat last adjustment: ENTER"));
+    Serial.println(F("   Set Mayfly and continue:    c"));
+    Serial.println(F("   Exit without setting clock: x"));
+
+    while (Serial.available() > 0) char trash = Serial.read();                    // strip off any newlines
+    while (Serial.available() <= 0);                                              // wait for a keyboard entry
+    keyboardChar = Serial.read();                                                 // get a character from the keyboard
+    
+    if (keyboardChar == 10) {                                                     // if the ENTER key was pressed by itself
+      keyboardChar = lastKeyboardChar;                                            // repeat the last character
+    }
+
+    lastKeyboardChar = keyboardChar;                                              // save the keyboard char so it can be reused
+    
+    switch (keyboardChar) {                                                       // handle the character
+      case 'S': case 's': mayflyDtSeconds++;        break;                        // increase second
+      case 'D': case 'd': mayflyDtSeconds--;        break;                        // decrease second
+      case 'M': case 'm': mayflyDtSeconds += 60;    break;                        // increase the minute
+      case 'E': case 'e': mayflyDtSeconds -= 60;    break;                        // decrease the minute
+      case 'H': case 'h': mayflyDtSeconds += 3600;  break;                        // increase the hour
+      case 'R': case 'r': mayflyDtSeconds -= 3600;  break;                        // decrease the hour
+      case 'X': case 'x': return false;                                           // exit the method
+      case 'C': case 'c':                                                         // set the Mayfly to this value
+      
+        rtc.setEpoch(mayflyDtSeconds + 946684800);                                // translate from Epoch-from-1/1/2000 to Epoch-from-1/1/1970; set the Mayfly date and time
+        delay(100);                                                               // let the clock and serial input settle down
+        
+        while (Serial.available() > 0) char trash = Serial.read();                // strip off any newlines
+
+        // display the current time every second, so it can be verified
+        while (Serial.available() <= 0) {                                         // wait for a keyboard entry
+          delay(1000);
+          mayflyDT = getDateTimeNow();                                            // get the current DateTime
+          sprintf(                                                                // create the date string to display
+            mayflyDtArray,
+            "%s %02d, %4d %02d:%02d:%02d", 
+            months[mayflyDT.month()-1], mayflyDT.date(), mayflyDT.year(), mayflyDT.hour(), mayflyDT.minute(), mayflyDT.second()
+          );
+      
+          Serial.print(F("\nCurrent Mayfly date & time: ")); Serial.println(mayflyDtArray);
+          Serial.println(F("Press ENTER to continue"));
+        }
+        
+        delay(100);                                                               // needed to let the serial input settle down
+        while (Serial.available() > 0) char trash = Serial.read();                // strip off any newlines
+      
+        breakout = true;
+        break;
+      default:
+        Serial.print(F("\nERROR: unknown request - key pressed = ")); Serial.println(keyboardChar);
+        break;
+    }
+  }
+  return true;
+}
