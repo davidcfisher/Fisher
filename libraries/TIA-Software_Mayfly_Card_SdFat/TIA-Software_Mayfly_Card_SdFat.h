@@ -2,7 +2,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200107
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200129
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
 #include "SdFat.h"                                                // SD Card support
@@ -27,18 +27,18 @@ class TIA_SdFat : public SdFat {
     TIA_SdFat();                                                  // constructor
     
     
-    // setup the SD Card
+    // METHOD: setup the SD Card
     void TIA_setup();
     
     
-    // list the files in the dir.  Returns the number of directory names + filenames
+    // METHOD: list the files in the dir.  Returns the number of directory names + filenames
     int TIA_dir(                                                  
       SdCardDirectory *sd_card_directory,                         // array to hold directory results
       int limit                                                   // limit on the number of directory names + file names to be returned
     );
     
 
-    // get the profile of console.txt
+    // METHOD: get the profile of console.txt
     boolean getConsoleProfile(
       char (*firstRecord)[consoleRecordLength],                   // returns first record found in the console file
       char (*lastRecord)[consoleRecordLength],                    // returns last record found in the console file
@@ -54,7 +54,7 @@ class TIA_SdFat : public SdFat {
     );
 
     
-    // get records from the console file
+    // METHOD: get records from the console file
     int getConsoleRecords(                                        // returns number of records read
 
       /* get records from console.txt, specifing starting and ending dates
@@ -72,6 +72,18 @@ class TIA_SdFat : public SdFat {
       String endDateTimeString,                                   // end reading at "YYYY-MM-DD HH:MM:SS"
       int byteLimit                                               // limit on the number of bytes to be returned      
     );
+    
+    
+    // METHOD - write test
+    boolean TIA_writeTest();
+    
+    
+    // METHOD - read test
+    boolean TIA_readTest();
+    
+    
+    // METHOD - remove test
+    boolean TIA_removeTest();
     
     
   protected:
