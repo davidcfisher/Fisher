@@ -10,7 +10,7 @@ Pushbutton::Pushbutton()                                      // constructor
 }
 
 
-// METHOD: setup module in bee socket
+// METHOD: setup the pushbutton
 void Pushbutton::setup()
 {
   pinMode(TIA_pushbuttonPin, INPUT);                          // the pushbutton pin is used as input
@@ -20,7 +20,6 @@ void Pushbutton::setup()
 // METHOD: read the state of the pushbutton
 boolean Pushbutton::readState()
 {
-   _state = digitalRead(TIA_pushbuttonPin);
-  //Serial.print("Pushbutton state=");Serial.println(_state ? "Pushed" : "Not pushed");
-  return _state;
+   _state = digitalRead(TIA_pushbuttonPin);                   // read the state of the pushbutton
+  return _state ? HIGH : LOW;                                 // return the state as HIGH or LOW
 }

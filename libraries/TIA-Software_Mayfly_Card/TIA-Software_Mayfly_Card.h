@@ -2,7 +2,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_H
 #define TIA_SOFTWARE_MAYFLY_CARD_H
-#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20200128
+#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20200129
 
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"                         // global definitions
@@ -27,8 +27,15 @@ class Mayfly_card {
     );
     
     void railroadLED(                                         // alternately flash the LEDs
-      int cycleMs = 500,                                      // flash cycle in ms
-      int cycleCount = 10                                     // number of cycles to flash
+      int cycleCount = 10,                                    // number of cycles to flash, negative number means railroad forever
+      boolean enablePushbutton = true,                        // true=button push terminates loop
+      int cycleMs = 1000                                      // flash cycle in ms
+    );
+    
+    void railroadLED(                                         // alternately flash the LEDs
+      String cycleCount,                                      // String defining number of cycles
+      boolean enablePushbotton = true,                        // true=button push terminates loop
+      int cycleMs = 1000                                      // flash cycle in ms
     );
 };
 

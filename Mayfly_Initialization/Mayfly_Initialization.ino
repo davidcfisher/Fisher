@@ -1,4 +1,4 @@
-#define Mayfly_Initialization_version = 20200128
+#define Mayfly_Initialization_version 20200128
 
 #include "TIA-Software_Mayfly_Card.h"
 
@@ -8,15 +8,13 @@ Mayfly_card mayflyCard;                                                         
 
 
 void setup() {
-  // signal that we've entered Mayfly setup
-  mayflyCard.redLED.turnOn();                                                     // turn on the Red LED
-  mayflyCard.greenLED.turnOn();                                                   // turn on the Green LED
-  
   mayflyCard.setup(&beeModule[0]);                                                // setup the Mayfly Card with a BeeModule
 
-  /***** Test the LEDs *****/
-  /*                       */
-  mayflyCard.railroadLED();                                                       // 
+  /***** Test the LEDs and pushbutton *****/
+  /*                                      */
+  Serial.println("\nACTION: if the LEDs are 'railroading,' push the BUTTON to continue");
+  mayflyCard.railroadLED("forever");                                              // Railroad the LEDs with the pushbutton enabled
+  Serial.println("STATUS: LEDs and button look ok");
 
 
   /***** Set the clock, if needed *****/
