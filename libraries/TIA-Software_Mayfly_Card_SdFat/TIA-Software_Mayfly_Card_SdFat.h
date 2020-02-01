@@ -2,7 +2,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200129
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200201
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
 #include "SdFat.h"                                                // SD Card support
@@ -22,13 +22,14 @@ typedef struct {                                                  // structure o
 
 
 class TIA_SdFat : public SdFat {
+  
   public:
 
     TIA_SdFat();                                                  // constructor
     
     
     // METHOD: setup the SD Card
-    void TIA_setup();
+    bool TIA_setup();
     
     
     // METHOD: list the files in the dir.  Returns the number of directory names + filenames
@@ -74,19 +75,13 @@ class TIA_SdFat : public SdFat {
     );
     
     
-    // METHOD - write test
-    boolean TIA_writeTest();
+    // METHOD - test the SD card
+    boolean testSdCard();
     
-    
-    // METHOD - read test
-    boolean TIA_readTest();
-    
-    
-    // METHOD - remove test
-    boolean TIA_removeTest();
-    
-    
+        
   protected:
+    
+    SdFat _sd;                                                    // SdFat for this instance
     
     void processDirectory(                                        // recursively process SD card directory
       SdCardDirectory *sd_card_directory,                         // array of SD Card directory entries

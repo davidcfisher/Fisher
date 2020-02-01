@@ -13,7 +13,7 @@ class TIA_RTC {
     
     TIA_RTC();                                                // constructor
       
-    void TIA_setup();                                         // setup the real time clock
+    bool TIA_setup();                                         // setup the real time clock
     DateTime getDateTimeNow();                                // get the current date and time as a DateTime object
     String getYearString(DateTime dT);                        // get the year as a String
     String getMonthString(DateTime dT, String format="MM");   // get the month as a String. formats: "MM", "Mmm"
@@ -27,6 +27,7 @@ class TIA_RTC {
       String dateFormat="YYYY-MM-DD",
       String timeFormat="HH:MM:SS"
     );
+    
     boolean adjustClock(                                      // adjust the Mayfly clock
       long int mayflyDtSeconds                                // seconds since 1/1/2000, which is the proposed date and time
     );

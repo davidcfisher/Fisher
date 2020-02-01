@@ -2,14 +2,14 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_LED_H
 #define TIA_SOFTWARE_MAYFLY_CARD_LED_H
-#define TIA_SOFTWARE_MAYFLY_CARD_LED_VERSION 20200128
+#define TIA_SOFTWARE_MAYFLY_CARD_LED_VERSION 20200201
 
 #include "Arduino.h"
 
 class LED {
   public:
     LED();                                                  // constructor
-    void setup(                                             // METHOD: setup the LED
+    bool setup(                                             // METHOD: setup the LED
       int pin,                                              // pin number for the LED
       String LEDname                                        // name for the LED
     );

@@ -8,13 +8,14 @@ LED::LED() {}                                                 // constructor
 
 
 // METHOD: setup an LED
-void LED::setup(int pin, String LEDname)
+bool LED::setup(int pin, String LEDname)
 {
   _pin = pin;                                                 // save the pin number for later use
   pinMode(_pin, OUTPUT);                                      // make the pin an OUTPUT
   
   setName(LEDname);                                           // save the LED name for later use
   turnOff();                                                  // turn the LED off
+  return true;
 }
 
 

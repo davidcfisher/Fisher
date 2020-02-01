@@ -11,12 +11,14 @@ TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclas
 
 
 // METHOD: setup - setup the SD Card
-void TIA_SdFat::TIA_setup() {
+bool TIA_SdFat::TIA_setup() {
   
-  if (begin(TIA_SD_CS_PIN)) {                                         // if the SD Card Reader begins successfully
-  }
-  else {
-  }    
+  SdFat _sd;
+  
+  if (_sd.begin(TIA_SD_CS_PIN)) return true;        
+  
+  Serial.println("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>");
+  return false;
 }
 
 
@@ -452,50 +454,52 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
 }
 
 
-// METHOD: TIA_writeTest - test the write capability of the SD card
-void TIA_SdFat::TIA_writeTest() {
-  testFile = open(testFilename, FILE_WRITE);                          // open the test file for writing
-  if (testFile) {                                                     // if the test file opened ok
-    testFile.rewind();                                                // set pointer to the beginning of the file
-    testFile.print(SdTestPhrase);                                     // write to the test file
-    testFile.close();                                                 // close the file
-  }
-  else {
-    
-  }
-}
+// METHOD: TIA_testSdCard - test the SD card for create, write, read, remove
+boolean TIA_SdFat::testSdCard()
+{
+  //SdFat _sd;
+  File myFile;
 
+  Serial.print(" STATUS: initializing SD card...");
+  
+  if (!_sd.begin(TIA_SD_CS_PIN)) {
+    Serial.println("initialization failed!");
+    return false;
+  }
+  
+  Serial.println("initialization done.");
 
-// METHOD: TIA_readTest - test the read capability of the SD card
-void TIA_SdFat::TIA_readTest() {
-  testFile = open(testFilename);                                      // open the test file for reading
-  if (testFile) {                                                     // if the test file opened ok
-    String readStr = testFile.readStringUntil('\n');                  // read a line from the file
-    readStr.trim();                                                   // remove any \n's
-    if (readStr.equals(SdTestPhrase)) {                               
-    }                                                                 
-    else {                                                            // file failed to open
-      SerialMon.println(F("...FAILED to match Write."));
-      SerialMon.print(SdTestPhrase);
-      SerialMon.print(F("<<< length="));
-      SerialMon.println(SdTestPhrase.length());
-      SerialMon.print(F(". Received>>>"));
-      SerialMon.print(readStr);
-      SerialMon.print(F("<<< length="));
-      SerialMon.print(readStr.length());
-      SerialMon.println(F("."));
+  // open the test file.
+  myFile = _sd.open("test.txt", FILE_WRITE);
+
+  // if the file opened okay, write to it:
+  if (myFile) {
+    Serial.print("Writing to test.txt...");
+    myFile.println("testing 1, 2, 3.");
+    // close the file:
+    myFile.close();
+    Serial.println("done.");
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+
+  // re-open the file for reading:
+  myFile = _sd.open("test.txt");
+  if (myFile) {
+    Serial.println("test.txt:");
+
+    // read from the file until there's nothing else in it:
+    while (myFile.available()) {
+      Serial.write(myFile.read());
     }
+    // close the file:
+    myFile.close();
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
   }
+  
+  return true;
 }
-
-
-// METHOD: TIA_removeTest - test the 'remove file' capability of the SD card
-void TIA_SdFat::TIA_removeTest() {
-  // perform a remove test
-  if (remove(testFilename)) {
-  }
-  else {
-  }
-}
-
 

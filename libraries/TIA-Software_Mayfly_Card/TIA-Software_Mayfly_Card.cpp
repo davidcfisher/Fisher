@@ -13,17 +13,54 @@ BeeSocket   Mayfly_card::beeSocket{};                         // Mayfly has a Be
 
 
 // METHOD: setup the Mayfly Card
-void Mayfly_card::setup(const char *beeModule = "none")
+bool Mayfly_card::setup(const char *beeModule)
 {
   Serial.begin(57600);                                        // initialize the Serial Monitor
   delay (100);
 
-  redLED.setup(TIA_redLedPin, "Red LED");                     // setup the red LED
-  greenLED.setup(TIA_greenLedPin, "Green LED");               // setup the green LED
-  realTimeClock.TIA_setup();                                  // setup the real time clock
-  pushbutton.setup();                                         // setup the pushbutton
-  sdCard.TIA_setup();                                         // setup the SD card
-  beeSocket.setup(beeModule);                                 // setup the Bee Socket
+  if (!redLED.setup(TIA_redLedPin, "Red LED")) {              // setup the red LED
+    Serial.println("<<< ERROR: failed to setup Red LED. >>>");
+    return false;
+  };
+  
+  Serial.println("  STATUS: Red LED setup ok.");
+  
+  if (!greenLED.setup(TIA_greenLedPin, "Green LED")) {        // setup the green LED
+    Serial.println("<<< ERROR: failed to setup Green LED. >>>");
+    return false;
+  };
+  
+  Serial.println("  STATUS: Green LED setup ok.");
+  
+  if (!realTimeClock.TIA_setup()) {                           // setup the real time clock
+    Serial.println("<<< ERROR: failed to setup Real Time Clock. >>>");
+    return false;
+  };
+  
+  Serial.println("  STATUS: Real Time Clock setup ok.");
+  
+  if (!pushbutton.setup()) {                                  // setup the pushbutton
+    Serial.println("<<< ERROR: failed to setup Pushbutton. >>>");
+    return false;
+  };
+  
+  Serial.println("  STATUS: Pushbutton setup ok.");
+  
+  if (!sdCard.TIA_setup()) {                                  // setup the SD card
+    Serial.println("<<< ERROR: failed to setup SD Card. >>>");
+    return false;
+  };
+  
+  Serial.println("  STATUS: SD Card setup ok.");
+  
+  if (!beeSocket.setup(beeModule)) {                         // setup the Bee Socket
+    Serial.println("<<< ERROR: failed to setup Bee Socket. >>>");
+    return false;
+  };
+  
+  Serial.println("  STATUS: Bee Socket setup ok.");
+  
+  return true;
 }
 
 

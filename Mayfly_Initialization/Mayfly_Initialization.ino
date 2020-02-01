@@ -6,15 +6,19 @@ const char beeModule[] = "DigiLTE-M";                                           
 
 Mayfly_card mayflyCard;                                                           // establish instance of Mayfly Card
 
-
 void setup() {
-  mayflyCard.setup(&beeModule[0]);                                                // setup the Mayfly Card with a BeeModule
+
+  if (!mayflyCard.setup(&beeModule[0])){                                          // setup the Mayfly Card with a BeeModule.  if it fails...
+    Serial.println("<<< ERROR: failed to setup the Mayfly. >>>");
+    Serial.println("\nProcessing terminated.");
+    while (true);
+  };
 
   /***** Test the LEDs and pushbutton *****/
   /*                                      */
-  Serial.println("\nACTION: if the LEDs are 'railroading,' push the BUTTON to continue");
+  Serial.println("\n>>>ACTION: if the LEDs are 'railroading,' push the BUTTON for a second to continue");
   mayflyCard.railroadLED("forever");                                              // Railroad the LEDs with the pushbutton enabled
-  Serial.println("STATUS: LEDs and button look ok");
+  Serial.println(" STATUS: LEDs and button look ok");
 
 
   /***** Set the clock, if needed *****/
@@ -32,7 +36,7 @@ void setup() {
 
   // if the Mayfly clock is significantly different than the compile date and time
   if (abs(deltaSeconds) > 60) {
-    Serial.println(F("\nACTION: looks like the Mayfly clock needs to be set."));
+    Serial.println(F("\n>>>ACTION: the Mayfly clock may need to be set."));
     Serial.print(F("   Computer: ")); Serial.print(__DATE__); Serial.print(F(" "));Serial.print(__TIME__);  Serial.print(F("  (")); Serial.print(computerDtSeconds); Serial.println(F(" seconds since Jan 1, 1970)"));
     Serial.print(F("     Mayfly: ")); Serial.print(mayflyDtString); Serial.print(F("  (")); Serial.print(mayflyDtSeconds); Serial.println(F(" seconds since Jan 1, 1970)"));
     Serial.print(F("\nEnter 'y' to set the clock..."));
@@ -53,8 +57,12 @@ void setup() {
 
   // clock doesn't need to be set
   else {
-    Serial.print(F("STATUS: Mayfly clock looks ok - ")); Serial.print(mayflyDtString);
+    Serial.print(F(" STATUS: Mayfly clock looks ok - ")); Serial.println(mayflyDtString);
   }
+
+  /***** Test the SD Card *****/
+  /*                          */
+  boolean SdCardResultsFlag = mayflyCard.sdCard.testSdCard();
 
   // get the console information
   const int byteLimit = 6000;                                     // return full console records, not to exceed this total number of bytes

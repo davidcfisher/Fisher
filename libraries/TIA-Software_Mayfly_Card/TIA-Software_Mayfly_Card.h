@@ -22,8 +22,8 @@ class Mayfly_card {
     static TIA_SdFat  sdCard;                                 // create SD Card instance "SdCard"
     static BeeSocket  beeSocket;                              // create something on the BEE socket
     
-    void setup(                                               // setup the Mayfly card.  
-      const char *beeModule                                   // module in the Bee socket
+    bool setup(                                               // setup the Mayfly card.  
+      const char *beeModule = "none"                          // module in the Bee socket
     );
     
     void railroadLED(                                         // alternately flash the LEDs

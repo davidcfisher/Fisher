@@ -9,8 +9,8 @@ TIA_RTC::TIA_RTC() {}                                             // constructor
 
 
 // METHOD: TIA_setup()                                            // setup the real time clock
-void TIA_RTC::TIA_setup()
-{
+bool TIA_RTC::TIA_setup() {
+  return true;
 }
 
 

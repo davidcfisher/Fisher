@@ -12,7 +12,7 @@ class Pushbutton {
     
     Pushbutton();                                           // constructor
     
-    void setup();                                           // METHOD: setup the pushbutton
+    bool setup();                                           // METHOD: setup the pushbutton
     boolean readState();                                    // METHOD: read the pushbutton
     
   protected:

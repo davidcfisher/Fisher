@@ -11,9 +11,10 @@ Pushbutton::Pushbutton()                                      // constructor
 
 
 // METHOD: setup the pushbutton
-void Pushbutton::setup()
+bool Pushbutton::setup()
 {
   pinMode(TIA_pushbuttonPin, INPUT);                          // the pushbutton pin is used as input
+  return true;
 }
 
 

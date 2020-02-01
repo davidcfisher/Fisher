@@ -8,15 +8,15 @@ BeeSocket::BeeSocket() {}                                     // constructor
 
 
 // METHOD: setup module in bee socket
-boolean BeeSocket::setup(const char *beeModule)
+bool BeeSocket::setup(const char *beeModule)
 {
   if (strcmp(beeModule, "DigiLTE-M") == 0) {
-    Serial.print("<<< setting up the bee socket with module: "); Serial.print(beeModule); Serial.println(" >>>");
+    Serial.print("  STATUS: setting up the bee socket with module="); Serial.println(beeModule);
     return true;
   }
   
   else {
-    Serial.print("<<< ERROR: unknown moduel in the bee socket: "); Serial.print(beeModule); Serial.println(" >>>");
+    Serial.print("<<< ERROR: unknown module in the bee socket: "); Serial.print(beeModule); Serial.println(" >>>");
     return false;
   }
 }
