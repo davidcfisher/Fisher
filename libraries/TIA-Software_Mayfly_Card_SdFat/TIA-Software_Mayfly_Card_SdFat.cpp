@@ -457,49 +457,66 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
 // METHOD: TIA_testSdCard - test the SD card for create, write, read, remove
 boolean TIA_SdFat::testSdCard()
 {
-  //SdFat _sd;
   File myFile;
+  char testString[] = "Testing 1, 2, 3.";                             // test string to write to SD card
+  char readBuffer[sizeof(testString) / sizeof(testString[0]) + 1];    // read the test string back to here
 
-  Serial.print(" STATUS: initializing SD card...");
-  
-  if (!_sd.begin(TIA_SD_CS_PIN)) {
-    Serial.println("initialization failed!");
+ if (!_sd.begin(TIA_SD_CS_PIN)) {
+    Serial.println("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>");
+    return false;
+  }
+
+  // open the test file.
+  Serial.print("  STATUS: SD Card - \"test.txt\" opening...");
+  myFile = _sd.open("test.txt", FILE_WRITE);
+
+  if (!myFile) {                                                      // if file failed to open
+    Serial.println("\n<<< ERROR: SD file failed to open.  Ensure SD Card is properly seated in Mayfly. >>>");
     return false;
   }
   
-  Serial.println("initialization done.");
-
-  // open the test file.
-  myFile = _sd.open("test.txt", FILE_WRITE);
-
-  // if the file opened okay, write to it:
-  if (myFile) {
-    Serial.print("Writing to test.txt...");
-    myFile.println("testing 1, 2, 3.");
-    // close the file:
-    myFile.close();
-    Serial.println("done.");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
+  Serial.print("truncating...");
+  
+  if (!myFile.truncate(0)) {                                          // if file fails to truncate
+    Serial.println("\n<<< ERROR: file failed truncate. >>>");
+    return false;
+  }
+    
+  Serial.print("writing...");                                         // write to the file
+  myFile.print(testString);
+  Serial.print("closing...");                                         // close the file
+  myFile.close();
+  Serial.print("opening...");                                         // re-open the file for reading
+  myFile = _sd.open("test.txt");
+  
+  if (!myFile) {                                                      // if file failed to open
+    Serial.println("\n<<< ERROR: failed to open. >>>");
+    return false;
   }
 
-  // re-open the file for reading:
-  myFile = _sd.open("test.txt");
-  if (myFile) {
-    Serial.println("test.txt:");
-
-    // read from the file until there's nothing else in it:
-    while (myFile.available()) {
-      Serial.write(myFile.read());
-    }
-    // close the file:
-    myFile.close();
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
+  Serial.print("reading...");
+  myFile.fgets(readBuffer, sizeof(testString));                       // read the file
+  Serial.print("closing...");                                         // close the file
+  myFile.close();
+    
+  Serial.print("comparing...");
+  if (strcmp(testString, readBuffer) != 0) {
+    int cmpResult = strcmp(testString, readBuffer);
+    int absCmpResult = abs(cmpResult);
+    Serial.print("\n<<< ERROR: compare failed.  Compare result="); Serial.print(cmpResult); Serial.println(" >>>");
+    Serial.print("  Written: "); Serial.print(testString); Serial.println("<<<");
+    Serial.print("     Read: "); Serial.print(readBuffer); Serial.println("<<<");
+    Serial.print("  int(char[");Serial.print(absCmpResult);Serial.print("])=<");Serial.print(int(testString[absCmpResult]));Serial.print(">, <");Serial.print(int(readBuffer[absCmpResult]));Serial.println(">");
+    return false;
   }
   
+  Serial.print("removing...");
+  myFile = _sd.open("test.txt", FILE_WRITE);                          // file must be opened for write in order to be removed
+  if (!myFile.remove()) {                                             // try to remove the file
+    Serial.println("\n<<< ERROR: failed to remove file. >>>");
+    return false;
+  }
+  
+  Serial.println("success.");  
   return true;
 }
-

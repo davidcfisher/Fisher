@@ -1,4 +1,4 @@
-#define Mayfly_Initialization_version 20200128
+#define Mayfly_Initialization_version 20200204
 
 #include "TIA-Software_Mayfly_Card.h"
 
@@ -18,7 +18,7 @@ void setup() {
   /*                                      */
   Serial.println("\n>>>ACTION: if the LEDs are 'railroading,' push the BUTTON for a second to continue");
   mayflyCard.railroadLED("forever");                                              // Railroad the LEDs with the pushbutton enabled
-  Serial.println(" STATUS: LEDs and button look ok");
+  Serial.println("\n  STATUS: LEDs and button look ok");
 
 
   /***** Set the clock, if needed *****/
@@ -57,19 +57,19 @@ void setup() {
 
   // clock doesn't need to be set
   else {
-    Serial.print(F(" STATUS: Mayfly clock looks ok - ")); Serial.println(mayflyDtString);
+    Serial.print(F("  STATUS: Mayfly clock looks ok - ")); Serial.println(mayflyDtString);
   }
 
   /***** Test the SD Card *****/
   /*                          */
   boolean SdCardResultsFlag = mayflyCard.sdCard.testSdCard();
 
-  // get the console information
-  const int byteLimit = 6000;                                     // return full console records, not to exceed this total number of bytes
-  char consoleRecords[byteLimit];                                 // return the console records into this array
-  char startDate[] = "2019-09-08 12:00:00";                       // return console records starting at this dateTime
-  char endDate[] = "2019-09-08 12:30:00";                         // return console records ending at this dateTime
-  int numberOfConsoleBytes = mayflyCard.sdCard.getConsoleRecords(&consoleRecords[0], startDate, endDate, byteLimit);
+//  // get the console information
+//  const int byteLimit = 6000;                                     // return full console records, not to exceed this total number of bytes
+//  char consoleRecords[byteLimit];                                 // return the console records into this array
+//  char startDate[] = "2019-09-08 12:00:00";                       // return console records starting at this dateTime
+//  char endDate[] = "2019-09-08 12:30:00";                         // return console records ending at this dateTime
+//  int numberOfConsoleBytes = mayflyCard.sdCard.getConsoleRecords(&consoleRecords[0], startDate, endDate, byteLimit);
 
   // get the directory from the SD Card
   const int sdCardDirectoryLimit = 10;                            // limit the number of directory names + file names to be displayed
@@ -77,13 +77,11 @@ void setup() {
   int numberOfEntries = mayflyCard.sdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
 
 
-  Serial.println(F("")); Serial.println(F("===== Starting Sketch Output ====="));
-  
-  /***** this code displays the console records *****/
-  /*                                                */
-  Serial.println(F("")); Serial.println(F("<<< CONSOLE RECORDS >>>"));
-  Serial.print(numberOfConsoleBytes); Serial.println(F(" bytes returned:"));
-  Serial.println(consoleRecords);
+//  /***** this code displays the console records *****/
+//  /*                                                */
+//  Serial.println(F("")); Serial.println(F("<<< CONSOLE RECORDS >>>"));
+//  Serial.print(numberOfConsoleBytes); Serial.println(F(" bytes returned:"));
+//  Serial.println(consoleRecords);
 
 
   /***** this code displays the directory information *****/
