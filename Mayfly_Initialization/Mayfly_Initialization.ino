@@ -1,8 +1,8 @@
-#define Mayfly_Initialization_version 20200204
+#define Mayfly_Initialization_version 20200211
 
 #include "TIA-Software_Mayfly_Card.h"
 
-const char beeModule[] = "DigiLTE-M";                                             // module in the Bee socket
+const char beeModule[] = "none";                                                  // module in the Bee socket.  Valid: "none", "DigiLTE-M"
 
 Mayfly_card mayflyCard;                                                           // establish instance of Mayfly Card
 
@@ -36,10 +36,10 @@ void setup() {
 
   // if the Mayfly clock is significantly different than the compile date and time
   if (abs(deltaSeconds) > 60) {
-    Serial.println(F("\n>>>ACTION: the Mayfly clock may need to be set."));
-    Serial.print(F("   Computer: ")); Serial.print(__DATE__); Serial.print(F(" "));Serial.print(__TIME__);  Serial.print(F("  (")); Serial.print(computerDtSeconds); Serial.println(F(" seconds since Jan 1, 1970)"));
-    Serial.print(F("     Mayfly: ")); Serial.print(mayflyDtString); Serial.print(F("  (")); Serial.print(mayflyDtSeconds); Serial.println(F(" seconds since Jan 1, 1970)"));
-    Serial.print(F("\nEnter 'y' to set the clock..."));
+    Serial.println(F("  STATUS: the Mayfly clock may need to be set."));
+    Serial.print(F("  Computer: ")); Serial.print(__DATE__); Serial.print(F(" "));Serial.print(__TIME__);  Serial.print(F("  (")); Serial.print(computerDtSeconds); Serial.println(F(" seconds since Jan 1, 1970)"));
+    Serial.print(F("    Mayfly: ")); Serial.print(mayflyDtString); Serial.print(F("  (")); Serial.print(mayflyDtSeconds); Serial.println(F(" seconds since Jan 1, 1970)"));
+    Serial.print(F("\n>>>ACTION: enter 'y' to set the clock..."));
 
     while (Serial.available() <= 0);                                              // wait for a keyboard entry
     keyboardChar = Serial.read();                                                 // get a character from the keyboard
@@ -62,7 +62,36 @@ void setup() {
 
   /***** Test the SD Card *****/
   /*                          */
-  boolean SdCardResultsFlag = mayflyCard.sdCard.testSdCard();
+  mayflyCard.sdCard.testSdCard();
+
+  /***** Ensure "console.txt" exists on SD Card *****/
+  /*                                                */
+//  SdFat sd;                                                         // create SdFat object
+//  if (!sd.begin(TIA_SD_CS_PIN)) {                                   // of the SD card doesn't start
+//    Serial.println("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>");
+//  }
+//  
+//  File consoleFile;                                                 // create the consoleFile object
+//  consoleFile = sd.open("console.txt", FILE_WRITE);                 // open "console.txt" for writing
+//  consoleFile.close();
+//
+//  if (!consoleFile) Serial.println(F("  STATUS: \"console.txt \""));
+//  mayflyCard.sdCard.getConsoleProfile(
+//  );
+//
+//  Serial.println(F("")); Serial.println(F("<<<<< CONSOLE FILE PROFILE >>>>>"));
+//  Serial.println(F("\t\tDateTime\t\tTimestamp\tFile Position\tRecord"));
+//  Serial.print(F(" First Record:\t"));
+//  Serial.print(firstDateTime_YYYY_MM_DD_HH_MM_SS); Serial.print(F("\t"));
+//  Serial.print(firstTimestampSeconds); SerialMprint(F("\t"));
+//  Serial.print(firstFilePosition); Serial.print(F("\t\t"));
+//  Serial.println(firstRecord);
+//  Serial.print(F("  Last Record:\t"));
+//  Serial.print(lastDateTime_YYYY_MM_DD_HH_MM_SS); Serial.print(F("\t"));
+//  Serial.print(lastTimestampSeconds); Serial.print(F("\t"));
+//  Serial.print(lastFilePosition); Serial.print(F("\t\t"));
+//  Serial.println(lastRecord);  
+
 
 //  // get the console information
 //  const int byteLimit = 6000;                                     // return full console records, not to exceed this total number of bytes
@@ -70,13 +99,7 @@ void setup() {
 //  char startDate[] = "2019-09-08 12:00:00";                       // return console records starting at this dateTime
 //  char endDate[] = "2019-09-08 12:30:00";                         // return console records ending at this dateTime
 //  int numberOfConsoleBytes = mayflyCard.sdCard.getConsoleRecords(&consoleRecords[0], startDate, endDate, byteLimit);
-
-  // get the directory from the SD Card
-  const int sdCardDirectoryLimit = 10;                            // limit the number of directory names + file names to be displayed
-  SdCardDirectory sd_card_directory[sdCardDirectoryLimit];        // define an array to hold the SD Card directory results
-  int numberOfEntries = mayflyCard.sdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
-
-
+//
 //  /***** this code displays the console records *****/
 //  /*                                                */
 //  Serial.println(F("")); Serial.println(F("<<< CONSOLE RECORDS >>>"));
@@ -84,8 +107,14 @@ void setup() {
 //  Serial.println(consoleRecords);
 
 
-  /***** this code displays the directory information *****/
-  /*                                                      */
+  /***** display the directory information *****/
+  /*                                           */
+  // get the directory from the SD Card
+  const int sdCardDirectoryLimit = 10;                              // limit the number of directory names + file names to be displayed
+  SdCardDirectory sd_card_directory[sdCardDirectoryLimit];          // define an array to hold the SD Card directory results
+  int numberOfEntries = mayflyCard.sdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
+  Serial.println(F("  STATUS: displaying SD Card directory -"));
+
   // process each file
   for (int i=0; i < numberOfEntries; i++) {
 

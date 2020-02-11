@@ -13,12 +13,15 @@ TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclas
 // METHOD: setup - setup the SD Card
 bool TIA_SdFat::TIA_setup() {
   
-  SdFat _sd;
+  SdFat sd;
+  //SdFile file;
   
-  if (_sd.begin(TIA_SD_CS_PIN)) return true;        
+  if (!sd.begin(TIA_SD_CS_PIN)) {       
+    Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
+    return false;
+  }
   
-  Serial.println("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>");
-  return false;
+  return true;  
 }
 
 
@@ -32,7 +35,7 @@ int TIA_SdFat::TIA_dir(
   numberOfFiles = 0;
   
   if (file.open("/", O_READ)) {                                       // if opening the root directory was successful
-    processDirectory(&sd_card_directory[0], file, "Root", 0, limit);        // process the root directory
+    processDirectory(&sd_card_directory[0], file, "Root", 0, limit);  // process the root directory
   }
   
   return numberOfFiles;
@@ -43,7 +46,7 @@ int TIA_SdFat::TIA_dir(
 void TIA_SdFat::processDirectory(
   SdCardDirectory *sd_card_directory,                                 // pointer to array holding results of dir request
   SdFile CFile,                                                       // 
-  const char dirName[],                                                     // assume method is called while pointing to a directory name
+  const char dirName[],                                               // assume method is called while pointing to a directory name
   int numTabs,                                                        // number of tabs to indent this directories information
   int limit                                                           // limit on the number of direcory+file names to be returned
 )
@@ -217,7 +220,7 @@ unsigned long int secondsSince1Jan2kFromDateTime(
 
 
 // FUNCTION: scan thru console file backwards looking for the previous record
-boolean getPreviousConsoleRecord(                                            // true=previous record found
+bool getPreviousConsoleRecord(                                        // true=previous record found
   char *line,                                                         // char array holding the previous record
   unsigned long int *progressPos_ptr                                  // position to start scanning the console record backwards
 )
@@ -252,7 +255,7 @@ boolean getPreviousConsoleRecord(                                            // 
 
 
 // METHOD: get console.txt profile
-boolean TIA_SdFat::getConsoleProfile(
+bool TIA_SdFat::getConsoleProfile(
   
   char (*firstRecord)[consoleRecordLength],                           // set with the first record found in the console file
   char (*lastRecord)[consoleRecordLength],                            // set with the last record found in the console file
@@ -269,10 +272,11 @@ boolean TIA_SdFat::getConsoleProfile(
 {
   SdFile consoleFile;                                                 // console file
   char line[consoleRecordLength]  = "";
-  boolean firstRecordFoundFlag    = false;
+  bool firstRecordFoundFlag       = false;
+  int result;
   
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
-    Serial.println(F("Error 339: console.txt did not open."));
+    Serial.println(F("Error 275: console.txt did not open."));
     return -1;                                                        // return an error code
   }
   
@@ -280,7 +284,10 @@ boolean TIA_SdFat::getConsoleProfile(
   while (!firstRecordFoundFlag) {
     
     // get the next record of the console file
-    consoleFile.fgets(line, consoleRecordLength);                     // get this whole console record
+    result = consoleFile.fgets(line, consoleRecordLength);            // get this whole console record
+    
+    if (result == 0) return false;                                    // check for no entries
+    
     if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';    // remove the New Line ('\n')
     
     *firstTimestampSeconds = secondsSince1Jan2kFromDateTime(line);    // save the timestamp of the first record, 0=invalid dateTime
@@ -455,68 +462,102 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
 
 
 // METHOD: TIA_testSdCard - test the SD card for create, write, read, remove
-boolean TIA_SdFat::testSdCard()
+bool TIA_SdFat::testSdCard()
 {
-  File myFile;
-  char testString[] = "Testing 1, 2, 3.";                             // test string to write to SD card
+  SdFat sd;
+  SdFile file;
+  
+  if (!sd.begin(TIA_SD_CS_PIN)) {       
+    Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
+    return false;
+  }
+
+  const char *testFilename = "test.txt";                              // file used to test the SD Card
+  const char *consoleFilename = "console.txt";                        // console filename
+  const char testString[] = "Testing 1, 2, 3.";                       // test string to write to SD card
   char readBuffer[sizeof(testString) / sizeof(testString[0]) + 1];    // read the test string back to here
 
- if (!_sd.begin(TIA_SD_CS_PIN)) {
-    Serial.println("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>");
-    return false;
-  }
-
-  // open the test file.
-  Serial.print("  STATUS: SD Card - \"test.txt\" opening...");
-  myFile = _sd.open("test.txt", FILE_WRITE);
-
-  if (!myFile) {                                                      // if file failed to open
-    Serial.println("\n<<< ERROR: SD file failed to open.  Ensure SD Card is properly seated in Mayfly. >>>");
+  Serial.print(F("  STATUS: SD Card - \"test.txt\" opening..."));     // open the test file.
+  if (!file.open(testFilename, O_WRITE | O_CREAT)) {                  // if file failed to open
+    Serial.print(F("\n<<< ERROR: \""));
+    Serial.print(testFilename);
+    Serial.println(F("\" failed to open for writing. >>>"));
     return false;
   }
   
-  Serial.print("truncating...");
-  
-  if (!myFile.truncate(0)) {                                          // if file fails to truncate
-    Serial.println("\n<<< ERROR: file failed truncate. >>>");
+  Serial.print(F("truncating..."));
+  if (!file.truncate(0)) {                                            // if file fails to truncate
+    Serial.println(F("\n<<< ERROR: \""));
+    Serial.print(testFilename);
+    Serial.println(F("\" failed truncate. >>>"));
     return false;
   }
     
-  Serial.print("writing...");                                         // write to the file
-  myFile.print(testString);
-  Serial.print("closing...");                                         // close the file
-  myFile.close();
-  Serial.print("opening...");                                         // re-open the file for reading
-  myFile = _sd.open("test.txt");
+  Serial.print(F("writing..."));
+  if (!file.write(testString)) {                                      // if file fails to write
+    Serial.print(F("\n<<< ERROR: \""));
+    Serial.print(testFilename);
+    Serial.println(F("\" failed to write.>>>"));
+    return false;
+  }
   
-  if (!myFile) {                                                      // if file failed to open
-    Serial.println("\n<<< ERROR: failed to open. >>>");
+  Serial.print(F("closing..."));
+  if (!file.close()) {                                                // if file fails to close
+    Serial.print(F("\n<<< ERROR: \""));
+    Serial.print(testFilename);
+    Serial.println(F("\" failed to close.>>>"));
+    return false;
+  }
+  
+  Serial.print(F("opening..."));
+  if (!file.open("test.txt", O_READ)) {                               // if file fails to open for read
+    Serial.println(F("\n<<< ERROR: \""));
+    Serial.print(testFilename);
+    Serial.println(F("\" failed to open for reading. >>>"));
     return false;
   }
 
-  Serial.print("reading...");
-  myFile.fgets(readBuffer, sizeof(testString));                       // read the file
-  Serial.print("closing...");                                         // close the file
-  myFile.close();
-    
-  Serial.print("comparing...");
-  if (strcmp(testString, readBuffer) != 0) {
+  Serial.print(F("reading..."));
+  if (file.fgets(readBuffer, sizeof(testString)) <= 0) {              // if file fails to read
+    Serial.println(F("\n<<< ERROR: \""));
+    Serial.print(testFilename);
+    Serial.println(F("\" failed to read. >>>"));
+    return false;
+  }
+  
+  Serial.print(F("closing..."));
+  if (!file.close()) {                                                // if file fails to close
+    Serial.print(F("\n<<< ERROR: \""));
+    Serial.print(testFilename);
+    Serial.println(F("\" failed to close.>>>"));
+    return false;
+  }
+     
+  Serial.print(F("comparing..."));
+  if (strcmp(testString, readBuffer) != 0) {                           // if compare fails
     int cmpResult = strcmp(testString, readBuffer);
     int absCmpResult = abs(cmpResult);
-    Serial.print("\n<<< ERROR: compare failed.  Compare result="); Serial.print(cmpResult); Serial.println(" >>>");
-    Serial.print("  Written: "); Serial.print(testString); Serial.println("<<<");
-    Serial.print("     Read: "); Serial.print(readBuffer); Serial.println("<<<");
-    Serial.print("  int(char[");Serial.print(absCmpResult);Serial.print("])=<");Serial.print(int(testString[absCmpResult]));Serial.print(">, <");Serial.print(int(readBuffer[absCmpResult]));Serial.println(">");
+    Serial.print(F("\n<<< ERROR: compare failed.  Compare result=")); Serial.print(cmpResult); Serial.println(F(" >>>"));
+    Serial.print(F("  Written: ")); Serial.print(testString); Serial.println(F("<<<"));
+    Serial.print(F("     Read: ")); Serial.print(readBuffer); Serial.println(F("<<<"));
+    Serial.print(F("  int(char["));
+    Serial.print(absCmpResult);
+    Serial.print(F("])=<"));
+    Serial.print(int(testString[absCmpResult]));
+    Serial.print(F(">, <"));
+    Serial.print(int(readBuffer[absCmpResult]));
+    Serial.println(F(">"));
     return false;
   }
   
-  Serial.print("removing...");
-  myFile = _sd.open("test.txt", FILE_WRITE);                          // file must be opened for write in order to be removed
-  if (!myFile.remove()) {                                             // try to remove the file
-    Serial.println("\n<<< ERROR: failed to remove file. >>>");
+  Serial.print(F("removing..."));
+  if (!sd.remove(testFilename)) {                                     // if remove fails
+    Serial.println(F("\n<<< ERROR: failed to remove \""));
+    Serial.print(testFilename);
+    Serial.println(F(".\" >>>"));
     return false;
   }
   
-  Serial.println("success.");  
+  Serial.println(F("success."));  
   return true;
 }

@@ -2,15 +2,15 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200203
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200211
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
+#include <SPI.h>
 #include "SdFat.h"                                                // SD Card support
 #include "Sodaq_DS3231.h"                                         // Real Time Clock support
 
 const int filenameLength = 200;                                   // maximum length of directory name or filename
-   
-    
+
 typedef struct {                                                  // structure of an SD Card directory return
   int folderLevel;                                                // sub-directory depth, used to determine indentation level for displaying results
   boolean directoryFlag;                                          // true=directory, false=file
@@ -22,7 +22,6 @@ typedef struct {                                                  // structure o
 
 
 class TIA_SdFat : public SdFat {
-  
   public:
 
     TIA_SdFat();                                                  // constructor
@@ -40,7 +39,8 @@ class TIA_SdFat : public SdFat {
     
 
     // METHOD: get the profile of console.txt
-    boolean getConsoleProfile(
+    bool getConsoleProfile(                                       // false = no entries in console.txt
+      
       char (*firstRecord)[consoleRecordLength],                   // returns first record found in the console file
       char (*lastRecord)[consoleRecordLength],                    // returns last record found in the console file
       
@@ -81,7 +81,7 @@ class TIA_SdFat : public SdFat {
         
   protected:
     
-    SdFat _sd;                                                    // SdFat for this instance
+    //SdFat _sd;                                                    // SdFat for this instance
     
     void processDirectory(                                        // recursively process SD card directory
       SdCardDirectory *sd_card_directory,                         // array of SD Card directory entries
