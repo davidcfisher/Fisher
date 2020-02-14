@@ -29,11 +29,11 @@ int TIA_SdFat::TIA_dir(
   int limit                                                           // limit on the number of directory names + filenames to be returned
 )
 {
-  SdFile file;
+  SdFile dirFile;                                                     // file holding directory information
   numberOfFiles = 0;
   
-  if (file.open("/", O_READ)) {                                       // if opening the root directory was successful
-    processDirectory(&sd_card_directory[0], file, "Root", 0, limit);  // process the root directory
+  if (dirFile.open("/", O_READ)) {                                    // if opening the root directory was successful
+    processDirectory(&sd_card_directory[0], dirFile, "Root", 0, limit);  // process the root directory
   }
   
   return numberOfFiles;
@@ -41,10 +41,11 @@ int TIA_SdFat::TIA_dir(
 
 
 // METHOD: processDirectory - recuresively get all directory names and filenames in a directory and sub-directories
+/* NOTE: assume that dirFile hold a DIRECTORY entry */
 void TIA_SdFat::processDirectory(
   SdCardDirectory *sd_card_directory,                                 // pointer to array holding results of dir request
-  SdFile CFile,                                                       // 
-  const char dirName[],                                               // assume method is called while pointing to a directory name
+  SdFile dirFile,                                                     // REQUIRED: file holding DIRECTORY information
+  const char dirName[],                                               // REQUIRED: method is called while pointing to a directory name
   int numTabs,                                                        // number of tabs to indent this directories information
   int limit                                                           // limit on the number of direcory+file names to be returned
 )
@@ -73,7 +74,7 @@ void TIA_SdFat::processDirectory(
   }
   
   // step thru all the files in this directory
-  while (file.openNext(&CFile, O_READ)) {
+  while (file.openNext(&dirFile, O_READ)) {
     if (!file.isHidden()) {                                           // skip hidden files
       
       for (int i = 1; i <= numTabs; i++) { Serial.print(F("\t")); }   // insert tabs for spacing
@@ -89,7 +90,9 @@ void TIA_SdFat::processDirectory(
       else {
         file.getName(filename, filenameLength);                       // get the filename
         file.dirEntry(&sd_card_directoryEntry);                       // get the FAT directory entry
-        
+Serial.print("93: filename=");Serial.println(filename);
+Serial.print("94: isLFN()=");Serial.println(file.isLFN());
+Serial.print("95: length of LFN=");Serial.println(file.len());
         // get the encoded last modification day
         unsigned int lastWriteDay = (sd_card_directoryEntry.lastWriteDate << 11) >> 11;            // strip off the encoded year and month - bits on the left
         

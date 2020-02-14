@@ -83,8 +83,8 @@ class TIA_SdFat : public SdFat {
     
     void processDirectory(                                        // recursively process SD card directory
       SdCardDirectory *sd_card_directory,                         // array of SD Card directory entries
-      SdFile CFile,                                               // current file being read
-      const char dirName[] = "Root",                                    // name of the current directory
+      SdFile file,                                                // current file being read
+      const char dirName[] = "Root",                              // name of the current directory
       int numTabs = 0,                                            // number of tabs for displaying sub-directories
       int limit = 100                                             // limit on the number of directory+file names to be returned
     );                                         
