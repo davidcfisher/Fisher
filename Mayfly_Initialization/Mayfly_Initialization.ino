@@ -1,4 +1,4 @@
-#define Mayfly_Initialization_version 20200211
+#define Mayfly_Initialization_version 20200214
 
 #include "TIA-Software_Mayfly_Card.h"
 

@@ -1,5 +1,4 @@
 //  TIA-Software_Mayfly_Card_SdFat.cpp - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
-//  v1.0
 
 #include "TIA-Software_Mayfly_Card_SdFat.h"                           // include the header file
     
@@ -14,14 +13,13 @@ TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclas
 bool TIA_SdFat::TIA_setup() {
   
   SdFat sd;
-  //SdFile file;
   
   if (!sd.begin(TIA_SD_CS_PIN)) {       
     Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
     return false;
   }
-  
-  return true;  
+
+  return true;
 }
 
 

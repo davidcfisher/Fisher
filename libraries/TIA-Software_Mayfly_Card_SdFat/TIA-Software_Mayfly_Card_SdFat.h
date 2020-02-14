@@ -2,7 +2,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200211
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200214
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
 #include <SPI.h>
@@ -80,8 +80,6 @@ class TIA_SdFat : public SdFat {
     
         
   protected:
-    
-    //SdFat _sd;                                                    // SdFat for this instance
     
     void processDirectory(                                        // recursively process SD card directory
       SdCardDirectory *sd_card_directory,                         // array of SD Card directory entries
