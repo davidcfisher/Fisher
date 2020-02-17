@@ -41,7 +41,7 @@ int TIA_SdFat::TIA_dir(
 
 
 // METHOD: processDirectory - recuresively get all directory names and filenames in a directory and sub-directories
-/* NOTE: assume that dirFile hold a DIRECTORY entry */
+/* NOTE: assume that dirFile holds a DIRECTORY entry */
 void TIA_SdFat::processDirectory(
   SdCardDirectory *sd_card_directory,                                 // pointer to array holding results of dir request
   SdFile dirFile,                                                     // REQUIRED: file holding DIRECTORY information
@@ -50,9 +50,9 @@ void TIA_SdFat::processDirectory(
   int limit                                                           // limit on the number of direcory+file names to be returned
 )
 {
-  SdFile file;
+  SdFile file;                                                        // holds a file object
   char filename[filenameLength];                                      // holds the filename
-  directoryEntry sd_card_directoryEntry;                              // holds the FAT directory entry
+  directoryEntry sd_card_directoryEntry;                              // holds a FAT directory entry
   char amPm[3] = "?M";                                                // holds "AM" or "PM"
   char mDateTime[20];                                                 // holds the last write time for the file
   
@@ -92,7 +92,7 @@ void TIA_SdFat::processDirectory(
         file.dirEntry(&sd_card_directoryEntry);                       // get the FAT directory entry
 Serial.print("93: filename=");Serial.println(filename);
 Serial.print("94: isLFN()=");Serial.println(file.isLFN());
-Serial.print("95: length of LFN=");Serial.println(file.len());
+//Serial.print("95: length of LFN=");Serial.println(file.len());
         // get the encoded last modification day
         unsigned int lastWriteDay = (sd_card_directoryEntry.lastWriteDate << 11) >> 11;            // strip off the encoded year and month - bits on the left
         
