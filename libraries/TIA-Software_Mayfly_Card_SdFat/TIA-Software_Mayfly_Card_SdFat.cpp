@@ -2,7 +2,7 @@
 
 #include "TIA-Software_Mayfly_Card_SdFat.h"                           // include the header file
     
-int numberOfFiles;                                                    // number of files in directory, including directory names
+//int numberOfFiles;                                                    // number of files in directory, including directory names
 
 
 // CONSTRUCTOR
@@ -29,11 +29,17 @@ int TIA_SdFat::TIA_dir(
   int limit                                                           // limit on the number of directory names + filenames to be returned
 )
 {
+  SdFat sd;
   SdFile dirFile;                                                     // file holding directory information
-  numberOfFiles = 0;
+  int numberOfFiles = 0;
   
-  if (dirFile.open("/", O_READ)) {                                    // if opening the root directory was successful
-    processDirectory(&sd_card_directory[0], dirFile, "Root", 0, limit);  // process the root directory
+  if (!sd.begin(TIA_SD_CS_PIN)) {       
+    Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
+    return numberOfFiles;
+  }
+ 
+  if (dirFile.open("/")) {                                            // if opening the root directory was successful
+    numberOfFiles = processDirectory(&sd_card_directory[0], dirFile, "Root", 0, limit);  // process the root directory
   }
   
   return numberOfFiles;
@@ -42,10 +48,11 @@ int TIA_SdFat::TIA_dir(
 
 // METHOD: processDirectory - recuresively get all directory names and filenames in a directory and sub-directories
 /* NOTE: assume that dirFile holds a DIRECTORY entry */
-void TIA_SdFat::processDirectory(
+int TIA_SdFat::processDirectory(
   SdCardDirectory *sd_card_directory,                                 // pointer to array holding results of dir request
   SdFile dirFile,                                                     // REQUIRED: file holding DIRECTORY information
   const char dirName[],                                               // REQUIRED: method is called while pointing to a directory name
+  int numberOfFiles,                                                  // number of files already processed
   int numTabs,                                                        // number of tabs to indent this directories information
   int limit                                                           // limit on the number of direcory+file names to be returned
 )
@@ -55,7 +62,7 @@ void TIA_SdFat::processDirectory(
   directoryEntry sd_card_directoryEntry;                              // holds a FAT directory entry
   char amPm[3] = "?M";                                                // holds "AM" or "PM"
   char mDateTime[20];                                                 // holds the last write time for the file
-  
+Serial.print("65: numTabs=");Serial.println(numTabs);  
   // save the directory information
   sd_card_directory[numberOfFiles].folderLevel    = numTabs;
   sd_card_directory[numberOfFiles].directoryFlag  = true;
@@ -70,29 +77,27 @@ void TIA_SdFat::processDirectory(
   // if we've reached the maximum number of directory+file names allowed, terminate
   if (numberOfFiles >= limit) {
     sd_card_directory[numberOfFiles-1].limitReached = true;
-    return;
+    return numberOfFiles - 1;
   }
   
   // step thru all the files in this directory
   while (file.openNext(&dirFile, O_READ)) {
     if (!file.isHidden()) {                                           // skip hidden files
       
-      for (int i = 1; i <= numTabs; i++) { Serial.print(F("\t")); }   // insert tabs for spacing
-      
-      // if this is a sub-directory, process it
+     // if this is a sub-directory, process it
       if (file.isDir()) {
         file.getName(filename, filenameLength);                       // get the directory name
-        processDirectory(&sd_card_directory[0], file, filename, numTabs+1, limit);  // process this directory        
-        if (sd_card_directory[numberOfFiles-1].limitReached) return;  // if we've reached the limit, stop processing
+        processDirectory(&sd_card_directory[0], file, filename, numberOfFiles, numTabs+1, limit);  // process this directory        
+        if (sd_card_directory[numberOfFiles-1].limitReached) {        // if we've reached the limit, stop processing
+          return numberOfFiles - 1;
+        }
       }
       
       // a regular file, not hidden or a directory
       else {
         file.getName(filename, filenameLength);                       // get the filename
         file.dirEntry(&sd_card_directoryEntry);                       // get the FAT directory entry
-Serial.print("93: filename=");Serial.println(filename);
-Serial.print("94: isLFN()=");Serial.println(file.isLFN());
-//Serial.print("95: length of LFN=");Serial.println(file.len());
+
         // get the encoded last modification day
         unsigned int lastWriteDay = (sd_card_directoryEntry.lastWriteDate << 11) >> 11;            // strip off the encoded year and month - bits on the left
         
@@ -123,23 +128,23 @@ Serial.print("94: isLFN()=");Serial.println(file.isLFN());
         sd_card_directory[numberOfFiles].directoryFlag  = false;
         sd_card_directory[numberOfFiles].sizeKb         = file.fileSize();
         sd_card_directory[numberOfFiles].limitReached   = false;
-
+          
         strcpy(sd_card_directory[numberOfFiles].filename, filename);
         strcpy(sd_card_directory[numberOfFiles].modDateTime, mDateTime);
-      
+        
         // increment the files counter
         numberOfFiles++;
        
         // if we've reached the maximum number of directory+file names allowed, terminate
         if (numberOfFiles >= limit) {          
           sd_card_directory[numberOfFiles-1].limitReached = true;
-          return;
+          return numberOfFiles - 1;
         }
       }
     }
-    
-    file.close();
+    file.close();  
   }
+  return numberOfFiles;
 }
 
 
@@ -474,7 +479,7 @@ bool TIA_SdFat::testSdCard()
   }
 
   const char *testFilename = "test.txt";                              // file used to test the SD Card
-  const char *consoleFilename = "console.txt";                        // console filename
+//  const char *consoleFilename = "console.txt";                        // console filename
   const char testString[] = "Testing 1, 2, 3.";                       // test string to write to SD card
   char readBuffer[sizeof(testString) / sizeof(testString[0]) + 1];    // read the test string back to here
 

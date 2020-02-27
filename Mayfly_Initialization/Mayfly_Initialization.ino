@@ -1,4 +1,4 @@
-#define Mayfly_Initialization_version 20200214
+#define Mayfly_Initialization_version 20200227
 
 #include "TIA-Software_Mayfly_Card.h"
 
@@ -16,9 +16,9 @@ void setup() {
 
   /***** Test the LEDs and pushbutton *****/
   /*                                      */
-  Serial.println("\n>>>ACTION: if the LEDs are 'railroading,' push the BUTTON for a second to continue");
-  mayflyCard.railroadLED("forever");                                              // Railroad the LEDs with the pushbutton enabled
-  Serial.println("\n  STATUS: LEDs and button look ok");
+  //Serial.println("\n>>>ACTION: if the LEDs are 'railroading,' push the BUTTON for a second to continue");
+  //mayflyCard.railroadLED("forever");                                              // Railroad the LEDs with the pushbutton enabled
+  //Serial.println("\n  STATUS: LEDs and button look ok");
 
 
   /***** Set the clock, if needed *****/
@@ -107,6 +107,7 @@ void setup() {
 //  Serial.println(consoleRecords);
 
 
+
   /***** display the directory information *****/
   /*                                           */
   // get the directory from the SD Card
@@ -141,6 +142,45 @@ void setup() {
       break;
     }
   }
+
+
+//#define SerialMon Serial
+//  // get the directory from the SD Card
+//  const int sdCardDirectoryLimit = 10;                            // limit the number of directory names + file names to be displayed
+//  SdCardDirectory sd_card_directory[sdCardDirectoryLimit];        // define an array to hold the SD Card directory results
+//  int numberOfEntries = mayflyCard.sdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
+//
+//
+//  /***** this code displays the directory information *****/
+//  /*                                                      */
+//  // process each file
+//  for (int i=0; i < numberOfEntries; i++) {
+//
+//    if (sd_card_directory[i].directoryFlag) SerialMon.println(F(""));                               // print a blank line before a directory entry
+//
+//    for (int j=0; j<sd_card_directory[i].folderLevel; j++) { SerialMon.print(F("\t")); }            // add tabs to indent sub-directory level
+//
+//    // if this is a directory entry
+//    if (sd_card_directory[i].directoryFlag) {
+//      SerialMon.print(F("<<< ")); SerialMon.print(sd_card_directory[i].filename); SerialMon.println(F(" >>>"));
+//    }
+//
+//    // otherwise, this is a file
+//    else {
+//      SerialMon.print(sd_card_directory[i].filename);     SerialMon.print(F("\t"));
+//      if (strlen(sd_card_directory[i].filename) <= 12)    SerialMon.print(F("\t"));
+//      SerialMon.print(sd_card_directory[i].modDateTime);  SerialMon.print(F("\t"));
+//      SerialMon.print(sd_card_directory[i].sizeKb);       SerialMon.println(F(" KB"));
+//    }
+//
+//    // if we've reached the limit of directory+file names
+//    if(sd_card_directory[i].limitReached) {
+//      SerialMon.println(F(""));SerialMon.print(F("=== More files may exist.  Maximum display limit of ")); SerialMon.print(sdCardDirectoryLimit); SerialMon.println(F(" reached. ==="));
+//      break;
+//    }
+//  }
+
+
 }
 
 
