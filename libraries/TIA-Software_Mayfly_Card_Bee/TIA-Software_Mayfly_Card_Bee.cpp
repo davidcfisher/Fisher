@@ -11,17 +11,17 @@ BeeSocket::BeeSocket() {}                                     // constructor
 bool BeeSocket::setup(const char *beeModule)
 {
   if (strcmp(beeModule, "none") == 0) {
-    Serial.println(F("  STATUS: setting up the bee socket with no module."));
+    Serial.println(F("  STATUS: setting up the Bee socket with no module."));
     return true;
   }
   
   else if (strcmp(beeModule, "DigiLTE-M") == 0) {
-    Serial.print(F("  STATUS: setting up the bee socket with module=")); Serial.print(beeModule); Serial.println(F("."));
+    Serial.print(F("  STATUS: setting up the Bee socket with module=")); Serial.print(beeModule); Serial.println(F("."));
     return true;
   }
   
   else {
-    Serial.print(F("<<< ERROR: unknown module in the bee socket: ")); Serial.print(beeModule); Serial.println(F(" >>>"));
+    Serial.print(F("<<< ERROR: unknown module in the Bee socket: ")); Serial.print(beeModule); Serial.println(F(" >>>"));
     return false;
   }
 }

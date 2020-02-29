@@ -10,9 +10,9 @@ TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclas
 
 
 // METHOD: setup - setup the SD Card
-bool TIA_SdFat::TIA_setup() {
+bool TIA_SdFat::TIA_setup(SdFat sd) {
   
-  SdFat sd;
+  //SdFat sd;
   
   if (!sd.begin(TIA_SD_CS_PIN)) {       
     Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
@@ -39,7 +39,7 @@ int TIA_SdFat::TIA_dir(
   }
  
   if (dirFile.open("/")) {                                            // if opening the root directory was successful
-    numberOfFiles = processDirectory(&sd_card_directory[0], dirFile, "Root", 0, limit);  // process the root directory
+    numberOfFiles = processDirectory(&sd_card_directory[0], dirFile, "Root", 0, 0, limit);  // process the root directory
   }
   
   return numberOfFiles;
@@ -62,7 +62,7 @@ int TIA_SdFat::processDirectory(
   directoryEntry sd_card_directoryEntry;                              // holds a FAT directory entry
   char amPm[3] = "?M";                                                // holds "AM" or "PM"
   char mDateTime[20];                                                 // holds the last write time for the file
-Serial.print("65: numTabs=");Serial.println(numTabs);  
+
   // save the directory information
   sd_card_directory[numberOfFiles].folderLevel    = numTabs;
   sd_card_directory[numberOfFiles].directoryFlag  = true;
@@ -146,7 +146,6 @@ Serial.print("65: numTabs=");Serial.println(numTabs);
   }
   return numberOfFiles;
 }
-
 
 
 // FUNCTION: return seconds since 1/1/200 if input is a valid dateTime char array of the format:  YYYY-MM-DD HH:MM:SS
@@ -251,8 +250,8 @@ bool getPreviousConsoleRecord(                                        // true=pr
       lineFeedFoundFlag = true;                                       // flag that we found the Line Feed
       *progressPos_ptr = consoleFile.curPosition();                   // grab the position of the Line Feed
     } 
-  } 
-    
+  }
+  
   consoleFile.seekCur(1);                                             // move forward past the Line Feed  
   consoleFile.fgets(fgetsLine, consoleRecordLength);                  // get this whole console record
   for (int i=0; i < consoleRecordLength; i++) line[i] = fgetsLine[i]; // copy this record into the line to be returned
@@ -473,7 +472,7 @@ bool TIA_SdFat::testSdCard()
   SdFat sd;
   SdFile file;
   
-  if (!sd.begin(TIA_SD_CS_PIN)) {       
+  if (!sd.begin(TIA_SD_CS_PIN)) {
     Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
     return false;
   }
@@ -483,7 +482,7 @@ bool TIA_SdFat::testSdCard()
   const char testString[] = "Testing 1, 2, 3.";                       // test string to write to SD card
   char readBuffer[sizeof(testString) / sizeof(testString[0]) + 1];    // read the test string back to here
 
-  Serial.print(F("  STATUS: SD Card - \"test.txt\" opening..."));     // open the test file.
+  Serial.print(F("  STATUS: SD Card test: \"test.txt\" opening...")); // open the test file.
   if (!file.open(testFilename, O_WRITE | O_CREAT)) {                  // if file failed to open
     Serial.print(F("\n<<< ERROR: \""));
     Serial.print(testFilename);
