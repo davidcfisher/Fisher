@@ -13,7 +13,7 @@ BeeSocket   Mayfly_card::beeSocket{};                         // Mayfly has a Be
 
 
 // METHOD: setup the Mayfly Card
-bool Mayfly_card::setup(SdFat sd, const char *beeModule)
+bool Mayfly_card::setup(const char *beeModule)
 {
   Serial.begin(57600);                                        // initialize the Serial Monitor
   delay (100);
@@ -46,7 +46,7 @@ bool Mayfly_card::setup(SdFat sd, const char *beeModule)
   
   Serial.println("  STATUS: Pushbutton setup ok.");
   
-  if (!sdCard.TIA_setup(sd)) {                              // setup the SD card
+  if (!sdCard.TIA_setup()) {                                // setup the SD card
     Serial.println("<<< ERROR: failed to setup SD Card. >>>");
     return false;
   };

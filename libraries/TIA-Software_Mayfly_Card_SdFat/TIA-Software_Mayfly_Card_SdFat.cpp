@@ -2,19 +2,15 @@
 
 #include "TIA-Software_Mayfly_Card_SdFat.h"                           // include the header file
     
-//int numberOfFiles;                                                    // number of files in directory, including directory names
-
 
 // CONSTRUCTOR
-TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclass of SdFat
+TIA_SdFat::TIA_SdFat() : SdFat(){};
 
 
 // METHOD: setup - setup the SD Card
-bool TIA_SdFat::TIA_setup(SdFat sd) {
-  
-  //SdFat sd;
-  
-  if (!sd.begin(TIA_SD_CS_PIN)) {       
+bool TIA_SdFat::TIA_setup()
+{
+  if (!_sd.begin(TIA_SD_CS_PIN)) {       
     Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
     return false;
   }
@@ -29,11 +25,10 @@ int TIA_SdFat::TIA_dir(
   int limit                                                           // limit on the number of directory names + filenames to be returned
 )
 {
-  SdFat sd;
   SdFile dirFile;                                                     // file holding directory information
   int numberOfFiles = 0;
   
-  if (!sd.begin(TIA_SD_CS_PIN)) {       
+  if (!_sd.begin(TIA_SD_CS_PIN)) {       
     Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
     return numberOfFiles;
   }
@@ -467,102 +462,118 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
 
 
 // METHOD: TIA_testSdCard - test the SD card for create, write, read, remove
-bool TIA_SdFat::testSdCard()
+bool TIA_SdFat::testSdCard(bool verbose)
 {
-  SdFat sd;
   SdFile file;
   
-  if (!sd.begin(TIA_SD_CS_PIN)) {
-    Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
+  if (!_sd.begin(TIA_SD_CS_PIN)) {
+    if (verbose) Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
     return false;
   }
 
   const char *testFilename = "test.txt";                              // file used to test the SD Card
-//  const char *consoleFilename = "console.txt";                        // console filename
   const char testString[] = "Testing 1, 2, 3.";                       // test string to write to SD card
   char readBuffer[sizeof(testString) / sizeof(testString[0]) + 1];    // read the test string back to here
 
-  Serial.print(F("  STATUS: SD Card test: \"test.txt\" opening...")); // open the test file.
+  if (verbose) Serial.print(F("    \"test.txt\" opening..."));    // open the test file.
   if (!file.open(testFilename, O_WRITE | O_CREAT)) {                  // if file failed to open
-    Serial.print(F("\n<<< ERROR: \""));
-    Serial.print(testFilename);
-    Serial.println(F("\" failed to open for writing. >>>"));
+    if (verbose) {
+      Serial.print(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to open for writing. >>>"));
+    }
     return false;
   }
   
-  Serial.print(F("truncating..."));
+  if (verbose) Serial.print(F("truncating..."));
   if (!file.truncate(0)) {                                            // if file fails to truncate
-    Serial.println(F("\n<<< ERROR: \""));
-    Serial.print(testFilename);
-    Serial.println(F("\" failed truncate. >>>"));
+    if (verbose) {
+      Serial.println(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed truncate. >>>"));
+    }
     return false;
   }
     
-  Serial.print(F("writing..."));
+  if (verbose) Serial.print(F("writing..."));
   if (!file.write(testString)) {                                      // if file fails to write
-    Serial.print(F("\n<<< ERROR: \""));
-    Serial.print(testFilename);
-    Serial.println(F("\" failed to write.>>>"));
+    if (verbose) {
+      Serial.print(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to write.>>>"));
+    }
     return false;
   }
   
-  Serial.print(F("closing..."));
+  if (verbose) Serial.print(F("closing..."));
   if (!file.close()) {                                                // if file fails to close
-    Serial.print(F("\n<<< ERROR: \""));
-    Serial.print(testFilename);
-    Serial.println(F("\" failed to close.>>>"));
+    if (verbose) {
+      Serial.print(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to close.>>>"));
+    }
     return false;
   }
   
-  Serial.print(F("opening..."));
+  if (verbose) Serial.print(F("opening..."));
   if (!file.open("test.txt", O_READ)) {                               // if file fails to open for read
-    Serial.println(F("\n<<< ERROR: \""));
-    Serial.print(testFilename);
-    Serial.println(F("\" failed to open for reading. >>>"));
+    if (verbose) {
+      Serial.println(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to open for reading. >>>"));
+    }
     return false;
   }
 
-  Serial.print(F("reading..."));
+  if (verbose) Serial.print(F("reading..."));
   if (file.fgets(readBuffer, sizeof(testString)) <= 0) {              // if file fails to read
-    Serial.println(F("\n<<< ERROR: \""));
-    Serial.print(testFilename);
-    Serial.println(F("\" failed to read. >>>"));
+    if (verbose) {
+      Serial.println(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to read. >>>"));
+    }
     return false;
   }
   
-  Serial.print(F("closing..."));
+  if (verbose) Serial.print(F("closing..."));
   if (!file.close()) {                                                // if file fails to close
-    Serial.print(F("\n<<< ERROR: \""));
-    Serial.print(testFilename);
-    Serial.println(F("\" failed to close.>>>"));
+    if (verbose) {
+      Serial.print(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to close.>>>"));
+    }
     return false;
   }
      
-  Serial.print(F("comparing..."));
+  if (verbose) Serial.print(F("comparing..."));
   if (strcmp(testString, readBuffer) != 0) {                           // if compare fails
-    int cmpResult = strcmp(testString, readBuffer);
-    int absCmpResult = abs(cmpResult);
-    Serial.print(F("\n<<< ERROR: compare failed.  Compare result=")); Serial.print(cmpResult); Serial.println(F(" >>>"));
-    Serial.print(F("  Written: ")); Serial.print(testString); Serial.println(F("<<<"));
-    Serial.print(F("     Read: ")); Serial.print(readBuffer); Serial.println(F("<<<"));
-    Serial.print(F("  int(char["));
-    Serial.print(absCmpResult);
-    Serial.print(F("])=<"));
-    Serial.print(int(testString[absCmpResult]));
-    Serial.print(F(">, <"));
-    Serial.print(int(readBuffer[absCmpResult]));
-    Serial.println(F(">"));
+    if (verbose) {
+      int cmpResult = strcmp(testString, readBuffer);
+      int absCmpResult = abs(cmpResult);
+      Serial.print(F("\n<<< ERROR: compare failed.  Compare result=")); Serial.print(cmpResult); Serial.println(F(" >>>"));
+      Serial.print(F("  Written: ")); Serial.print(testString); Serial.println(F("<<<"));
+      Serial.print(F("     Read: ")); Serial.print(readBuffer); Serial.println(F("<<<"));
+      Serial.print(F("  int(char["));
+      Serial.print(absCmpResult);
+      Serial.print(F("])=<"));
+      Serial.print(int(testString[absCmpResult]));
+      Serial.print(F(">, <"));
+      Serial.print(int(readBuffer[absCmpResult]));
+      Serial.println(F(">"));
+    }
     return false;
   }
   
-  Serial.print(F("removing..."));
-  if (!sd.remove(testFilename)) {                                     // if remove fails
-    Serial.println(F("\n<<< ERROR: failed to remove \""));
-    Serial.print(testFilename);
-    Serial.println(F(".\" >>>"));
+  if (verbose) Serial.print(F("removing..."));
+  if (!_sd.remove(testFilename)) {                                    // if remove fails
+    if (verbose) {
+      Serial.println(F("\n<<< ERROR: failed to remove \""));
+      Serial.print(testFilename);
+      Serial.println(F(".\" >>>"));
+    }
     return false;
   }
   
-  Serial.println(F("success."));  
+  if (verbose) Serial.println(F("success."));  
   return true;
 }

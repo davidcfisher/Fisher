@@ -23,7 +23,7 @@ class Mayfly_card {
     static BeeSocket  beeSocket;                              // create something on the BEE socket
     
     bool setup(                                               // setup the Mayfly card.
-      SdFat sd,                                               // SD Card
+      //SdFat sd,                                               // SD Card
       const char *beeModule = "none"                          // module in the Bee socket
     );
     

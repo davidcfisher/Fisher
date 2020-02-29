@@ -1,15 +1,15 @@
-#define Mayfly_Initialization_version 20200228
+#define Mayfly_Initialization_version 20200229
 
 #include "TIA-Software_Mayfly_Card.h"
 
 const char beeModule[] = "none";                                                  // module in the Bee socket.  Valid: "none", "DigiLTE-M"
-SdFat sd;
+//SdFat sd;
 
 Mayfly_card mayflyCard;                                                           // establish instance of Mayfly Card
 
 void setup() {
 
-  if (!mayflyCard.setup(sd, &beeModule[0])){                                          // setup the Mayfly Card with a BeeModule.  if it fails...
+  if (!mayflyCard.setup(&beeModule[0])){                                          // setup the Mayfly Card with a BeeModule.  if it fails...
     Serial.println("<<< ERROR: failed to setup the Mayfly. >>>");
     Serial.println("\nProcessing terminated.");
     while (true);
@@ -53,7 +53,7 @@ void setup() {
   }
   else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_RTC ok");
 
-  if (TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION < 20200228) {
+  if (TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION < 20200229) {
     Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_SDFAT, should be at least 20200228, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION);
   }
   else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_SDFAT ok");
@@ -108,8 +108,13 @@ void setup() {
 
   /***** Test the SD Card *****/
   /*                          */
-  mayflyCard.sdCard.testSdCard();
-
+  Serial.println(F("  STATUS: testing the SD Card..."));
+  if (!mayflyCard.sdCard.testSdCard(true)) {                                           // true = verbose
+    Serial.println(F("  >>>WARNING: SD Card test failed"));
+  }
+  else {
+    Serial.println(F("  STATUS: SD Card test passed"));
+  }
 
   /***** check for file: console.txt *****/
   /*                                     */
