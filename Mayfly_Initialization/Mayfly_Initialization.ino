@@ -1,4 +1,4 @@
-#define Mayfly_Initialization_version 20200229
+#define Mayfly_Initialization_version 20200302
 
 #include "TIA-Software_Mayfly_Card.h"
 
@@ -53,7 +53,7 @@ void setup() {
   }
   else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_RTC ok");
 
-  if (TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION < 20200229) {
+  if (TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION < 20200302) {
     Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_SDFAT, should be at least 20200228, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION);
   }
   else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_SDFAT ok");

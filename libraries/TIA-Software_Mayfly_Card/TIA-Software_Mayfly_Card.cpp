@@ -13,10 +13,14 @@ BeeSocket   Mayfly_card::beeSocket{};                         // Mayfly has a Be
 
 
 // METHOD: setup the Mayfly Card
-bool Mayfly_card::setup(const char *beeModule)
+bool Mayfly_card::setup(
+  const char *beeModule                                       // Bee module installed on the Mayfly
+)
 {
   Serial.begin(57600);                                        // initialize the Serial Monitor
   delay (100);
+
+  Serial.println(F("\n<<< Mayfly Initialization >>>"));
 
   if (!redLED.setup(TIA_redLedPin, "Red LED")) {              // setup the red LED
     Serial.println("<<< ERROR: failed to setup Red LED. >>>");

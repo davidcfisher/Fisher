@@ -2,7 +2,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200229
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200302
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
 #include <SPI.h>
