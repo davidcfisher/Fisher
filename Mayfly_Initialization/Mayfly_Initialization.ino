@@ -1,8 +1,8 @@
-#define Mayfly_Initialization_version 20200302
+#define Mayfly_Initialization_version 20200306
 
 #include "TIA-Software_Mayfly_Card.h"
 
-const char beeModule[] = "none";                                                  // module in the Bee socket.  Valid: "none", "DigiLTE-M"
+const char beeModule[] = "DigiLTE";                                               // module in the Bee socket.  Valid: "none", "DigiLTE-M"
 //SdFat sd;
 
 Mayfly_card mayflyCard;                                                           // establish instance of Mayfly Card
@@ -23,13 +23,13 @@ void setup() {
   }
   else Serial.println("    - SD_FAT library: ok");
  
-  if (TIA_SOFTWARE_DCF_GLOBALS_VERSION < 20200228) {
-    Serial.print("    >>>WARNING: downlevel TIA-SOFTWARE_DCF_GLOBALS, should be at least 20200128, is: "); Serial.println(TIA_SOFTWARE_DCF_GLOBALS_VERSION);
+  if (TIA_SOFTWARE_DCF_GLOBALS_VERSION < 20200307) {
+    Serial.print("    >>>WARNING: downlevel TIA-SOFTWARE_DCF_GLOBALS, should be at least 20200307, is: "); Serial.println(TIA_SOFTWARE_DCF_GLOBALS_VERSION);
   }
   else Serial.println("    - TIA-SOFTWARE_DCF_GLOBALS library: ok");
 
-  if (TIA_SOFTWARE_MAYFLY_CARD_VERSION < 20200129) {
-    Serial.print("    >>>WARNING: downlevel TIA-SOFTWARE_MAYFLY_CARD, should be at least 20200129, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_VERSION);
+  if (TIA_SOFTWARE_MAYFLY_CARD_VERSION < 20200306) {
+    Serial.print("    >>>WARNING: downlevel TIA-SOFTWARE_MAYFLY_CARD, should be at least 20200306, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_VERSION);
   }
   else Serial.println("    - TIA-SOFTWARE_MAYFLY_CARD library: ok");
 
@@ -49,14 +49,19 @@ void setup() {
   else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_RTC library: ok");
 
   if (TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION < 20200302) {
-    Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_SDFAT, should be at least 20200228, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION);
+    Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_SDFAT, should be at least 20200302, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION);
   }
   else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_SDFAT library: ok");
 
-  if (TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION < 20200302) {
-    Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_BEE, should be at least 20200228, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION);
+  if (TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION < 20200306) {
+    Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_BEE, should be at least 20200306, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION);
   }
   else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_BEE library: ok");
+
+  if (TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE_VERSION < 20200307) {
+    Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE, should be at least 20200307, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE_VERSION);
+  }
+  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE library: ok");
 
 
   /***** Test the LEDs and pushbutton *****/
@@ -128,7 +133,7 @@ void setup() {
   int numberOfEntries = mayflyCard.sdCard.TIA_dir(&sd_card_directory[0], sdCardDirectoryLimit);     // get the SD Card directory & file names
   Serial.println(F("  STATUS: displaying SD Card directory -"));
 
-  // process each file
+  // process each directory or file
   for (int i=0; i < numberOfEntries; i++) {
 
     if (sd_card_directory[i].directoryFlag) Serial.println(F(""));                                  // print a blank line before a directory entry

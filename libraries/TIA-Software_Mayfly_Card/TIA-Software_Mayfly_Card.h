@@ -2,7 +2,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_H
 #define TIA_SOFTWARE_MAYFLY_CARD_H
-#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20200129
+#define TIA_SOFTWARE_MAYFLY_CARD_VERSION 20200306
 
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"                         // global definitions
@@ -11,6 +11,7 @@
 #include "TIA-Software_Mayfly_Card_Pushbutton.h"              // include the Pushbutton library
 #include "TIA-Software_Mayfly_Card_SdFat.h"                   // include the SD Card library
 #include "TIA-Software_Mayfly_Card_Bee.h"                     // include the Bee Socket library
+#include "TIA-Software_Mayfly_Card_Bee_DigiLTE.h"             // include the Digi LTE library
 
 class Mayfly_card { 
   public: 

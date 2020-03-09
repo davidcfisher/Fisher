@@ -1,7 +1,7 @@
 //  TIA-Software_Mayfly_Card_Bee.cpp - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 
 #include "TIA-Software_Mayfly_Card_Bee.h"                     // include the header file
-
+#include "TIA-Software_Mayfly_Card_Bee_DigiLTE.h"             // include the Digi LTE module
 
 // CONSTRUCTOR
 BeeSocket::BeeSocket() {}                                     // constructor
@@ -15,8 +15,11 @@ bool BeeSocket::setup(const char *beeModule)
     return true;
   }
   
-  else if (strcmp(beeModule, "DigiLTE-M") == 0) {
+  else if (strcmp(beeModule, "DigiLTE") == 0) {
     Serial.print(F("  STATUS: setting up the Bee socket with module=")); Serial.print(beeModule); Serial.println(F("..."));
+    
+    DigiLTE digi;
+    digi.setup();
     return true;
   }
   
