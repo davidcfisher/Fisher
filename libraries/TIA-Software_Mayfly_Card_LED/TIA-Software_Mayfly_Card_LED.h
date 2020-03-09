@@ -1,16 +1,15 @@
-//  TIA-Softwaref_Mayfly_Card_LED.h - Copyright (c) 2019 TIA Software, LLC.  All rights reserved.
-//  v1.0
+//  TIA-Softwaref_Mayfly_Card_LED.h - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_LED_H
 #define TIA_SOFTWARE_MAYFLY_CARD_LED_H
-#define TIA_SOFTWARE_MAYFLY_CARD_LED_VERSION 20191210
+#define TIA_SOFTWARE_MAYFLY_CARD_LED_VERSION 20200201
 
 #include "Arduino.h"
 
 class LED {
   public:
     LED();                                                  // constructor
-    void setup(                                             // METHOD: setup the LED
+    bool setup(                                             // METHOD: setup the LED
       int pin,                                              // pin number for the LED
       String LEDname                                        // name for the LED
     );

@@ -1,6 +1,7 @@
-#define DCF_version = 20200107
+#define DCF_version = 20200125
 
 #include "TIA-Software_Mayfly_Card.h"
+#define SerialMon Serial
 
 const char beeModule[] = "DigiLTE-M";                             // module in the Bee socket, default = "none"
 
@@ -67,6 +68,37 @@ void setup()
       break;
     }
   }
+
+
+
+//  /***** this code displays the directory information *****/
+//  /*                                                      */
+//  // process each file
+//  for (int i=0; i < numberOfEntries; i++) {
+//
+//    if (sd_card_directory[i].directoryFlag) SerialMon.println(F(""));                               // print a blank line before a directory entry
+//
+//    for (int j=0; j<sd_card_directory[i].folderLevel; j++) { SerialMon.print(F("\t")); }            // add tabs to indent sub-directory level
+//
+//    // if this is a directory entry
+//    if (sd_card_directory[i].directoryFlag) {
+//      SerialMon.print(F("<<< ")); SerialMon.print(sd_card_directory[i].filename); SerialMon.println(F(" >>>"));
+//    }
+//
+//    // otherwise, this is a file
+//    else {
+//      SerialMon.print(sd_card_directory[i].filename);     SerialMon.print(F("\t"));
+//      if (strlen(sd_card_directory[i].filename) <= 12)    SerialMon.print(F("\t"));
+//      SerialMon.print(sd_card_directory[i].modDateTime);  SerialMon.print(F("\t"));
+//      SerialMon.print(sd_card_directory[i].sizeKb);       SerialMon.println(F(" KB"));
+//    }
+//
+//    // if we've reached the limit of directory+file names
+//    if(sd_card_directory[i].limitReached) {
+//      SerialMon.println(F(""));SerialMon.print(F("=== More files may exist.  Maximum display limit of ")); SerialMon.print(sdCardDirectoryLimit); SerialMon.println(F(" reached. ==="));
+//      break;
+//    }
+//  }
 }
 
 

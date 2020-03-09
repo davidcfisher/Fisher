@@ -1,22 +1,21 @@
 //  TIA-Software_Mayfly_Card_SdFat.cpp - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
-//  v1.0
 
 #include "TIA-Software_Mayfly_Card_SdFat.h"                           // include the header file
     
-int numberOfFiles;                                                    // number of files in directory, including directory names
-
 
 // CONSTRUCTOR
-TIA_SdFat::TIA_SdFat() : SdFat(){};                                   // Subclass of SdFat
+TIA_SdFat::TIA_SdFat() : SdFat(){};
 
 
 // METHOD: setup - setup the SD Card
-void TIA_SdFat::TIA_setup() {
-  
-  if (begin(TIA_SD_CS_PIN)) {                                         // if the SD Card Reader begins successfully
+bool TIA_SdFat::TIA_setup()
+{
+  if (!_sd.begin(TIA_SD_CS_PIN)) {       
+    Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
+    return false;
   }
-  else {
-  }    
+
+  return true;
 }
 
 
@@ -26,11 +25,16 @@ int TIA_SdFat::TIA_dir(
   int limit                                                           // limit on the number of directory names + filenames to be returned
 )
 {
-  SdFile file;
-  numberOfFiles = 0;
+  SdFile dirFile;                                                     // file holding directory information
+  int numberOfFiles = 0;
   
-  if (file.open("/", O_READ)) {                                       // if opening the root directory was successful
-    processDirectory(&sd_card_directory[0], file, "Root", 0, limit);        // process the root directory
+  if (!_sd.begin(TIA_SD_CS_PIN)) {       
+    Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
+    return numberOfFiles;
+  }
+ 
+  if (dirFile.open("/")) {                                            // if opening the root directory was successful
+    numberOfFiles = processDirectory(&sd_card_directory[0], dirFile, "Root", 0, 0, limit);  // process the root directory
   }
   
   return numberOfFiles;
@@ -38,20 +42,22 @@ int TIA_SdFat::TIA_dir(
 
 
 // METHOD: processDirectory - recuresively get all directory names and filenames in a directory and sub-directories
-void TIA_SdFat::processDirectory(
+/* NOTE: assume that dirFile holds a DIRECTORY entry */
+int TIA_SdFat::processDirectory(
   SdCardDirectory *sd_card_directory,                                 // pointer to array holding results of dir request
-  SdFile CFile,                                                       // 
-  const char dirName[],                                                     // assume method is called while pointing to a directory name
+  SdFile dirFile,                                                     // REQUIRED: file holding DIRECTORY information
+  const char dirName[],                                               // REQUIRED: method is called while pointing to a directory name
+  int numberOfFiles,                                                  // number of files already processed
   int numTabs,                                                        // number of tabs to indent this directories information
   int limit                                                           // limit on the number of direcory+file names to be returned
 )
 {
-  SdFile file;
+  SdFile file;                                                        // holds a file object
   char filename[filenameLength];                                      // holds the filename
-  directoryEntry sd_card_directoryEntry;                              // holds the FAT directory entry
+  directoryEntry sd_card_directoryEntry;                              // holds a FAT directory entry
   char amPm[3] = "?M";                                                // holds "AM" or "PM"
   char mDateTime[20];                                                 // holds the last write time for the file
-  
+
   // save the directory information
   sd_card_directory[numberOfFiles].folderLevel    = numTabs;
   sd_card_directory[numberOfFiles].directoryFlag  = true;
@@ -66,27 +72,27 @@ void TIA_SdFat::processDirectory(
   // if we've reached the maximum number of directory+file names allowed, terminate
   if (numberOfFiles >= limit) {
     sd_card_directory[numberOfFiles-1].limitReached = true;
-    return;
+    return numberOfFiles - 1;
   }
   
   // step thru all the files in this directory
-  while (file.openNext(&CFile, O_READ)) {
+  while (file.openNext(&dirFile, O_READ)) {
     if (!file.isHidden()) {                                           // skip hidden files
       
-      for (int i = 1; i <= numTabs; i++) { Serial.print(F("\t")); }   // insert tabs for spacing
-      
-      // if this is a sub-directory, process it
+     // if this is a sub-directory, process it
       if (file.isDir()) {
         file.getName(filename, filenameLength);                       // get the directory name
-        processDirectory(&sd_card_directory[0], file, filename, numTabs+1, limit);  // process this directory        
-        if (sd_card_directory[numberOfFiles-1].limitReached) return;  // if we've reached the limit, stop processing
+        processDirectory(&sd_card_directory[0], file, filename, numberOfFiles, numTabs+1, limit);  // process this directory        
+        if (sd_card_directory[numberOfFiles-1].limitReached) {        // if we've reached the limit, stop processing
+          return numberOfFiles - 1;
+        }
       }
       
       // a regular file, not hidden or a directory
       else {
         file.getName(filename, filenameLength);                       // get the filename
         file.dirEntry(&sd_card_directoryEntry);                       // get the FAT directory entry
-        
+
         // get the encoded last modification day
         unsigned int lastWriteDay = (sd_card_directoryEntry.lastWriteDate << 11) >> 11;            // strip off the encoded year and month - bits on the left
         
@@ -117,25 +123,24 @@ void TIA_SdFat::processDirectory(
         sd_card_directory[numberOfFiles].directoryFlag  = false;
         sd_card_directory[numberOfFiles].sizeKb         = file.fileSize();
         sd_card_directory[numberOfFiles].limitReached   = false;
-
+          
         strcpy(sd_card_directory[numberOfFiles].filename, filename);
         strcpy(sd_card_directory[numberOfFiles].modDateTime, mDateTime);
-      
+        
         // increment the files counter
         numberOfFiles++;
        
         // if we've reached the maximum number of directory+file names allowed, terminate
         if (numberOfFiles >= limit) {          
           sd_card_directory[numberOfFiles-1].limitReached = true;
-          return;
+          return numberOfFiles - 1;
         }
       }
     }
-    
-    file.close();
+    file.close();  
   }
+  return numberOfFiles;
 }
-
 
 
 // FUNCTION: return seconds since 1/1/200 if input is a valid dateTime char array of the format:  YYYY-MM-DD HH:MM:SS
@@ -215,7 +220,7 @@ unsigned long int secondsSince1Jan2kFromDateTime(
 
 
 // FUNCTION: scan thru console file backwards looking for the previous record
-boolean getPreviousConsoleRecord(                                            // true=previous record found
+bool getPreviousConsoleRecord(                                        // true=previous record found
   char *line,                                                         // char array holding the previous record
   unsigned long int *progressPos_ptr                                  // position to start scanning the console record backwards
 )
@@ -225,7 +230,7 @@ boolean getPreviousConsoleRecord(                                            // 
   SdFile consoleFile;                                                 // console file
     
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
-    SerialMon.println(F("Console.txt did not open.")); 
+    Serial.println(F("Console.txt did not open.")); 
     return false; 
   } 
     
@@ -240,8 +245,8 @@ boolean getPreviousConsoleRecord(                                            // 
       lineFeedFoundFlag = true;                                       // flag that we found the Line Feed
       *progressPos_ptr = consoleFile.curPosition();                   // grab the position of the Line Feed
     } 
-  } 
-    
+  }
+  
   consoleFile.seekCur(1);                                             // move forward past the Line Feed  
   consoleFile.fgets(fgetsLine, consoleRecordLength);                  // get this whole console record
   for (int i=0; i < consoleRecordLength; i++) line[i] = fgetsLine[i]; // copy this record into the line to be returned
@@ -250,7 +255,7 @@ boolean getPreviousConsoleRecord(                                            // 
 
 
 // METHOD: get console.txt profile
-boolean TIA_SdFat::getConsoleProfile(
+bool TIA_SdFat::getConsoleProfile(
   
   char (*firstRecord)[consoleRecordLength],                           // set with the first record found in the console file
   char (*lastRecord)[consoleRecordLength],                            // set with the last record found in the console file
@@ -267,10 +272,11 @@ boolean TIA_SdFat::getConsoleProfile(
 {
   SdFile consoleFile;                                                 // console file
   char line[consoleRecordLength]  = "";
-  boolean firstRecordFoundFlag    = false;
+  bool firstRecordFoundFlag       = false;
+  int result;
   
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
-    SerialMon.println(F("Error 339: console.txt did not open."));
+    Serial.println(F("Error 275: console.txt did not open."));
     return -1;                                                        // return an error code
   }
   
@@ -278,8 +284,11 @@ boolean TIA_SdFat::getConsoleProfile(
   while (!firstRecordFoundFlag) {
     
     // get the next record of the console file
-    consoleFile.fgets(line, consoleRecordLength);                     // get this whole console record
-    if (line[strlen(line)-1] = '\n') line[strlen(line)-1] = '\0';     // remove the New Line ('\n')
+    result = consoleFile.fgets(line, consoleRecordLength);            // get this whole console record
+    
+    if (result == 0) return false;                                    // check for no entries
+    
+    if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';    // remove the New Line ('\n')
     
     *firstTimestampSeconds = secondsSince1Jan2kFromDateTime(line);    // save the timestamp of the first record, 0=invalid dateTime
 
@@ -298,7 +307,7 @@ boolean TIA_SdFat::getConsoleProfile(
   consoleFile.seekCur(-1);                                            // seek to last character before the eof, likely LF
   *lastFilePosition = consoleFile.curPosition();                      // point to the last character
   getPreviousConsoleRecord(&line[0], lastFilePosition);               // position to start scanning the console record backwards
-  if (line[strlen(line)-1] = '\n') line[strlen(line)-1] = '\0';       // remove the New Line ('\n')
+  if (line[strlen(line)-1] == '\n') line[strlen(line)-1] = '\0';      // remove the New Line ('\n')
 
   *lastTimestampSeconds = secondsSince1Jan2kFromDateTime(line);       // get the number of seconds since 1/1/2000 for this record
   
@@ -310,21 +319,22 @@ boolean TIA_SdFat::getConsoleProfile(
     strncpy(*lastDateTime_YYYY_MM_DD_HH_MM_SS, line, 20);             // save the dateTime of the last record
   }
   
+  return true;
   
   /***** use this code to display console.txt profile *****/
   /*                                                      */
-  //SerialMon.println(F("")); SerialMon.println(F("<<<<< CONSOLE FILE PROFILE >>>>>"));
-  //SerialMon.println(F("\t\tDateTime\t\tTimestamp\tFile Position\tRecord"));
-  //SerialMon.print(F(" First Record:\t"));
-  //SerialMon.print(firstDateTime_YYYY_MM_DD_HH_MM_SS); SerialMon.print(F("\t"));
-  //SerialMon.print(firstTimestampSeconds); SerialMon.print(F("\t"));
-  //SerialMon.print(firstFilePosition); SerialMon.print(F("\t\t"));
-  //SerialMon.println(firstRecord);
-  //SerialMon.print(F("  Last Record:\t"));
-  //SerialMon.print(lastDateTime_YYYY_MM_DD_HH_MM_SS); SerialMon.print(F("\t"));
-  //SerialMon.print(lastTimestampSeconds); SerialMon.print(F("\t"));
-  //SerialMon.print(lastFilePosition); SerialMon.print(F("\t\t"));
-  //SerialMon.println(lastRecord);  
+  //Serial.println(F("")); Serial.println(F("<<<<< CONSOLE FILE PROFILE >>>>>"));
+  //Serial.println(F("\t\tDateTime\t\tTimestamp\tFile Position\tRecord"));
+  //Serial.print(F(" First Record:\t"));
+  //Serial.print(firstDateTime_YYYY_MM_DD_HH_MM_SS); Serial.print(F("\t"));
+  //Serial.print(firstTimestampSeconds); SerialMprint(F("\t"));
+  //Serial.print(firstFilePosition); Serial.print(F("\t\t"));
+  //Serial.println(firstRecord);
+  //Serial.print(F("  Last Record:\t"));
+  //Serial.print(lastDateTime_YYYY_MM_DD_HH_MM_SS); Serial.print(F("\t"));
+  //Serial.print(lastTimestampSeconds); Serial.print(F("\t"));
+  //Serial.print(lastFilePosition); Serial.print(F("\t\t"));
+  //Serial.println(lastRecord);  
 }
 
 
@@ -361,13 +371,13 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   char line[consoleRecordLength]                = "";
   unsigned long int timestampSeconds            = 0;
   
-  SerialMon.println(F(""));
-  SerialMon.print(F("<<< getting Console records, start=")); SerialMon.print(requestedStartDateTimeString);
-  SerialMon.print(F(", end=")); SerialMon.print(requestedEndDateTimeString);
-  SerialMon.print(F(", byteLimit=")); SerialMon.print(byteLimit); SerialMon.println(F(" >>>"));
+  Serial.println(F(""));
+  Serial.print(F("<<< getting Console records, start=")); Serial.print(requestedStartDateTimeString);
+  Serial.print(F(", end=")); Serial.print(requestedEndDateTimeString);
+  Serial.print(F(", byteLimit=")); Serial.print(byteLimit); Serial.println(F(" >>>"));
   
   // get the console profile
-  boolean profileFlag = getConsoleProfile(
+  getConsoleProfile(
     &firstRecord,                                                     // copy of the first record found
     &lastRecord,                                                      // copy of the last record found
     &firstDateTime_YYYY_MM_DD_HH_MM_SS,                               // datetime of the first console record in the console file
@@ -402,18 +412,18 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
     getPreviousConsoleRecord(&line[0], &position);                    // get the previous record
     timestampSeconds = secondsSince1Jan2kFromDateTime(line);          // get the number of seconds since 1/1/2000 for this record
       
-    SerialMon.print(F("."));                                          // print out a period to show progress
+    Serial.print(F("."));                                             // print out a period to show progress
     loopCounter++;  
     if (loopCounter >= 100) {                                         // break progress display into multiple lines
       loopCounter = 0;  
-      SerialMon.println(F(""));
+      Serial.println(F(""));
     }
   }
   
-  SerialMon.println(F(""));
+  Serial.println(F(""));
   
   if (!consoleFile.open("console.txt", O_READ)) {                     // if the file doesn't open
-    SerialMon.println(F("Error 466: console.txt did not open."));
+    Serial.println(F("Error 466: console.txt did not open."));
     return -1;                                                        // return an error code
   }
   
@@ -423,7 +433,6 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   consoleFile.fgets(line, consoleRecordLength);                       // get this whole console record
   timestampSeconds = secondsSince1Jan2kFromDateTime(line);            // get the number of seconds since 1/1/2000 for this record
   
-  int recordCounter = 0;
   int recordBytes   = 0;
   int totalBytes    = 0;
   
@@ -449,4 +458,122 @@ int TIA_SdFat::getConsoleRecords(                                 // returns num
   *destinationArray = '\0';                                           // add string terminator
   
   return totalBytes;
+}
+
+
+// METHOD: TIA_testSdCard - test the SD card for create, write, read, remove
+bool TIA_SdFat::testSdCard(bool verbose)
+{
+  SdFile file;
+  
+  if (!_sd.begin(TIA_SD_CS_PIN)) {
+    if (verbose) Serial.println(F("<<< ERROR: SD Card failure.  Ensure SD Card is properly seated in Mayfly. >>>"));
+    return false;
+  }
+
+  const char *testFilename = "test.txt";                              // file used to test the SD Card
+  const char testString[] = "Testing 1, 2, 3.";                       // test string to write to SD card
+  char readBuffer[sizeof(testString) / sizeof(testString[0]) + 1];    // read the test string back to here
+
+  if (verbose) Serial.print(F("    \"test.txt\" opening..."));    // open the test file.
+  if (!file.open(testFilename, O_WRITE | O_CREAT)) {                  // if file failed to open
+    if (verbose) {
+      Serial.print(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to open for writing. >>>"));
+    }
+    return false;
+  }
+  
+  if (verbose) Serial.print(F("truncating..."));
+  if (!file.truncate(0)) {                                            // if file fails to truncate
+    if (verbose) {
+      Serial.println(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed truncate. >>>"));
+    }
+    return false;
+  }
+    
+  if (verbose) Serial.print(F("writing..."));
+  if (!file.write(testString)) {                                      // if file fails to write
+    if (verbose) {
+      Serial.print(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to write.>>>"));
+    }
+    return false;
+  }
+  
+  if (verbose) Serial.print(F("closing..."));
+  if (!file.close()) {                                                // if file fails to close
+    if (verbose) {
+      Serial.print(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to close.>>>"));
+    }
+    return false;
+  }
+  
+  if (verbose) Serial.print(F("opening..."));
+  if (!file.open("test.txt", O_READ)) {                               // if file fails to open for read
+    if (verbose) {
+      Serial.println(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to open for reading. >>>"));
+    }
+    return false;
+  }
+
+  if (verbose) Serial.print(F("reading..."));
+  if (file.fgets(readBuffer, sizeof(testString)) <= 0) {              // if file fails to read
+    if (verbose) {
+      Serial.println(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to read. >>>"));
+    }
+    return false;
+  }
+  
+  if (verbose) Serial.print(F("closing..."));
+  if (!file.close()) {                                                // if file fails to close
+    if (verbose) {
+      Serial.print(F("\n<<< ERROR: \""));
+      Serial.print(testFilename);
+      Serial.println(F("\" failed to close.>>>"));
+    }
+    return false;
+  }
+     
+  if (verbose) Serial.print(F("comparing..."));
+  if (strcmp(testString, readBuffer) != 0) {                           // if compare fails
+    if (verbose) {
+      int cmpResult = strcmp(testString, readBuffer);
+      int absCmpResult = abs(cmpResult);
+      Serial.print(F("\n<<< ERROR: compare failed.  Compare result=")); Serial.print(cmpResult); Serial.println(F(" >>>"));
+      Serial.print(F("  Written: ")); Serial.print(testString); Serial.println(F("<<<"));
+      Serial.print(F("     Read: ")); Serial.print(readBuffer); Serial.println(F("<<<"));
+      Serial.print(F("  int(char["));
+      Serial.print(absCmpResult);
+      Serial.print(F("])=<"));
+      Serial.print(int(testString[absCmpResult]));
+      Serial.print(F(">, <"));
+      Serial.print(int(readBuffer[absCmpResult]));
+      Serial.println(F(">"));
+    }
+    return false;
+  }
+  
+  if (verbose) Serial.print(F("removing..."));
+  if (!_sd.remove(testFilename)) {                                    // if remove fails
+    if (verbose) {
+      Serial.println(F("\n<<< ERROR: failed to remove \""));
+      Serial.print(testFilename);
+      Serial.println(F(".\" >>>"));
+    }
+    return false;
+  }
+  
+  if (verbose) Serial.println(F("success."));  
+  return true;
 }

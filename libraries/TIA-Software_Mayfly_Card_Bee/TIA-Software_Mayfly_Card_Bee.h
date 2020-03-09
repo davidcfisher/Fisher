@@ -2,7 +2,7 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_BEE_H
 #define TIA_SOFTWARE_MAYFLY_CARD_BEE_H
-#define TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION 20200107
+#define TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION 20200306
 
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"
@@ -12,7 +12,7 @@ class BeeSocket {
     
     BeeSocket();                                            // constructor
     
-    boolean setup(                                          // METHOD: setup the Bee Socket
+    bool setup(                                             // METHOD: setup the Bee Socket
       const char *beeModule                                 // defines the module in the Bee socket
     );
 };

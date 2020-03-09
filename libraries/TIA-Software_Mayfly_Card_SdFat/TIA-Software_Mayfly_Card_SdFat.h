@@ -2,15 +2,15 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
 #define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_H
-#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200107
+#define TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION 20200302
 
 #include "TIA-Software_DCF_Globals.h"                             // global headers
+#include <SPI.h>
 #include "SdFat.h"                                                // SD Card support
 #include "Sodaq_DS3231.h"                                         // Real Time Clock support
 
 const int filenameLength = 200;                                   // maximum length of directory name or filename
-   
-    
+
 typedef struct {                                                  // structure of an SD Card directory return
   int folderLevel;                                                // sub-directory depth, used to determine indentation level for displaying results
   boolean directoryFlag;                                          // true=directory, false=file
@@ -27,19 +27,20 @@ class TIA_SdFat : public SdFat {
     TIA_SdFat();                                                  // constructor
     
     
-    // setup the SD Card
-    void TIA_setup();
+    // METHOD: setup the SD Card
+    bool TIA_setup();
     
     
-    // list the files in the dir.  Returns the number of directory names + filenames
+    // METHOD: list the files in the dir.  Returns the number of directory names + filenames
     int TIA_dir(                                                  
       SdCardDirectory *sd_card_directory,                         // array to hold directory results
       int limit                                                   // limit on the number of directory names + file names to be returned
     );
     
 
-    // get the profile of console.txt
-    boolean getConsoleProfile(
+    // METHOD: get the profile of console.txt
+    bool getConsoleProfile(                                       // false = no entries in console.txt
+      
       char (*firstRecord)[consoleRecordLength],                   // returns first record found in the console file
       char (*lastRecord)[consoleRecordLength],                    // returns last record found in the console file
       
@@ -54,7 +55,7 @@ class TIA_SdFat : public SdFat {
     );
 
     
-    // get records from the console file
+    // METHOD: get records from the console file
     int getConsoleRecords(                                        // returns number of records read
 
       /* get records from console.txt, specifing starting and ending dates
@@ -74,12 +75,19 @@ class TIA_SdFat : public SdFat {
     );
     
     
+    // METHOD - test the SD card
+    boolean testSdCard(bool verbose=false);
+    
+        
   protected:
     
-    void processDirectory(                                        // recursively process SD card directory
-      SdCardDirectory *sd_card_directory,                         // array of SD Card directory entries
-      SdFile CFile,                                               // current file being read
-      const char dirName[] = "Root",                                    // name of the current directory
+    SdFat _sd;
+    
+    int processDirectory(                                         // recursively process SD card directory
+      SdCardDirectory *sd_card_directory,                         // results go into array of SD Card directory entries
+      SdFile file,                                                // current file being read
+      const char dirName[] = "Root",                              // name of the current directory
+      int numberOfFiles = 0,                                      // number of files already processed
       int numTabs = 0,                                            // number of tabs for displaying sub-directories
       int limit = 100                                             // limit on the number of directory+file names to be returned
     );                                         

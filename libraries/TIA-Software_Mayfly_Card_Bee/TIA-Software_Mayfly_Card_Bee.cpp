@@ -1,22 +1,30 @@
 //  TIA-Software_Mayfly_Card_Bee.cpp - Copyright (c) 2019-2020 TIA Software, LLC.  All rights reserved.
 
 #include "TIA-Software_Mayfly_Card_Bee.h"                     // include the header file
-
+#include "TIA-Software_Mayfly_Card_Bee_DigiLTE.h"             // include the Digi LTE module
 
 // CONSTRUCTOR
 BeeSocket::BeeSocket() {}                                     // constructor
 
 
 // METHOD: setup module in bee socket
-boolean BeeSocket::setup(const char *beeModule)
+bool BeeSocket::setup(const char *beeModule)
 {
-  if (strcmp(beeModule, "DigiLTE-M") == 0) {
-    SerialMon.print("<<< setting up the bee socket with module: "); SerialMon.print(beeModule); SerialMon.println(" >>>");
+  if (strcmp(beeModule, "none") == 0) {
+    Serial.println(F("  STATUS: setting up the Bee socket with no module..."));
+    return true;
+  }
+  
+  else if (strcmp(beeModule, "DigiLTE") == 0) {
+    Serial.print(F("  STATUS: setting up the Bee socket with module=")); Serial.print(beeModule); Serial.println(F("..."));
+    
+    DigiLTE digi;
+    digi.setup();
     return true;
   }
   
   else {
-    SerialMon.print("<<< ERROR: unknown moduel in the bee socket: "); SerialMon.print(beeModule); SerialMon.println(" >>>");
+    Serial.print(F("<<< ERROR: unknown module in the Bee socket: ")); Serial.print(beeModule); Serial.println(F(" >>>"));
     return false;
   }
 }
