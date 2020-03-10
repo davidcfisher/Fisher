@@ -1,4 +1,4 @@
-#define Mayfly_Initialization_version 20200306
+#define Mayfly_Initialization_version 20200310
 
 #include "TIA-Software_Mayfly_Card.h"
 
@@ -21,54 +21,54 @@ void setup() {
   if (SD_FAT_VERSION < 10102) {
     Serial.print("    >>>WARNING: downlevel SD_FAT, should be at least 10102, is: "); Serial.println(SD_FAT_VERSION);
   }
-  else Serial.println("    - SD_FAT library: ok");
+  else Serial.println("    - SD_FAT library: ok.");
  
   if (TIA_SOFTWARE_DCF_GLOBALS_VERSION < 20200307) {
     Serial.print("    >>>WARNING: downlevel TIA-SOFTWARE_DCF_GLOBALS, should be at least 20200307, is: "); Serial.println(TIA_SOFTWARE_DCF_GLOBALS_VERSION);
   }
-  else Serial.println("    - TIA-SOFTWARE_DCF_GLOBALS library: ok");
+  else Serial.println("    - TIA-SOFTWARE_DCF_GLOBALS library: ok.");
 
   if (TIA_SOFTWARE_MAYFLY_CARD_VERSION < 20200306) {
     Serial.print("    >>>WARNING: downlevel TIA-SOFTWARE_MAYFLY_CARD, should be at least 20200306, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_VERSION);
   }
-  else Serial.println("    - TIA-SOFTWARE_MAYFLY_CARD library: ok");
+  else Serial.println("    - TIA-SOFTWARE_MAYFLY_CARD library: ok.");
 
   if (TIA_SOFTWARE_MAYFLY_CARD_LED_VERSION < 20200201) {
     Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_LED, should be at least 20200201, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_LED_VERSION);
   }
-  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_LED library: ok");
+  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_LED library: ok.");
 
   if (TIA_SOFTWARE_MAYFLY_CARD_PUSHBUTTON_VERSION < 20200126) {
     Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_PUSHBUTTON, should be at least 20200126, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_PUSHBUTTON_VERSION);
   }
-  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_PUSHBUTTON library: ok");
+  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_PUSHBUTTON library: ok.");
 
   if (TIA_SOFTWARE_MAYFLY_CARD_RTC_VERSION < 20200128) {
     Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_RTC, should be at least 20200128, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_RTC_VERSION);
   }
-  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_RTC library: ok");
+  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_RTC library: ok.");
 
   if (TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION < 20200302) {
     Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_SDFAT, should be at least 20200302, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_SDFAT_VERSION);
   }
-  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_SDFAT library: ok");
+  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_SDFAT library: ok.");
 
-  if (TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION < 20200306) {
-    Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_BEE, should be at least 20200306, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION);
+  if (TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION < 20200310) {
+    Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_BEE, should be at least 20200310, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_BEE_VERSION);
   }
-  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_BEE library: ok");
+  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_BEE library: ok.");
 
-  if (TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE_VERSION < 20200307) {
-    Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE, should be at least 20200307, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE_VERSION);
+  if (TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE_VERSION < 20200310) {
+    Serial.print("    >>>WARNING: downlevel TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE, should be at least 20200310, is: "); Serial.println(TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE_VERSION);
   }
-  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE library: ok");
+  else Serial.println("    - TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE library: ok.");
 
 
   /***** Test the LEDs and pushbutton *****/
   /*                                      */
   Serial.println("\n>>>ACTION: if the LEDs are 'railroading,' push the BUTTON for a second to continue");
   mayflyCard.railroadLED("forever");                                              // Railroad the LEDs with the pushbutton enabled
-  Serial.println("\n  STATUS: LEDs and button look ok");
+  Serial.println("\n  STATUS: LEDs and button look ok.");
 
 
   /***** Set the clock, if needed *****/

@@ -6,8 +6,6 @@
  * @date       Nov 2016
  */
 
-// copied from Killen's "Mayfly" directory, modified by Fisher 3/6/2020
-
 #ifndef TinyGsmClientXBee_h
 #define TinyGsmClientXBee_h
 //#pragma message("TinyGSM:  TinyGsmClientXBee")
@@ -20,7 +18,6 @@
 // XBee's have a default guard time of 1 second (1000ms, 10 extra for safety here)
 #define TINY_GSM_XBEE_GUARD_TIME 1010
 
-#include "TIA-Software_DCF_Globals.h"
 #include <TinyGsmCommon.h>
 
 #define GSM_NL "\r"

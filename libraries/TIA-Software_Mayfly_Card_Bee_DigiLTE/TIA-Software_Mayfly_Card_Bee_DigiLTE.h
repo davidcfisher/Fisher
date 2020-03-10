@@ -2,29 +2,21 @@
 
 #ifndef TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE_H
 #define TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE_H
-#define TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE_VERSION 20200307
+#define TIA_SOFTWARE_MAYFLY_CARD_BEE_DIGILTE_VERSION 20200310
+
+#define TINY_GSM_MODEM_XBEE                                 // define the Digi Xbee modem
 
 #include "Arduino.h"
 #include "TIA-Software_DCF_Globals.h"
+#include "TinyGsmClient.h"
 
-#define TINY_GSM_MODEM_HAS_GPRS
-#define TINY_GSM_MODEM_HAS_WIFI
-#include <TIA-Software_TinyGsmClientXBee.h>
-typedef TinyGsmXBee TinyGsm;
-typedef TinyGsmXBee::GsmClient TinyGsmClient;
-typedef TinyGsmXBee::GsmClientSecure TinyGsmClientSecure;
 
 class DigiLTE {
   public:
     
     DigiLTE();                                              // constructor
     
-    bool setup(                                             // METHOD: setup the DigiLTE module
-    );
-    
-    TinyGsmXBee modem(SerialAT);
-    
-    TinyGsmClient client();
+    bool setup();                                           // METHOD: setup the DigiLTE module
 };
 
 #endif
